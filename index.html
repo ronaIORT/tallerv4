@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>Taller de Costura</title>
+
+    <!-- CSS -->
+    <link rel="stylesheet" href="css/style.css" />
+    <!-- En index.html -->
+
+
+    <!-- PWA Manifest (rutas relativas SIN / inicial) -->
+    <link rel="manifest" href="manifest.json">
+
+    <!-- Meta tags para PWA -->
+    <meta name="theme-color" content="#4a5568">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes"> <!-- Corrección para Chrome -->
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
+    <!-- Iconos (rutas relativas SIN / inicial) -->
+    <link rel="apple-touch-icon" href="icons/icon-192x192.png">
+    <link rel="icon" href="icons/icon-192x192.png" sizes="192x192">
+</head>
+
+<body>
+    <!-- Contenedor principal -->
+    <div id="app">
+        <p>Cargando aplicación 1 2 3...</p>
+    </div>
+
+    <!-- Dexie.js desde CDN (¡SIN ESPACIOS!) -->
+    <script src="https://unpkg.com/dexie@4.0.8/dist/dexie.js"></script>
+
+    <!-- Scripts de la app -->
+    <script type="module" src="js/db.js"></script>
+    <script type="module" src="js/app.js"></script>
+
+    <!-- Service Worker Registration (al final, después de los módulos) -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', async () => {
+                try {
+                    // Esperar a que se carguen los módulos primero
+                    await new Promise(resolve => setTimeout(resolve, 500));
+
+
+                    const registration = await navigator.serviceWorker.register('./service-worker.js');
+
+
+                    console.log('✅ ServiceWorker registrado con éxito:', registration.scope);
+
+                    // Forzar actualización si hay nueva versión
+                    registration.onupdatefound = () => {
+                        const installingWorker = registration.installing;
+                        installingWorker.onstatechange = async () => {
+                            if (installingWorker.state === 'installed') {
+                                if (navigator.serviceWorker.controller) {
+                                    console.log('🔄 Nueva versión disponible. Recargando...');
+
+                                    // Mostrar notificación al usuario
+                                    if (confirm('¡Nueva versión disponible! ¿Recargar para actualizar?')) {
+                                        window.location.reload();
+                                    }
+                                } else {
+                                    console.log('✅ App está lista para funcionar offline');
+                                }
+                            }
+                        };
+                    };
+                } catch (error) {
+                    console.error('❌ Error al registrar ServiceWorker:', error);
+
+                    // Modo degradado pero funcional
+                    console.warn('⚠️ La app funcionará pero sin modo offline');
+                }
+            });
+        } else {
+            console.warn('⚠️ ServiceWorker no soportado en este navegador');
+        }
+    </script>
+</body>
+
+</html>

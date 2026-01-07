@@ -1578,9 +1578,9 @@
 }
 
 .stat-icon {
-    font-size: 28px;
-    width: 56px;
-    height: 56px;
+    font-size: 25px;
+    width: 40px;
+    height: 40px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -3316,6 +3316,72 @@ select.form-control {
 .worker-table tfoot tr:last-child td {
     border-bottom: none;
     /* Eliminar borde inferior del último */
+}
+
+/* --------------------------------------------------------------------- */
+/* la parte de los botones flotantes para copiar y compartir */
+/* Estilos para trabajadores seleccionables */
+.selectable-worker {
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border-radius: 10px;
+    padding: 5px;
+    margin-bottom: 15px;
+}
+
+.selectable-worker.selected {
+    background-color: rgba(0, 123, 255, 0.1);
+    border: 2px solid #007bff;
+    box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.3);
+}
+
+/* Botones flotantes para trabajador */
+#floating-actions-trabajador {
+    position: fixed;
+    bottom: 100px;
+    right: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    z-index: 1000;
+}
+
+.floating-btn-share {
+    background-color: #25D366;
+    /* Color WhatsApp */
+    color: white;
+    border: none;
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    font-size: 24px;
+    cursor: pointer;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.floating-btn-copy {
+    background-color: #007bff;
+    /* Color azul */
+    color: white;
+    border: none;
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    font-size: 24px;
+    cursor: pointer;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.floating-btn-share:hover,
+.floating-btn-copy:hover {
+    transform: scale(1.1);
+    transition: transform 0.2s;
 }
 
 /* --------------------------------------------------------------------------------------- */

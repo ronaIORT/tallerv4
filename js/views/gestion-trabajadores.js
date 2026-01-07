@@ -1,4 +1,4 @@
-// gestion-trabajadores.js - Versión tema oscuro compacto
+// gestion-trabajadores.js - Versión tema oscuro compacto con botones flotantes
 import { db } from '../db.js';
 
 export function renderGestionTrabajadores() {
@@ -33,6 +33,16 @@ export function renderGestionTrabajadores() {
             <div class="loading-line short"></div>
           </div>
         </div>
+      </div>
+      
+      <!-- Botones flotantes contextuales -->
+      <div id="floating-actions-trabajador" class="floating-actions" style="display: none;">
+        <button id="btn-floating-edit-trabajador" class="floating-btn floating-btn-edit" onclick="editarTrabajadorSeleccionado()">
+          ✏️
+        </button>
+        <button id="btn-floating-delete-trabajador" class="floating-btn floating-btn-delete" onclick="eliminarTrabajadorSeleccionado()">
+          🗑️
+        </button>
       </div>
     </div>
   `;
@@ -77,7 +87,7 @@ async function cargarTrabajadores() {
 
         // Renderizar lista
         lista.innerHTML = trabajadoresConGanancias.map(trabajador => `
-      <div class="worker-card" data-id="${trabajador.id}">
+      <div class="worker-card selectable-row" data-id="${trabajador.id}">
         <div class="worker-card-main">
           <div class="worker-info">
             <h3 class="worker-name" id="nombre-${trabajador.id}">${trabajador.nombre}</h3>
@@ -91,18 +101,12 @@ async function cargarTrabajadores() {
             <span class="earnings-value positive">$${trabajador.ganancias.toFixed(2)}</span>
           </div>
         </div>
-        <div class="worker-actions">
-          <button class="action-btn edit" onclick="editarTrabajador(${trabajador.id})">
-            <span class="action-icon">✏️</span>
-            <span class="action-text">Editar</span>
-          </button>
-          <button class="action-btn delete" onclick="eliminarTrabajador(${trabajador.id})">
-            <span class="action-icon">🗑️</span>
-            <span class="action-text">Eliminar</span>
-          </button>
-        </div>
       </div>
     `).join('');
+
+        // Inicializar eventos de selección
+        inicializarEventosSeleccionTrabajadores();
+
     } catch (error) {
         console.error("Error al cargar trabajadores:", error);
         document.getElementById('lista-trabajadores').innerHTML = `
@@ -113,6 +117,78 @@ async function cargarTrabajadores() {
             </div>
         `;
     }
+}
+
+// Inicializar eventos de selección de trabajadores
+function inicializarEventosSeleccionTrabajadores() {
+    let trabajadorSeleccionado = null;
+    let trabajadorIdSeleccionado = null;
+
+    document.querySelectorAll('.worker-card.selectable-row').forEach(card => {
+        card.addEventListener('click', (e) => {
+            // Evitar que se active si se hace clic en un enlace o botón dentro
+            if (e.target.tagName === 'BUTTON' || e.target.tagName === 'A') {
+                return;
+            }
+
+            // Quitar selección de todas las filas
+            document.querySelectorAll('.selectable-row').forEach(r => {
+                r.classList.remove('selected');
+            });
+
+            // Agregar selección a la tarjeta clickeada
+            card.classList.add('selected');
+
+            // Guardar datos del trabajador seleccionado
+            trabajadorIdSeleccionado = parseInt(card.dataset.id);
+            trabajadorSeleccionado = true;
+
+            // Mostrar botones flotantes
+            const floatingActions = document.getElementById('floating-actions-trabajador');
+            floatingActions.style.display = 'flex';
+
+            e.stopPropagation();
+        });
+    });
+
+    // Cerrar botones flotantes al hacer clic fuera
+    document.addEventListener('click', (e) => {
+        const floatingActions = document.getElementById('floating-actions-trabajador');
+        const isClickInsideList = e.target.closest('.workers-list');
+        const isClickInsideFloating = e.target.closest('#floating-actions-trabajador');
+
+        if (!isClickInsideList && !isClickInsideFloating && floatingActions) {
+            floatingActions.style.display = 'none';
+            document.querySelectorAll('.selectable-row').forEach(r => {
+                r.classList.remove('selected');
+            });
+            trabajadorSeleccionado = null;
+            trabajadorIdSeleccionado = null;
+        }
+    });
+
+    // Exponer funciones para los botones flotantes
+    window.editarTrabajadorSeleccionado = function () {
+        if (trabajadorIdSeleccionado !== null) {
+            mostrarModalEditarTrabajador(trabajadorIdSeleccionado);
+            // Ocultar botones flotantes después de abrir modal
+            document.getElementById('floating-actions-trabajador').style.display = 'none';
+            document.querySelectorAll('.selectable-row').forEach(r => {
+                r.classList.remove('selected');
+            });
+        }
+    };
+
+    window.eliminarTrabajadorSeleccionado = function () {
+        if (trabajadorIdSeleccionado !== null) {
+            mostrarModalEliminarTrabajador(trabajadorIdSeleccionado);
+            // Ocultar botones flotantes después de abrir modal
+            document.getElementById('floating-actions-trabajador').style.display = 'none';
+            document.querySelectorAll('.selectable-row').forEach(r => {
+                r.classList.remove('selected');
+            });
+        }
+    };
 }
 
 // Agregar nuevo trabajador
@@ -165,93 +241,119 @@ async function agregarTrabajador() {
     }
 }
 
-// Editar trabajador existente
-window.editarTrabajador = async function (id) {
-    const workerCard = document.querySelector(`.worker-card[data-id="${id}"]`);
-    const nombreActual = workerCard.querySelector('.worker-name').textContent;
+// ==================== MODALES TRABAJADORES ====================
 
-    const nuevoNombre = prompt('Editar nombre del trabajador:', nombreActual);
+// Modal: Editar Trabajador
+function mostrarModalEditarTrabajador(trabajadorId) {
+    db.trabajadores.get(trabajadorId).then(trabajador => {
+        if (!trabajador) {
+            mostrarMensaje('❌ Trabajador no encontrado');
+            return;
+        }
 
-    if (nuevoNombre === null || nuevoNombre.trim() === '' || nuevoNombre.trim() === nombreActual) {
+        const modalHTML = `
+            <div class="modal-overlay" onclick="cerrarModal(event)">
+                <div class="modal-container">
+                    <h3 class="modal-title">✏️ Editar Trabajador</h3>
+                    
+                    <div class="form-group">
+                        <label for="modal-nombre-trabajador">Nombre del Trabajador</label>
+                        <input type="text" class="form-control" id="modal-nombre-trabajador" 
+                               value="${trabajador.nombre}" placeholder="Ingrese nombre completo">
+                        <small class="error-message" id="modal-error-nombre"></small>
+                    </div>
+                    
+                    <div class="modal-actions">
+                        <button class="btn-secondary" onclick="cerrarModal()">Cancelar</button>
+                        <button class="btn-primary" onclick="guardarTrabajadorEditado(${trabajadorId})">
+                            Guardar Cambios
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        mostrarModal(modalHTML);
+    }).catch(error => {
+        console.error("Error al cargar trabajador para edición:", error);
+        mostrarMensaje('❌ Error al cargar los datos del trabajador');
+    });
+}
+
+// Modal: Eliminar Trabajador
+function mostrarModalEliminarTrabajador(trabajadorId) {
+    db.trabajadores.get(trabajadorId).then(trabajador => {
+        if (!trabajador) {
+            mostrarMensaje('❌ Trabajador no encontrado');
+            return;
+        }
+
+        const modalHTML = `
+            <div class="modal-overlay" onclick="cerrarModal(event)">
+                <div class="modal-container">
+                    <h3 class="modal-title">⚠️ Confirmar Eliminación</h3>
+                    <p class="modal-message">
+                        ¿Está seguro de eliminar al trabajador <strong>"${trabajador.nombre}"</strong>?
+                    </p>
+                    <p class="warning-message">
+                        ⚠️ Esta acción no se puede deshacer.
+                    </p>
+                    <div class="modal-actions">
+                        <button class="btn-secondary" onclick="cerrarModal()">Cancelar</button>
+                        <button class="btn-danger" onclick="confirmarEliminarTrabajador(${trabajadorId})">Eliminar</button>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        mostrarModal(modalHTML);
+    }).catch(error => {
+        console.error("Error al cargar trabajador para eliminación:", error);
+        mostrarMensaje('❌ Error al cargar los datos del trabajador');
+    });
+}
+
+// Guardar trabajador editado
+window.guardarTrabajadorEditado = async function (trabajadorId) {
+    const nombreInput = document.getElementById('modal-nombre-trabajador');
+    const nombre = nombreInput.value.trim();
+
+    // Validaciones
+    if (!nombre) {
+        document.getElementById('modal-error-nombre').textContent = 'El nombre no puede estar vacío';
         return;
     }
 
-    const nombreLimpiado = nuevoNombre.trim();
+    if (nombre.length < 3) {
+        document.getElementById('modal-error-nombre').textContent = 'El nombre debe tener al menos 3 caracteres';
+        return;
+    }
 
     try {
         // Verificar si ya existe un trabajador con el nuevo nombre
         const trabajadorExistente = await db.trabajadores
             .where('nombre')
-            .equalsIgnoreCase(nombreLimpiado)
+            .equalsIgnoreCase(nombre)
             .first();
 
-        if (trabajadorExistente && trabajadorExistente.id !== id) {
-            mostrarMensaje('❌ Ya existe un trabajador con este nombre');
+        if (trabajadorExistente && trabajadorExistente.id !== trabajadorId) {
+            document.getElementById('modal-error-nombre').textContent = 'Ya existe un trabajador con este nombre';
             return;
         }
 
         // Actualizar trabajador
-        await db.trabajadores.update(id, { nombre: nombreLimpiado });
+        await db.trabajadores.update(trabajadorId, { nombre: nombre });
 
-        // Actualizar visualmente
-        workerCard.querySelector('.worker-name').textContent = nombreLimpiado;
+        // Cerrar modal y recargar
+        cerrarModal();
+        await cargarTrabajadores();
         mostrarMensaje('✅ Nombre actualizado correctamente');
+
     } catch (error) {
-        console.error("Error al editar trabajador:", error);
-        mostrarMensaje('❌ Error al actualizar. Intente nuevamente.');
+        console.error("Error al guardar trabajador:", error);
+        mostrarMensaje(`❌ Error: ${error.message || 'No se pudo guardar el trabajador'}`);
     }
 };
-
-// Eliminar trabajador
-window.eliminarTrabajador = async function (id) {
-    const workerCard = document.querySelector(`.worker-card[data-id="${id}"]`);
-    const nombre = workerCard.querySelector('.worker-name').textContent;
-
-    const modalHTML = `
-        <div class="modal-overlay" onclick="cerrarModal(event)">
-            <div class="modal-container">
-                <h3 class="modal-title">⚠️ Confirmar Eliminación</h3>
-                <p class="modal-message">
-                    ¿Está seguro de eliminar al trabajador <strong>"${nombre}"</strong>?
-                </p>
-                <p class="warning-message">
-                    ⚠️ Esta acción no se puede deshacer.
-                </p>
-                <div class="modal-actions">
-                    <button class="btn-secondary" onclick="cerrarModal()">Cancelar</button>
-                    <button class="btn-danger" onclick="confirmarEliminarTrabajador(${id})">Eliminar</button>
-                </div>
-            </div>
-        </div>
-    `;
-
-    mostrarModal(modalHTML);
-};
-
-// Función auxiliar para mostrar modal
-function mostrarModal(contenidoHTML) {
-    const modalExistente = document.querySelector('.modal-overlay');
-    if (modalExistente) modalExistente.remove();
-
-    const modal = document.createElement('div');
-    modal.innerHTML = contenidoHTML;
-    document.body.appendChild(modal);
-    document.body.style.overflow = 'hidden';
-}
-
-// Función auxiliar para cerrar modal
-function cerrarModal(event) {
-    const overlay = document.querySelector('.modal-overlay');
-    if (!overlay) return;
-
-    if (event && event.target.classList.contains('modal-overlay')) {
-        document.body.style.overflow = 'auto';
-        overlay.remove();
-    } else if (!event) {
-        document.body.style.overflow = 'auto';
-        overlay.remove();
-    }
-}
 
 // Confirmar eliminación de trabajador
 window.confirmarEliminarTrabajador = async function (id) {
@@ -289,6 +391,33 @@ window.confirmarEliminarTrabajador = async function (id) {
         cerrarModal();
     }
 };
+
+// ==================== FUNCIONES AUXILIARES ====================
+
+// Función auxiliar para mostrar modal
+function mostrarModal(contenidoHTML) {
+    const modalExistente = document.querySelector('.modal-overlay');
+    if (modalExistente) modalExistente.remove();
+
+    const modal = document.createElement('div');
+    modal.innerHTML = contenidoHTML;
+    document.body.appendChild(modal);
+    document.body.style.overflow = 'hidden';
+}
+
+// Función auxiliar para cerrar modal
+function cerrarModal(event) {
+    const overlay = document.querySelector('.modal-overlay');
+    if (!overlay) return;
+
+    if (event && event.target.classList.contains('modal-overlay')) {
+        document.body.style.overflow = 'auto';
+        overlay.remove();
+    } else if (!event) {
+        document.body.style.overflow = 'auto';
+        overlay.remove();
+    }
+}
 
 // Calcular ganancias de un trabajador en cortes activos
 async function calcularGananciasTrabajador(trabajadorId) {

@@ -5,6 +5,37 @@ import { renderGestionTrabajadores } from './views/gestion-trabajadores.js';
 import { renderGestionPrendas, renderVerPrenda, renderEditarPrenda } from './views/gestion-prendas.js';
 import { renderAdministrarTareas } from './views/administrar-tareas.js';
 
+// ===========================================================================
+// 🔧 DESHABILITAR SERVICE WORKER DURANTE DESARROLLO
+// ===========================================================================
+if (window.location.hostname === 'localhost' ||
+    window.location.hostname === '127.0.0.1' ||
+    window.location.port === '5500' ||  // Live Server port
+    window.location.port === '8080' ||  // Otros puertos comunes
+    window.location.port === '3000') {
+
+    console.log('🔧 MODO DESARROLLO: Deshabilitando Service Worker...');
+
+    if ('serviceWorker' in navigator) {
+        // Desregistrar cualquier Service Worker existente
+        navigator.serviceWorker.getRegistrations().then(registrations => {
+            registrations.forEach(registration => {
+                registration.unregister();
+                console.log('✅ Service Worker deshabilitado para desarrollo');
+            });
+        });
+
+        // Prevenir nuevos registros durante la sesión
+        const originalRegister = navigator.serviceWorker.register;
+        navigator.serviceWorker.register = function () {
+            console.warn('⚠️ Service Worker bloqueado en modo desarrollo');
+            return Promise.reject(new Error('Modo desarrollo activo - Service Worker deshabilitado'));
+        };
+    }
+}
+
+// ===========================================================================
+
 // Función para cargar una vista
 async function cargarVista(ruta) {
     const app = document.getElementById('app');
@@ -14,7 +45,7 @@ async function cargarVista(ruta) {
         app.innerHTML = `
             <div class="mobile-container">
                 <div class="header">
-                    <h1 class="small-title">Dashboard</h1>
+                    <h1 class="small-title">Dashboard Taller</h1>
                 </div>
                 
                 <div class="dashboard-content">
@@ -30,7 +61,7 @@ async function cargarVista(ruta) {
                         <div class="stat-card">
                             <div class="stat-icon">💰</div>
                             <div class="stat-content">
-                                <div class="stat-value" data-prefix="$">2,540</div>
+                                <div class="stat-value" data-prefix="Bs">0</div>
                                 <div class="stat-label">Ganancias Totales</div>
                             </div>
                         </div>
@@ -249,9 +280,9 @@ async function cargarEstadisticas() {
                     </div>
                 </div>
                 <div class="stat-card">
-                    <div class="stat-icon">💰</div>
+                    
                     <div class="stat-content">
-                        <div class="stat-value">$${gananciasRealesTotales.toFixed(0)}</div>
+                        <div class="stat-value">Bs ${gananciasRealesTotales.toFixed(0)}</div>
                         <div class="stat-label">Ganancias Reales</div>
                     </div>
                 </div>

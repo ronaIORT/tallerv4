@@ -1,4 +1,4 @@
-// gestion-prendas.js - Versión tema oscuro compacto
+// gestion-prendas.js - Versión tema oscuro compacto con botones flotantes
 import { db } from '../db.js';
 
 export function renderGestionPrendas() {
@@ -34,6 +34,16 @@ export function renderGestionPrendas() {
           </div>
         </div>
       </div>
+      
+      <!-- Botones flotantes contextuales -->
+      <div id="floating-actions-prenda" class="floating-actions" style="display: none;">
+        <button id="btn-floating-ver-prenda" class="floating-btn floating-btn-view" onclick="verPrendaSeleccionada()">
+          👁️
+        </button>
+        <button id="btn-floating-editar-prenda" class="floating-btn floating-btn-edit" onclick="editarPrendaSeleccionada()">
+          ✏️
+        </button>
+      </div>
     </div>
   `;
 
@@ -66,7 +76,7 @@ async function cargarPrendas() {
 
     // Renderizar lista de prendas
     lista.innerHTML = prendas.map(prenda => `
-      <div class="prenda-card" data-id="${prenda.id}">
+      <div class="prenda-card selectable-row" data-id="${prenda.id}">
         <div class="prenda-card-main">
           <div class="prenda-info">
             <h3 class="prenda-name">${prenda.nombre}</h3>
@@ -80,18 +90,11 @@ async function cargarPrendas() {
             <span class="summary-value">$${prenda.tareas.reduce((sum, tarea) => sum + tarea.precioUnitario, 0).toFixed(2)}</span>
           </div>
         </div>
-        <div class="prenda-actions">
-          <button class="action-btn primary" onclick="window.location.hash = '#ver-prenda/${prenda.id}'">
-            <span class="action-icon">👁️</span>
-            <span class="action-text">Ver</span>
-          </button>
-          <button class="action-btn" onclick="window.location.hash = '#editar-prenda/${prenda.id}'; event.stopPropagation();">
-            <span class="action-icon">✏️</span>
-            <span class="action-text">Editar</span>
-          </button>
-        </div>
       </div>
     `).join('');
+
+    // Inicializar eventos de selección
+    inicializarEventosSeleccionPrendas();
   } catch (error) {
     console.error("Error al cargar prendas:", error);
     document.getElementById('lista-prendas').innerHTML = `
@@ -102,6 +105,68 @@ async function cargarPrendas() {
       </div>
     `;
   }
+}
+
+// Inicializar eventos de selección de prendas
+function inicializarEventosSeleccionPrendas() {
+  let prendaSeleccionada = null;
+  let prendaIdSeleccionada = null;
+
+  document.querySelectorAll('.prenda-card.selectable-row').forEach(card => {
+    card.addEventListener('click', (e) => {
+      // Evitar que se active si se hace clic en un enlace o botón dentro
+      if (e.target.tagName === 'BUTTON' || e.target.tagName === 'A') {
+        return;
+      }
+
+      // Quitar selección de todas las filas
+      document.querySelectorAll('.selectable-row').forEach(r => {
+        r.classList.remove('selected');
+      });
+
+      // Agregar selección a la tarjeta clickeada
+      card.classList.add('selected');
+
+      // Guardar datos de la prenda seleccionada
+      prendaIdSeleccionada = parseInt(card.dataset.id);
+      prendaSeleccionada = true;
+
+      // Mostrar botones flotantes
+      const floatingActions = document.getElementById('floating-actions-prenda');
+      floatingActions.style.display = 'flex';
+
+      e.stopPropagation();
+    });
+  });
+
+  // Cerrar botones flotantes al hacer clic fuera
+  document.addEventListener('click', (e) => {
+    const floatingActions = document.getElementById('floating-actions-prenda');
+    const isClickInsideList = e.target.closest('.prendas-list');
+    const isClickInsideFloating = e.target.closest('#floating-actions-prenda');
+
+    if (!isClickInsideList && !isClickInsideFloating && floatingActions) {
+      floatingActions.style.display = 'none';
+      document.querySelectorAll('.selectable-row').forEach(r => {
+        r.classList.remove('selected');
+      });
+      prendaSeleccionada = null;
+      prendaIdSeleccionada = null;
+    }
+  });
+
+  // Exponer funciones para los botones flotantes
+  window.verPrendaSeleccionada = function () {
+    if (prendaIdSeleccionada !== null) {
+      window.location.hash = `#ver-prenda/${prendaIdSeleccionada}`;
+    }
+  };
+
+  window.editarPrendaSeleccionada = function () {
+    if (prendaIdSeleccionada !== null) {
+      window.location.hash = `#editar-prenda/${prendaIdSeleccionada}`;
+    }
+  };
 }
 
 // Crear nueva prenda
@@ -159,6 +224,8 @@ async function crearPrenda() {
   }
 }
 
+// ==================== PANTALLA VER PRENDA ====================
+
 // Ver detalles de una prenda
 export async function renderVerPrenda(id) {
   try {
@@ -186,7 +253,7 @@ export async function renderVerPrenda(id) {
               <thead>
                 <tr>
                   <th>Tarea</th>
-                  <th>Precio Unitario</th>
+                  <th>Uni</th>
                 </tr>
               </thead>
               <tbody>
@@ -235,6 +302,7 @@ export async function renderVerPrenda(id) {
   }
 }
 
+// ==================== PANTALLA EDITAR PRENDA ====================
 // Editar una prenda existente
 export async function renderEditarPrenda(id) {
   try {
@@ -273,14 +341,13 @@ export async function renderEditarPrenda(id) {
               <thead>
                 <tr>
                   <th>Tarea</th>
-                  <th>Precio Unitario</th>
-                  <th>Acciones</th>
+                  <th>Uni</th>
                 </tr>
               </thead>
               <tbody id="tareas-lista-edit">
                 ${prenda.tareas.length === 0
         ? `<tr>
-                    <td colspan="3" class="no-data">
+                    <td colspan="2" class="no-data">
                       <div class="empty-state">
                         <div class="empty-icon">📭</div>
                         <p>No hay tareas definidas</p>
@@ -288,23 +355,25 @@ export async function renderEditarPrenda(id) {
                     </td>
                   </tr>`
         : prenda.tareas.map((tarea, index) => `
-                    <tr data-index="${index}">
+                    <tr class="selectable-row" data-index="${index}">
                       <td class="task-name">${tarea.nombre}</td>
                       <td class="task-price-cell">
                         <input type="number" class="task-price-edit form-control" 
                                value="${tarea.precioUnitario.toFixed(2)}" 
                                step="0.01" min="0" data-index="${index}">
                       </td>
-                      <td class="task-actions">
-                        <button class="action-btn delete small" onclick="eliminarTareaPrenda(${id}, ${index})">
-                          <span class="action-icon">🗑️</span>
-                        </button>
-                      </td>
                     </tr>
                   `).join('')
       }
               </tbody>
             </table>
+          </div>
+          
+          <!-- Botones flotantes para tareas -->
+          <div id="floating-actions-tarea" class="floating-actions" style="display: none;">
+            <button id="btn-floating-eliminar-tarea" class="floating-btn floating-btn-delete" onclick="eliminarTareaSeleccionada()">
+              🗑️
+            </button>
           </div>
           
           <div class="form-card">
@@ -333,11 +402,23 @@ export async function renderEditarPrenda(id) {
             <span id="costo-total" class="money positive">$${prenda.tareas.reduce((sum, tarea) => sum + tarea.precioUnitario, 0).toFixed(2)}</span>
           </div>
         </div>
+        
+        <!-- NUEVO BOTÓN PARA CREAR COPIA DE PRENDA -->
+        <div class="actions-section">
+          <button id="btn-crear-copia-prenda" class="btn-secondary" style="margin-top: 1rem;">
+            📋 Crear nueva prenda a partir de esta prenda
+          </button>
+        </div>
       </div>
     `;
 
     // Eventos para edición
     document.getElementById('btn-agregar-tarea').addEventListener('click', () => agregarTarea(id));
+
+    // NUEVO: Evento para el botón de crear copia
+    document.getElementById('btn-crear-copia-prenda').addEventListener('click', () => {
+      mostrarModalCrearCopiaPrenda(id, prenda);
+    });
 
     // Guardar automáticamente cuando se cambia el nombre
     document.getElementById('nombre-editable').addEventListener('blur', () => guardarNombrePrenda(id));
@@ -347,12 +428,218 @@ export async function renderEditarPrenda(id) {
       input.addEventListener('blur', () => guardarPrecioTarea(id, input.dataset.index, input.value));
       input.addEventListener('input', recalcularTotalesEdicion);
     });
+
+    // Inicializar eventos de selección para tareas
+    inicializarEventosSeleccionTareas(id, prenda);
+
   } catch (error) {
     console.error("Error al editar prenda:", error);
     mostrarMensaje('❌ Error al cargar la edición de la prenda.');
     window.location.hash = '#gestion-prendas';
   }
 }
+
+// ==================== MODAL CREAR COPIA DE PRENDA ====================
+// Mostrar modal para crear copia de prenda
+function mostrarModalCrearCopiaPrenda(prendaIdOriginal, prendaOriginal) {
+  const modalHTML = `
+    <div class="modal-overlay" onclick="cerrarModalCrearCopia(event)">
+      <div class="modal-container">
+        <h3 class="modal-title">📋 Crear nueva prenda</h3>
+        <p class="modal-message">
+          Se creará una nueva prenda copiando todas las tareas y precios de <strong>"${prendaOriginal.nombre}"</strong>.
+        </p>
+        
+        <div class="form-group">
+          <label for="nombre-nueva-prenda">Nombre de la nueva prenda</label>
+          <input type="text" id="nombre-nueva-prenda" class="form-control" 
+                 placeholder="Ej: ${prendaOriginal.nombre} (Copia)" 
+                 value="${prendaOriginal.nombre} (Copia)">
+          <small id="error-nombre-copia" class="error-message"></small>
+        </div>
+        
+        <div class="modal-info">
+          <p><strong>📊 Información de la copia:</strong></p>
+          <ul class="modal-info-list">
+            <li>• Se copiarán ${prendaOriginal.tareas.length} tareas</li>
+            <li>• Se mantendrán todos los precios unitarios</li>
+            <li>• La prenda original se conservará sin cambios</li>
+          </ul>
+        </div>
+        
+        <div class="modal-actions">
+          <button class="btn-secondary" onclick="cerrarModalCrearCopia()">Cancelar</button>
+          <button class="btn-primary" onclick="confirmarCrearCopiaPrenda(${prendaIdOriginal})">Guardar</button>
+        </div>
+      </div>
+    </div>
+  `;
+
+  mostrarModal(modalHTML);
+
+  // Enfocar el input del nombre
+  setTimeout(() => {
+    const input = document.getElementById('nombre-nueva-prenda');
+    if (input) {
+      input.focus();
+      input.select();
+    }
+  }, 100);
+}
+// Cerrar modal de crear copia
+function cerrarModalCrearCopia(event) {
+  const overlay = document.querySelector('.modal-overlay');
+  if (!overlay) return;
+
+  if (event && event.target.classList.contains('modal-overlay')) {
+    document.body.style.overflow = 'auto';
+    overlay.remove();
+  } else if (!event) {
+    document.body.style.overflow = 'auto';
+    overlay.remove();
+  }
+}
+
+// Confirmar creación de copia de prenda
+window.confirmarCrearCopiaPrenda = async function (prendaIdOriginal) {
+  try {
+    const input = document.getElementById('nombre-nueva-prenda');
+    const errorEl = document.getElementById('error-nombre-copia');
+    const nombreNuevaPrenda = input.value.trim();
+
+    errorEl.textContent = '';
+    input.classList.remove('error');
+
+    // Validaciones
+    if (!nombreNuevaPrenda) {
+      errorEl.textContent = 'El nombre no puede estar vacío';
+      input.classList.add('error');
+      return;
+    }
+
+    if (nombreNuevaPrenda.length < 3) {
+      errorEl.textContent = 'El nombre debe tener al menos 3 caracteres';
+      input.classList.add('error');
+      return;
+    }
+
+    // Obtener prenda original
+    const prendaOriginal = await db.prendas.get(prendaIdOriginal);
+    if (!prendaOriginal) {
+      mostrarMensaje('❌ No se encontró la prenda original');
+      cerrarModalCrearCopia();
+      return;
+    }
+
+    // Verificar si ya existe una prenda con el nuevo nombre
+    const prendaExistente = await db.prendas
+      .where('nombre')
+      .equalsIgnoreCase(nombreNuevaPrenda)
+      .first();
+
+    if (prendaExistente) {
+      errorEl.textContent = 'Ya existe una prenda con este nombre';
+      input.classList.add('error');
+      return;
+    }
+
+    // Crear copia profunda de las tareas
+    const tareasCopia = JSON.parse(JSON.stringify(prendaOriginal.tareas));
+
+    // Crear nueva prenda con las tareas copiadas
+    const nuevaPrenda = {
+      nombre: nombreNuevaPrenda,
+      tareas: tareasCopia
+    };
+
+    // Guardar en la base de datos
+    await db.prendas.add(nuevaPrenda);
+
+    // Cerrar modal
+    cerrarModalCrearCopia();
+
+    // Mostrar mensaje de éxito
+    mostrarMensaje(`✅ Prenda "${nombreNuevaPrenda}" creada correctamente`);
+
+    // Redirigir a gestión de prendas después de un breve delay
+    setTimeout(() => {
+      window.location.hash = '#gestion-prendas';
+    }, 500);
+
+  } catch (error) {
+    console.error("Error al crear copia de prenda:", error);
+    const errorEl = document.getElementById('error-nombre-copia');
+    if (errorEl) {
+      errorEl.textContent = 'Error al crear la prenda. Intente nuevamente.';
+    }
+    mostrarMensaje('❌ Error al crear la prenda copia');
+  }
+};
+
+// ==================== FUNCIONES GENERALES (Actualizar) ====================
+
+// Inicializar eventos de selección de tareas en la edición de prenda
+function inicializarEventosSeleccionTareas(prendaId, prenda) {
+  let tareaSeleccionada = null;
+  let tareaIndexSeleccionada = null;
+
+  document.querySelectorAll('#tareas-lista-edit .selectable-row').forEach(row => {
+    row.addEventListener('click', (e) => {
+      // Evitar que se active si se hace clic en un input dentro de la fila
+      if (e.target.tagName === 'INPUT') {
+        return;
+      }
+
+      // Quitar selección de todas las filas
+      document.querySelectorAll('.selectable-row').forEach(r => {
+        r.classList.remove('selected');
+      });
+
+      // Agregar selección a la fila clickeada
+      row.classList.add('selected');
+
+      // Guardar datos de la tarea seleccionada
+      tareaIndexSeleccionada = parseInt(row.dataset.index);
+      tareaSeleccionada = prenda.tareas[tareaIndexSeleccionada];
+
+      // Mostrar botones flotantes
+      const floatingActions = document.getElementById('floating-actions-tarea');
+      floatingActions.style.display = 'flex';
+
+      e.stopPropagation();
+    });
+  });
+
+  // Cerrar botones flotantes al hacer clic fuera
+  document.addEventListener('click', (e) => {
+    const floatingActions = document.getElementById('floating-actions-tarea');
+    const isClickInsideTable = e.target.closest('.table-container');
+    const isClickInsideFloating = e.target.closest('#floating-actions-tarea');
+
+    if (!isClickInsideTable && !isClickInsideFloating && floatingActions) {
+      floatingActions.style.display = 'none';
+      document.querySelectorAll('.selectable-row').forEach(r => {
+        r.classList.remove('selected');
+      });
+      tareaSeleccionada = null;
+      tareaIndexSeleccionada = null;
+    }
+  });
+
+  // Exponer función para eliminar tarea seleccionada
+  window.eliminarTareaSeleccionada = function () {
+    if (tareaSeleccionada !== null && tareaIndexSeleccionada !== null) {
+      mostrarModalEliminarTareaPrenda(prendaId, prenda, tareaIndexSeleccionada);
+      // Ocultar botones flotantes después de abrir modal
+      document.getElementById('floating-actions-tarea').style.display = 'none';
+      document.querySelectorAll('.selectable-row').forEach(r => {
+        r.classList.remove('selected');
+      });
+    }
+  };
+}
+
+// ==================== FUNCIONES AUXILIARES EDICIÓN ====================
 
 // Agregar nueva tarea a una prenda
 async function agregarTarea(prendaId) {
@@ -401,66 +688,12 @@ async function agregarTarea(prendaId) {
     precioInput.classList.remove('error');
 
     // Recargar edición
-    // window.location.hash = `#editar-prenda/${prendaId}`;
-    actualizarTablaTareas(prendaId, prenda.tareas);
+    await renderEditarPrenda(prendaId);
     mostrarMensaje('✅ Tarea agregada correctamente');
   } catch (error) {
     console.error("Error al agregar tarea:", error);
     mostrarMensaje('❌ Error al agregar tarea. Intente nuevamente.');
   }
-}
-
-// Actualizar tabla de tareas dinámicamente sin recargar
-function actualizarTablaTareas(prendaId, tareas) {
-  const tbody = document.getElementById('tareas-lista-edit');
-  const totalTareasElement = document.getElementById('total-tareas');
-  const costoTotalElement = document.getElementById('costo-total');
-
-  if (tareas.length === 0) {
-    tbody.innerHTML = `
-      <tr>
-        <td colspan="3" class="no-data">
-          <div class="empty-state">
-            <div class="empty-icon">📭</div>
-            <p>No hay tareas definidas</p>
-          </div>
-        </td>
-      </tr>
-    `;
-  } else {
-    tbody.innerHTML = tareas.map((tarea, index) => `
-      <tr data-index="${index}">
-        <td class="task-name">${tarea.nombre}</td>
-        <td class="task-price-cell">
-          <input type="number" class="task-price-edit form-control" 
-                 value="${tarea.precioUnitario.toFixed(2)}" 
-                 step="0.01" min="0" data-index="${index}">
-        </td>
-        <td class="task-actions">
-          <button class="action-btn delete small" onclick="eliminarTareaPrenda(${prendaId}, ${index})">
-            <span class="action-icon">🗑️</span>
-          </button>
-        </td>
-      </tr>
-    `).join('');
-  }
-
-  // Actualizar los totales
-  if (totalTareasElement) {
-    totalTareasElement.textContent = tareas.length;
-  }
-
-  if (costoTotalElement) {
-    const costoTotal = tareas.reduce((sum, tarea) => sum + tarea.precioUnitario, 0);
-    costoTotalElement.textContent = `$${costoTotal.toFixed(2)}`;
-    costoTotalElement.className = `money ${costoTotal > 0 ? 'positive' : ''}`;
-  }
-
-  // Reasignar eventos a los inputs de precio
-  document.querySelectorAll('.task-price-edit').forEach(input => {
-    input.addEventListener('blur', () => guardarPrecioTarea(prendaId, input.dataset.index, input.value));
-    input.addEventListener('input', recalcularTotalesEdicion);
-  });
 }
 
 // Guardar nombre de prenda cuando se edita
@@ -502,6 +735,8 @@ async function guardarNombrePrenda(prendaId) {
       nombre: nuevoNombre
     });
 
+    // Actualizar título en la pantalla
+    document.querySelector('.small-title').textContent = `Editar ${nuevoNombre}`;
     mostrarMensaje('✅ Nombre actualizado');
   } catch (error) {
     console.error("Error al guardar nombre:", error);
@@ -526,6 +761,8 @@ async function guardarPrecioTarea(prendaId, tareaIndex, nuevoPrecio) {
     // Actualizar en la base de datos
     await db.prendas.update(prendaId, { tareas: prenda.tareas });
 
+    // Actualizar totales
+    recalcularTotalesEdicion();
     mostrarMensaje('✅ Precio actualizado');
   } catch (error) {
     console.error("Error al guardar precio de tarea:", error);
@@ -533,11 +770,10 @@ async function guardarPrecioTarea(prendaId, tareaIndex, nuevoPrecio) {
   }
 }
 
-// Eliminar tarea de una prenda
-window.eliminarTareaPrenda = async function (prendaId, tareaIndex) {
-  const prenda = await db.prendas.get(prendaId);
-  if (!prenda) return;
+// ==================== MODALES ====================
 
+// Modal: Eliminar Tarea de Prenda
+function mostrarModalEliminarTareaPrenda(prendaId, prenda, tareaIndex) {
   const tarea = prenda.tareas[tareaIndex];
 
   const modalHTML = `
@@ -559,10 +795,9 @@ window.eliminarTareaPrenda = async function (prendaId, tareaIndex) {
   `;
 
   mostrarModal(modalHTML);
-};
+}
 
 // Confirmar eliminación de tarea
-// Confirmar eliminación de tarea (VERSIÓN MEJORADA)
 window.confirmarEliminarTareaPrenda = async function (prendaId, tareaIndex) {
   try {
     const prenda = await db.prendas.get(prendaId);
@@ -574,18 +809,19 @@ window.confirmarEliminarTareaPrenda = async function (prendaId, tareaIndex) {
     // Actualizar en la base de datos
     await db.prendas.update(prendaId, { tareas: prenda.tareas });
 
-    // ✅ EN LUGAR DE RECARGAR, ACTUALIZAMOS LA TABLA DINÁMICAMENTE
-    actualizarTablaTareas(prendaId, prenda.tareas);
-
-    // Cerrar modal
+    // Recargar pantalla de edición
+    await renderEditarPrenda(prendaId);
     cerrarModal();
-
     mostrarMensaje('✅ Tarea eliminada correctamente');
+
   } catch (error) {
+    cerrarModal();
     console.error("Error al eliminar tarea:", error);
     mostrarMensaje('❌ Error al eliminar tarea. Intente nuevamente.');
   }
 };
+
+// ==================== FUNCIONES GENERALES ====================
 
 // Recalcular totales en tiempo real durante edición
 function recalcularTotalesEdicion() {
@@ -607,7 +843,7 @@ function recalcularTotalesEdicion() {
   }
 }
 
-// Mostrar modal
+// Mostrar modal (actualizada para soportar ambos tipos de modal)
 function mostrarModal(contenidoHTML) {
   const modalExistente = document.querySelector('.modal-overlay');
   if (modalExistente) modalExistente.remove();
@@ -618,7 +854,7 @@ function mostrarModal(contenidoHTML) {
   document.body.style.overflow = 'hidden';
 }
 
-// Cerrar modal
+// cerrar modal genérico
 function cerrarModal(event) {
   const overlay = document.querySelector('.modal-overlay');
   if (!overlay) return;
@@ -648,3 +884,4 @@ function mostrarMensaje(mensaje) {
 // Exponer funciones globales
 window.cargarPrendas = cargarPrendas;
 window.cerrarModal = cerrarModal;
+window.cerrarModalCrearCopia = cerrarModalCrearCopia;

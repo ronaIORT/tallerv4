@@ -1,5 +1,8 @@
 // administrar-tareas.js
 import { db } from '../db.js';
+// hola hola mundo cruel
+// hola hola mundo cruel
+// hola hola mundo cruel
 // ----------------------------------------------------------------------
 export function renderAdministrarTareas(corteId) {
   // Usar el nombre personalizado si existe, sino el original  
@@ -346,6 +349,9 @@ async function cargarPestanaCorte(corteId) {
 // ----------------------------------------------------------------------
 // -------------------------PESTANA TRABAJADOR------------------------------
 // ---------------------------------------------------------------------
+// ----------------------------------------------------------------------
+// -------------------------PESTANA TRABAJADOR------------------------------
+// ---------------------------------------------------------------------
 // Cargar la pestaña "Trabajador" con resumen por trabajador
 async function cargarPestanaTrabajador(corteId) {
   const content = document.getElementById('tab-content');
@@ -420,7 +426,10 @@ async function cargarPestanaTrabajador(corteId) {
       }).join('');
 
       return `
-        <div class="worker-section">
+        <div class="worker-section selectable-worker" 
+             data-trabajador-id="${trabajadorId}" 
+             data-trabajador-nombre="${nombreTrabajador}"
+             onclick="seleccionarTrabajador(this, ${trabajadorId}, '${nombreTrabajador.replace(/'/g, "\\'")}')">
           <h3 class="worker-title">${nombreTrabajador}</h3>
           <div class="table-container">
             <table class="worker-table">
@@ -478,8 +487,21 @@ async function cargarPestanaTrabajador(corteId) {
             </button>
           </div>
         ` : ''}
+
+        <!-- Botones flotantes para compartir y copiar -->
+        <div id="floating-actions-trabajador" class="floating-actions" style="display: none;">
+          <button id="btn-floating-share" class="floating-btn floating-btn-share" onclick="compartirTrabajadorSeleccionado()">
+            📤
+          </button>
+          <button id="btn-floating-copy" class="floating-btn floating-btn-copy" onclick="copiarTrabajadorSeleccionado()">
+            📋
+          </button>
+        </div>
       </div>
     `;
+
+    // Inicializar eventos para selección de trabajadores
+    inicializarEventosSeleccionTrabajador(corte);
 
   } catch (error) {
     console.error("Error al cargar pestaña Trabajador:", error);
@@ -488,7 +510,183 @@ async function cargarPestanaTrabajador(corteId) {
 }
 
 // ----------------------------------------------------------------------
-// -----------------------PESTANA EDITAR CORTE------------------------------
+// FUNCIONES PARA SELECCIÓN Y COMPARTIR TRABAJADOR
+// ----------------------------------------------------------------------
+
+// Variables globales para almacenar el trabajador seleccionado
+let trabajadorSeleccionadoId = null;
+let trabajadorSeleccionadoNombre = null;
+let trabajadorSeleccionadoAsignaciones = null;
+let corteActualParaCompartir = null;
+
+// Inicializar eventos para selección de trabajadores
+function inicializarEventosSeleccionTrabajador(corte) {
+  corteActualParaCompartir = corte;
+
+  // Cerrar botones flotantes al hacer clic fuera
+  document.addEventListener('click', (e) => {
+    const floatingActions = document.getElementById('floating-actions-trabajador');
+    const isClickInsideWorker = e.target.closest('.selectable-worker');
+    const isClickInsideFloating = e.target.closest('#floating-actions-trabajador');
+
+    if (!isClickInsideWorker && !isClickInsideFloating && floatingActions) {
+      floatingActions.style.display = 'none';
+      document.querySelectorAll('.selectable-worker').forEach(w => {
+        w.classList.remove('selected');
+      });
+      trabajadorSeleccionadoId = null;
+      trabajadorSeleccionadoNombre = null;
+      trabajadorSeleccionadoAsignaciones = null;
+    }
+  });
+}
+
+// Seleccionar un trabajador (llamado desde onclick del HTML)
+window.seleccionarTrabajador = function (element, trabajadorId, nombreTrabajador) {
+  // Quitar selección de todos los trabajadores
+  document.querySelectorAll('.selectable-worker').forEach(w => {
+    w.classList.remove('selected');
+  });
+
+  // Agregar selección al trabajador clickeado
+  element.classList.add('selected');
+
+  // Guardar datos del trabajador seleccionado
+  trabajadorSeleccionadoId = trabajadorId;
+  trabajadorSeleccionadoNombre = nombreTrabajador;
+
+  // Obtener las asignaciones de este trabajador
+  if (corteActualParaCompartir) {
+    trabajadorSeleccionadoAsignaciones = [];
+    corteActualParaCompartir.tareas.forEach(tarea => {
+      tarea.asignaciones.forEach(asignacion => {
+        if (parseInt(asignacion.trabajadorId) === parseInt(trabajadorId)) {
+          trabajadorSeleccionadoAsignaciones.push({
+            tareaNombre: tarea.nombre,
+            cantidad: asignacion.cantidad,
+            precioUnitario: tarea.precioUnitario,
+            total: asignacion.cantidad * tarea.precioUnitario
+          });
+        }
+      });
+    });
+  }
+
+  // Mostrar botones flotantes
+  const floatingActions = document.getElementById('floating-actions-trabajador');
+  if (floatingActions) {
+    floatingActions.style.display = 'flex';
+  }
+};
+
+// Compartir trabajador seleccionado usando Web Share API
+window.compartirTrabajadorSeleccionado = async function () {
+  if (!trabajadorSeleccionadoId || !trabajadorSeleccionadoAsignaciones || !corteActualParaCompartir) {
+    mostrarMensaje('❌ No hay trabajador seleccionado');
+    return;
+  }
+
+  // Generar texto para compartir
+  const texto = formatearTextoCompartir(
+    trabajadorSeleccionadoNombre,
+    trabajadorSeleccionadoAsignaciones,
+    corteActualParaCompartir
+  );
+
+  // Usar Web Share API si está disponible
+  if (navigator.share) {
+    try {
+      await navigator.share({
+        title: `Resumen de trabajo - ${trabajadorSeleccionadoNombre}`,
+        text: texto,
+        // Opcional: url: window.location.href
+      });
+      mostrarMensaje('✅ Compartido correctamente');
+    } catch (error) {
+      if (error.name !== 'AbortError') {
+        console.error('Error al compartir:', error);
+        mostrarMensaje('❌ Error al compartir');
+      }
+    }
+  } else {
+    // Fallback: copiar al portapapeles
+    copiarAlPortapapeles(texto);
+    mostrarMensaje('📋 Copiado al portapapeles');
+  }
+
+  // Ocultar botones flotantes
+  const floatingActions = document.getElementById('floating-actions-trabajador');
+  if (floatingActions) {
+    floatingActions.style.display = 'none';
+  }
+  document.querySelectorAll('.selectable-worker').forEach(w => {
+    w.classList.remove('selected');
+  });
+};
+
+// Copiar trabajador seleccionado al portapapeles
+window.copiarTrabajadorSeleccionado = function () {
+  if (!trabajadorSeleccionadoId || !trabajadorSeleccionadoAsignaciones || !corteActualParaCompartir) {
+    mostrarMensaje('❌ No hay trabajador seleccionado');
+    return;
+  }
+
+  // Generar texto para compartir
+  const texto = formatearTextoCompartir(
+    trabajadorSeleccionadoNombre,
+    trabajadorSeleccionadoAsignaciones,
+    corteActualParaCompartir
+  );
+
+  // Copiar al portapapeles
+  copiarAlPortapapeles(texto);
+  mostrarMensaje('📋 Copiado al portapapeles');
+
+  // Ocultar botones flotantes
+  const floatingActions = document.getElementById('floating-actions-trabajador');
+  if (floatingActions) {
+    floatingActions.style.display = 'none';
+  }
+  document.querySelectorAll('.selectable-worker').forEach(w => {
+    w.classList.remove('selected');
+  });
+};
+
+// Formatear texto para compartir
+function formatearTextoCompartir(nombreTrabajador, asignaciones, corte) {
+  let texto = `📋 RESUMEN DE TRABAJO\n`;
+  texto += `────────────────────\n`;
+  texto += `👤 Trabajador: ${nombreTrabajador}\n`;
+  texto += `📦 Corte: ${corte.nombrePrenda}\n`;
+  texto += `📊 Unidades del corte: ${corte.cantidadPrendas}\n`;
+  texto += `📅 Fecha: ${formatDate(new Date())}\n\n`;
+
+  texto += `📊 TAREAS ASIGNADAS:\n`;
+  let totalTrabajador = 0;
+
+  asignaciones.forEach(asig => {
+    texto += `• ${asig.tareaNombre}: ${asig.cantidad} un. - $${asig.total.toFixed(2)}\n`;
+    totalTrabajador += asig.total;
+  });
+
+  texto += `\n💰 TOTAL ${nombreTrabajador}: $${totalTrabajador.toFixed(2)}\n`;
+  texto += `────────────────────\n`;
+  texto += `📱 Generado desde la App de Gestión de Cortes`;
+
+  return texto;
+}
+
+// Función auxiliar para copiar al portapapeles
+function copiarAlPortapapeles(texto) {
+  const textarea = document.createElement('textarea');
+  textarea.value = texto;
+  document.body.appendChild(textarea);
+  textarea.select();
+  document.execCommand('copy');
+  document.body.removeChild(textarea);
+}
+
+
 // ----------------------------------------------------------------------
 // -----------------------PESTANA EDITAR CORTE------------------------------
 // ----------------------------------------------------------------------
@@ -530,7 +728,7 @@ async function cargarPestanaEditar(corteId) {
               <tr>
                 <th>Tarea</th>
                 <th>Uni</th>
-                <th>Asignado</th>
+                <th>Asig.</th>
               </tr>
             </thead>
             <tbody id="tareas-body">
@@ -583,7 +781,109 @@ async function cargarPestanaEditar(corteId) {
     content.innerHTML = '<p class="error">Error al cargar la edición del corte</p>';
   }
 }
+// ----------------------------------------------------------------------
+// Validar campos para nueva tarea (agregar dentro de administrar-tareas.js)
+function validarCamposNuevaTarea() {
+  const nombreInput = document.getElementById('nueva-tarea-nombre');
+  const precioInput = document.getElementById('nueva-tarea-precio');
+  const btnAgregar = document.getElementById('btn-agregar-tarea');
 
+  const nombre = nombreInput.value.trim();
+  const precio = parseFloat(precioInput.value);
+
+  let valido = true;
+
+  // Validar nombre
+  const errorNombre = document.getElementById('error-nombre');
+  if (!nombre) {
+    errorNombre.textContent = 'El nombre no puede estar vacío';
+    valido = false;
+  } else if (nombre.length > 100) {
+    errorNombre.textContent = 'El nombre es demasiado largo';
+    valido = false;
+  } else {
+    errorNombre.textContent = '';
+  }
+
+  // Validar precio
+  const errorPrecio = document.getElementById('error-precio');
+  if (isNaN(precio) || precio < 0) {
+    errorPrecio.textContent = 'Ingrese un precio válido (mayor o igual a 0)';
+    valido = false;
+  } else if (precio > 10000) {
+    errorPrecio.textContent = 'El precio es demasiado alto';
+    valido = false;
+  } else {
+    errorPrecio.textContent = '';
+  }
+
+  // Habilitar/deshabilitar botón
+  btnAgregar.disabled = !valido;
+
+  return valido;
+}
+// ----------------------------------------------------------------------
+// Agregar nueva tarea al corte
+async function agregarNuevaTarea(corteId, corte) {
+  const nombreInput = document.getElementById('nueva-tarea-nombre');
+  const precioInput = document.getElementById('nueva-tarea-precio');
+
+  const nombre = nombreInput.value.trim();
+  const precio = parseFloat(precioInput.value);
+
+  // Validar una vez más
+  if (!validarCamposNuevaTarea()) {
+    return;
+  }
+
+  try {
+    // Verificar que el nombre no esté duplicado
+    const tareaExistente = corte.tareas.find(t =>
+      t.nombre.toLowerCase() === nombre.toLowerCase()
+    );
+
+    if (tareaExistente) {
+      document.getElementById('error-nombre').textContent = 'Ya existe una tarea con este nombre';
+      return;
+    }
+
+    // Crear nueva tarea
+    const nuevaTarea = {
+      id: Date.now(), // ID temporal único
+      nombre: nombre,
+      precioUnitario: precio,
+      unidadesTotales: corte.cantidadPrendas,
+      asignaciones: []
+    };
+
+    // Actualizar en la base de datos
+    await db.transaction('rw', db.cortes, async () => {
+      const corteActualizado = await db.cortes.get(corteId);
+      if (!corteActualizado) throw new Error('Corte no encontrado');
+
+      // Agregar nueva tarea
+      corteActualizado.tareas.push(nuevaTarea);
+
+      // Guardar cambios
+      await db.cortes.put(corteActualizado);
+    });
+
+    // Limpiar formulario
+    nombreInput.value = '';
+    precioInput.value = '';
+    document.getElementById('btn-agregar-tarea').disabled = true;
+
+    // Mostrar mensaje y recargar tabla
+    mostrarMensaje('✅ Tarea agregada correctamente');
+
+    // Recargar pestaña de edición
+    await cargarPestanaEditar(corteId);
+
+  } catch (error) {
+    console.error("Error al agregar tarea:", error);
+    mostrarMensaje(`❌ Error: ${error.message || 'No se pudo agregar la tarea'}`);
+  }
+}
 // ------------------------------------------------------------------
 // Inicializar eventos para la pestaña Editar Corte
 function inicializarEventosEditarCorte(corteId, corte) {
@@ -649,6 +949,7 @@ function inicializarEventosEditarCorte(corteId, corte) {
   const btnAgregar = document.getElementById('btn-agregar-tarea');
 
   // Validar campos al escribir
+  // pero que pasa tio joder
   nombreInput.addEventListener('input', () => validarCamposNuevaTarea());
   precioInput.addEventListener('input', () => validarCamposNuevaTarea());
 
@@ -849,6 +1150,7 @@ window.eliminarTarea = async function (corteId, tareaIndex) {
 // ----------------------------------------------------------------------
 // Cargar la pestaña "Asignar Tarea"
 async function cargarPestanaAsignar(corteId) {
+  window.corteIdActual = corteId;
   const content = document.getElementById('tab-content');
 
   try {
@@ -937,6 +1239,13 @@ async function cargarPestanaAsignar(corteId) {
             ${renderHistorialAsignaciones(corte)}
           </div>
         </div>
+        
+        <!-- Botones flotantes contextuales -->
+        <div id="floating-actions-asignacion" class="floating-actions" style="display: none;">
+          <button id="btn-floating-edit-asignacion" class="floating-btn floating-btn-edit" onclick="editarAsignacionSeleccionada()">
+            ✏️
+          </button>
+        </div>
       </div>
     `;
 
@@ -949,7 +1258,7 @@ async function cargarPestanaAsignar(corteId) {
   }
 }
 
-// ------------sus funciones
+// ----------sus funciones
 
 // Obtener tareas con unidades disponibles
 function getTareasDisponibles(corte) {
@@ -967,8 +1276,7 @@ function getTareasDisponibles(corte) {
     .filter(t => t.unidadesDisponibles > 0);
 }
 
-
-// Renderizar historial de asignaciones
+// Renderizar historial de asignaciones (VERSIÓN MODIFICADA)
 function renderHistorialAsignaciones(corte) {
   if (!corte.tareas || corte.tareas.length === 0) {
     return '<p class="no-data">No hay asignaciones en este corte</p>';
@@ -976,13 +1284,16 @@ function renderHistorialAsignaciones(corte) {
 
   let historial = [];
 
-  corte.tareas.forEach(tarea => {
-    tarea.asignaciones.forEach(asignacion => {
+  corte.tareas.forEach((tarea, tareaIndex) => {
+    tarea.asignaciones.forEach((asignacion, asignacionIndex) => {
       historial.push({
         tareaNombre: tarea.nombre,
         cantidad: asignacion.cantidad,
         trabajadorId: asignacion.trabajadorId,
-        asignacionId: asignacion.id || `${tarea.id}-${asignacion.trabajadorId}-${asignacion.cantidad}`
+        tareaIndex: tareaIndex,
+        asignacionIndex: asignacionIndex,
+        precioUnitario: tarea.precioUnitario,
+        fecha: asignacion.fecha || 'Sin fecha'
       });
     });
   });
@@ -996,32 +1307,26 @@ function renderHistorialAsignaciones(corte) {
       <thead>
         <tr>
           <th>Tarea</th>
-          <th>Cantidad</th>
-          <th>Trabajador</th>
-          <th>Acciones</th>
+          <th>Cant</th>
+          <th>Nombre</th>
         </tr>
       </thead>
       <tbody>
-        ${historial.map(asig => `
-          <tr data-asignacion-id="${asig.asignacionId}">
+        ${historial.map((asig, idx) => `
+          <tr class="selectable-row" 
+              data-index="${idx}"
+              data-tarea-index="${asig.tareaIndex}"
+              data-asignacion-index="${asig.asignacionIndex}">
             <td class="task-name">${asig.tareaNombre}</td>
             <td class="task-quantity">${asig.cantidad}</td>
             <td class="worker-name" data-trabajador-id="${asig.trabajadorId}"></td>
-            <td class="action-cell">
-              <button class="btn-edit" onclick="editarAsignacion('${asig.asignacionId}', ${corte.id})">
-                ✏️ Editar
-              </button>
-            </td>
           </tr>
         `).join('')}
       </tbody>
     </table>
   `;
 }
-// --------------------------
 
-// Inicializar eventos del formulario de asignación
-// Inicializar eventos del formulario de asignación (VERSIÓN CORREGIDA)
 // Inicializar eventos del formulario de asignación (VERSIÓN CORREGIDA)
 async function inicializarEventosAsignacion(corteId, corte) {
   const selectTrabajador = document.getElementById('select-trabajador');
@@ -1029,8 +1334,16 @@ async function inicializarEventosAsignacion(corteId, corte) {
   const cantidadInput = document.getElementById('cantidad-asignar');
   const btnAsignar = document.getElementById('btn-asignar');
 
+  // Variables para seguimiento de selección
+  let asignacionSeleccionada = null;
+  let tareaIndexSeleccionada = null;
+  let asignacionIndexSeleccionada = null;
+
   // Cargar nombres de trabajadores en el historial
   await cargarNombresTrabajadoresEnHistorial();
+
+  // Inicializar eventos de selección de filas
+  inicializarEventosSeleccionFilas();
 
   // Evento: Seleccionar trabajador
   selectTrabajador.addEventListener('change', function () {
@@ -1219,8 +1532,69 @@ async function inicializarEventosAsignacion(corteId, corte) {
       mostrarMensaje(`❌ Error: ${error.message || 'No se pudo asignar la tarea'}`);
     }
   });
+
+  // ==================== FUNCIONES DE SELECCIÓN ====================
+
+  // Inicializar eventos de selección de filas
+  function inicializarEventosSeleccionFilas() {
+    document.querySelectorAll('.history-table .selectable-row').forEach(row => {
+      row.addEventListener('click', (e) => {
+        // Evitar que se active si se hace clic en un enlace o botón dentro
+        if (e.target.tagName === 'BUTTON' || e.target.tagName === 'A') {
+          return;
+        }
+
+        // Quitar selección de todas las filas
+        document.querySelectorAll('.selectable-row').forEach(r => {
+          r.classList.remove('selected');
+        });
+
+        // Agregar selección a la fila clickeada
+        row.classList.add('selected');
+
+        // Guardar índices de la asignación seleccionada
+        tareaIndexSeleccionada = parseInt(row.dataset.tareaIndex);
+        asignacionIndexSeleccionada = parseInt(row.dataset.asignacionIndex);
+        asignacionSeleccionada = true;
+
+        // Mostrar botones flotantes
+        const floatingActions = document.getElementById('floating-actions-asignacion');
+        floatingActions.style.display = 'flex';
+
+        e.stopPropagation();
+      });
+    });
+
+    // Cerrar botones flotantes al hacer clic fuera
+    document.addEventListener('click', (e) => {
+      const floatingActions = document.getElementById('floating-actions-asignacion');
+      const isClickInsideTable = e.target.closest('.table-container');
+      const isClickInsideFloating = e.target.closest('#floating-actions-asignacion');
+
+      if (!isClickInsideTable && !isClickInsideFloating && floatingActions) {
+        floatingActions.style.display = 'none';
+        document.querySelectorAll('.selectable-row').forEach(r => {
+          r.classList.remove('selected');
+        });
+        asignacionSeleccionada = null;
+        tareaIndexSeleccionada = null;
+        asignacionIndexSeleccionada = null;
+      }
+    });
+  }
+
+  // Exponer función para editar asignación seleccionada
+  window.editarAsignacionSeleccionada = function () {
+    if (tareaIndexSeleccionada !== null && asignacionIndexSeleccionada !== null) {
+      mostrarModalEditarAsignacion(corteId, tareaIndexSeleccionada, asignacionIndexSeleccionada);
+      // Ocultar botones flotantes después de abrir modal
+      document.getElementById('floating-actions-asignacion').style.display = 'none';
+      document.querySelectorAll('.selectable-row').forEach(r => {
+        r.classList.remove('selected');
+      });
+    }
+  };
 }
-// --------------------------
 
 // Cargar nombres de trabajadores en el historial (asincrónico)
 async function cargarNombresTrabajadoresEnHistorial() {
@@ -1236,102 +1610,128 @@ async function cargarNombresTrabajadoresEnHistorial() {
     console.error("Error al cargar nombres de trabajadores:", error);
   }
 }
-// --------------------------
 
-// Editar asignación existente
-window.editarAsignacion = async function (asignacionId, corteId) {
-  if (!confirm('¿Desea editar esta asignación? Podrá modificar la cantidad o eliminarla.')) {
+// ==================== MODAL EDITAR ASIGNACIÓN ====================
+
+// Mostrar modal para editar asignación
+function mostrarModalEditarAsignacion(corteId, tareaIndex, asignacionIndex) {
+  // Primero cargar el corte actualizado
+  db.cortes.get(corteId).then(corte => {
+    if (!corte) {
+      mostrarMensaje('❌ Corte no encontrado');
+      return;
+    }
+
+    const tarea = corte.tareas[tareaIndex];
+    if (!tarea) {
+      mostrarMensaje('❌ Tarea no encontrada');
+      return;
+    }
+
+    const asignacion = tarea.asignaciones[asignacionIndex];
+    if (!asignacion) {
+      mostrarMensaje('❌ Asignación no encontrada');
+      return;
+    }
+
+    // Calcular unidades disponibles (incluyendo las de esta asignación)
+    const unidadesAsignadas = tarea.asignaciones.reduce((sum, a) => sum + a.cantidad, 0);
+    const unidadesDisponibles = tarea.unidadesTotales - (unidadesAsignadas - asignacion.cantidad);
+
+    // Obtener nombre del trabajador
+    db.trabajadores.get(asignacion.trabajadorId).then(trabajador => {
+      const nombreTrabajador = trabajador ? trabajador.nombre : 'Desconocido';
+
+      const modalHTML = `
+        <div class="modal-overlay" onclick="cerrarModal(event)">
+          <div class="modal-container">
+            <h3 class="modal-title">✏️ Editar Asignación</h3>
+            
+            <div class="modal-info">
+              <p><strong>Tarea:</strong> ${tarea.nombre}</p>
+              <p><strong>Trabajador:</strong> ${nombreTrabajador}</p>
+              <p><strong>Precio unitario:</strong> $${tarea.precioUnitario.toFixed(2)}</p>
+              <p><strong>Cantidad actual:</strong> ${asignacion.cantidad} unidades</p>
+            </div>
+            
+            <div class="form-group">
+              <label for="modal-cantidad-asignacion">Nueva Cantidad</label>
+              <input type="number" class="form-control" id="modal-cantidad-asignacion" 
+                     min="0" max="${unidadesDisponibles}" value="${asignacion.cantidad}" 
+                     placeholder="Cantidad">
+              <small class="error-message" id="modal-error-cantidad"></small>
+              <small class="info-message">Unidades disponibles: ${unidadesDisponibles}</small>
+            </div>
+            
+            <div class="modal-warning">
+              <p>⚠️ <strong>Advertencia:</strong> Si establece la cantidad en 0, se eliminará la asignación.</p>
+            </div>
+            
+            <div class="modal-actions">
+              <button class="btn-secondary" onclick="cerrarModal()">Cancelar</button>
+              <button class="btn-primary" onclick="guardarAsignacionEditada(${corteId}, ${tareaIndex}, ${asignacionIndex})">
+                Guardar Cambios
+              </button>
+            </div>
+          </div>
+        </div>
+      `;
+
+      mostrarModal(modalHTML);
+    });
+  }).catch(error => {
+    console.error("Error al cargar datos para modal:", error);
+    mostrarMensaje('❌ Error al cargar los datos');
+  });
+}
+
+// Guardar asignación editada
+window.guardarAsignacionEditada = async function (corteId, tareaIndex, asignacionIndex) {
+  const cantidadInput = document.getElementById('modal-cantidad-asignacion');
+  const cantidad = parseInt(cantidadInput.value);
+
+  // Validaciones
+  if (isNaN(cantidad) || cantidad < 0) {
+    document.getElementById('modal-error-cantidad').textContent = 'Ingrese una cantidad válida (mínimo 0)';
     return;
   }
 
   try {
-    const corte = await db.cortes.get(corteId);
-    if (!corte) throw new Error('Corte no encontrado');
-
-    // Buscar la asignación en el corte
-    let asignacionEncontrada = null;
-    let tareaPadre = null;
-
-    for (const tarea of corte.tareas) {
-      const asignacion = tarea.asignaciones.find(a => {
-        const aId = a.id || `${tarea.id}-${a.trabajadorId}-${a.cantidad}`;
-        return aId === asignacionId;
-      });
-
-      if (asignacion) {
-        asignacionEncontrada = asignacion;
-        tareaPadre = tarea;
-        break;
-      }
-    }
-
-    if (!asignacionEncontrada || !tareaPadre) {
-      throw new Error('Asignación no encontrada');
-    }
-
-    // Calcular unidades disponibles (incluyendo las de esta asignación)
-    const unidadesAsignadas = tareaPadre.asignaciones.reduce((sum, a) => sum + a.cantidad, 0);
-    const unidadesDisponibles = tareaPadre.unidadesTotales - (unidadesAsignadas - asignacionEncontrada.cantidad);
-
-    // Pedir nueva cantidad
-    const nuevaCantidad = prompt(
-      `Editar asignación de "${tareaPadre.nombre}"\n` +
-      `Cantidad actual: ${asignacionEncontrada.cantidad}\n` +
-      `Unidades disponibles: ${unidadesDisponibles}\n` +
-      `Ingrese nueva cantidad (0 para eliminar):`,
-      asignacionEncontrada.cantidad.toString()
-    );
-
-    if (nuevaCantidad === null) return; // Cancelado
-
-    const cantidadNumerica = parseInt(nuevaCantidad);
-
-    if (isNaN(cantidadNumerica) || cantidadNumerica < 0) {
-      alert('Cantidad inválida');
-      return;
-    }
-
-    if (cantidadNumerica > unidadesDisponibles) {
-      alert(`Solo hay ${unidadesDisponibles} unidades disponibles`);
-      return;
-    }
-
-    // Actualizar en la base de datos
     await db.transaction('rw', db.cortes, async () => {
-      const corteDB = await db.cortes.get(corteId);
-      if (!corteDB) return;
+      const corte = await db.cortes.get(corteId);
+      const tarea = corte.tareas[tareaIndex];
+      const asignacion = tarea.asignaciones[asignacionIndex];
 
-      const tareaDB = corteDB.tareas.find(t => t.id === tareaPadre.id);
-      if (!tareaDB) return;
+      // Calcular unidades disponibles (sin contar esta asignación)
+      const otrasAsignaciones = tarea.asignaciones.filter((_, idx) => idx !== asignacionIndex);
+      const otrasUnidades = otrasAsignaciones.reduce((sum, a) => sum + a.cantidad, 0);
+      const unidadesDisponibles = tarea.unidadesTotales - otrasUnidades;
 
-      const index = tareaDB.asignaciones.findIndex(a => {
-        const aId = a.id || `${tareaDB.id}-${a.trabajadorId}-${a.cantidad}`;
-        return aId === asignacionId;
-      });
+      if (cantidad > unidadesDisponibles) {
+        throw new Error(`Solo hay ${unidadesDisponibles} unidades disponibles`);
+      }
 
-      if (index === -1) return;
-
-      if (cantidadNumerica === 0) {
-        // Eliminar asignación
-        tareaDB.asignaciones.splice(index, 1);
+      if (cantidad === 0) {
+        // Eliminar asignación si la cantidad es 0
+        tarea.asignaciones.splice(asignacionIndex, 1);
       } else {
         // Actualizar cantidad
-        tareaDB.asignaciones[index].cantidad = cantidadNumerica;
+        asignacion.cantidad = cantidad;
       }
 
-      await db.cortes.put(corteDB);
+      await db.cortes.put(corte);
     });
 
-    // Recargar la pestaña
+    // Cerrar modal y recargar
+    cerrarModal();
     await cargarPestanaAsignar(corteId);
     mostrarMensaje('✅ Asignación actualizada correctamente');
 
   } catch (error) {
-    console.error("Error al editar asignación:", error);
-    mostrarMensaje(`❌ Error: ${error.message || 'No se pudo editar la asignación'}`);
+    console.error("Error al guardar asignación:", error);
+    mostrarMensaje(`❌ Error: ${error.message || 'No se pudo guardar la asignación'}`);
   }
 };
-
 // ----------------------------------------------------------------------
 // ----------------------------------------------------------------------
 // ----------------------------------------------------------------------
@@ -1397,3 +1797,9 @@ window.guardarTareaEditada = guardarTareaEditada;
 window.eliminarTarea = eliminarTarea;
 // Exponer función globalmente
 window.cambiarPestana = cambiarPestana;
+
+// de la pestana trabajador
+// Agregar funciones al objeto window para acceso global
+window.compartirTrabajadorSeleccionado = compartirTrabajadorSeleccionado;
+window.copiarTrabajadorSeleccionado = copiarTrabajadorSeleccionado;
+window.seleccionarTrabajador = seleccionarTrabajador;

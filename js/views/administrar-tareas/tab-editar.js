@@ -1,6 +1,6 @@
 // tab-editar.js - Pestaña para editar tareas del corte
 import { db } from '../../db.js';
-import { mostrarMensaje } from './utils.js';
+import { mostrarMensaje, calcularCostoPorPrenda } from './utils.js';
 
 export async function cargarPestanaEditar(corteId) {
   const content = document.getElementById('tab-content');
@@ -25,6 +25,8 @@ export async function cargarPestanaEditar(corteId) {
       </tr>`;
     }).join('');
 
+    const costoPorPrenda = calcularCostoPorPrenda(corte.tareas);
+
     content.innerHTML = `
       <div class="editar-corte-section">
         <h2>Editar Tareas</h2>
@@ -43,15 +45,25 @@ export async function cargarPestanaEditar(corteId) {
             <button id="btn-agregar-tarea" class="btn-primary">+ Agregar</button>
           </div>
         </div>
+        
+        <div class="costo-prenda-section">
+          <div class="costo-prenda-row">
+            <span>💰 Costo por Prenda:</span>
+            <span class="costo-prenda-value">$${costoPorPrenda.toFixed(2)}</span>
+          </div>
+        </div>
       </div>
       
-      <!-- Botones flotantes para editar/eliminar -->
+      <!-- Botones flotantes para editar/eliminar/agregar -->
       <div id="floating-edit-btns" class="floating-action-btns" style="display: none;">
-        <button class="btn-edit-floating" onclick="mostrarModalEditarTarea()">
+        <button class="btn-edit-floating" id="btn-editar-tarea" onclick="mostrarModalEditarTarea()">
           ✏️ Editar
         </button>
         <button class="btn-danger-floating" id="btn-eliminar-tarea" onclick="mostrarModalEliminarTarea()">
           🗑️ Eliminar
+        </button>
+        <button class="btn-add-floating" onclick="mostrarModalAgregarTareaDebajo()">
+          ➕ Agregar
         </button>
       </div>
     `;
@@ -138,6 +150,22 @@ function inicializarEventosEditar(corteId, corte) {
       `¿Eliminar la tarea <strong>"${tarea.nombre}"</strong>?`,
       async () => {
         await eliminarTarea(corteId, tarea.index);
+        floatingBtns.style.display = 'none';
+        window._tareaSeleccionadaEditar = null;
+      }
+    );
+  };
+
+  // Función global para mostrar modal de agregar tarea debajo
+  window.mostrarModalAgregarTareaDebajo = function() {
+    if (!window._tareaSeleccionadaEditar) return;
+    
+    const tareaSeleccionada = window._tareaSeleccionadaEditar;
+    
+    mostrarModalAgregarTarea(
+      tareaSeleccionada.index,
+      async (nombre, precio) => {
+        await agregarTareaDebajo(corteId, tareaSeleccionada.index + 1, nombre, precio, corte.cantidadPrendas);
         floatingBtns.style.display = 'none';
         window._tareaSeleccionadaEditar = null;
       }
@@ -276,6 +304,101 @@ function mostrarModalEditar(nombreActual, precioActual, onSave) {
       document.body.style.overflow = 'auto';
     }
   });
+}
+
+// Función para mostrar modal de agregar tarea
+function mostrarModalAgregarTarea(indexDespues, onSave) {
+  // Crear overlay del modal
+  const overlay = document.createElement('div');
+  overlay.className = 'modal-overlay';
+  overlay.innerHTML = `
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>➕ Agregar Nueva Tarea</h3>
+      </div>
+      <div class="modal-body">
+        <p class="modal-info-text">Se agregará la nueva tarea en la posición ${indexDespues + 1}</p>
+        <div class="form-group">
+          <label for="add-nombre">Nombre de la tarea</label>
+          <input type="text" id="add-nombre" class="form-control" placeholder="Ej: Costura especial">
+        </div>
+        <div class="form-group">
+          <label for="add-precio">Precio Unitario</label>
+          <input type="number" id="add-precio" class="form-control" placeholder="0.00" step="0.01" min="0">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-secondary" id="modal-cancel">Cancelar</button>
+        <button class="btn-primary" id="modal-add">Agregar</button>
+      </div>
+    </div>
+  `;
+
+  document.body.appendChild(overlay);
+  document.body.style.overflow = 'hidden';
+
+  // Focus en el input de nombre
+  setTimeout(() => {
+    document.getElementById('add-nombre').focus();
+  }, 100);
+
+  // Eventos
+  document.getElementById('modal-cancel').addEventListener('click', () => {
+    overlay.remove();
+    document.body.style.overflow = 'auto';
+  });
+
+  document.getElementById('modal-add').addEventListener('click', () => {
+    const nombre = document.getElementById('add-nombre').value.trim();
+    const precio = parseFloat(document.getElementById('add-precio').value);
+
+    if (!nombre || isNaN(precio) || precio < 0) {
+      mostrarMensaje('❌ Datos inválidos');
+      return;
+    }
+
+    overlay.remove();
+    document.body.style.overflow = 'auto';
+    if (onSave) onSave(nombre, precio);
+  });
+
+  // Cerrar al hacer clic fuera
+  overlay.addEventListener('click', (e) => {
+    if (e.target === overlay) {
+      overlay.remove();
+      document.body.style.overflow = 'auto';
+    }
+  });
+}
+
+// Agregar tarea en una posición específica
+async function agregarTareaDebajo(corteId, posicion, nombre, precio, cantidadPrendas) {
+  try {
+    const corte = await db.cortes.get(corteId);
+    if (!corte) return;
+
+    // Crear nueva tarea
+    const nuevaTarea = {
+      id: Date.now(),
+      nombre,
+      precioUnitario: precio,
+      unidadesTotales: cantidadPrendas,
+      asignaciones: []
+    };
+
+    // Insertar en la posición específica
+    corte.tareas.splice(posicion, 0, nuevaTarea);
+
+    await db.cortes.put(corte);
+    mostrarMensaje('✅ Tarea agregada debajo');
+    
+    // Recargar la pestaña
+    await cargarPestanaEditar(corteId);
+
+  } catch (error) {
+    console.error('Error al agregar tarea:', error);
+    mostrarMensaje('❌ Error al agregar tarea');
+  }
 }
 
 // Función para mostrar modal de confirmación

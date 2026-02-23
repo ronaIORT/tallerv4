@@ -1,6 +1,6 @@
 // tab-corte.js - Pestaña de vista general del corte
 import { db } from '../../db.js';
-import { mostrarMensaje } from './utils.js';
+import { mostrarMensaje, mostrarModalFinalizarCorte } from './utils.js';
 
 export async function cargarPestanaCorte(corteId) {
   const content = document.getElementById('tab-content');
@@ -93,7 +93,7 @@ export async function cargarPestanaCorte(corteId) {
         ${corte.estado === 'activo' ? `
           <div class="actions-section">        
             <button class="btn-primary" onclick="cambiarPestana('asignar')">Asignar Tareas</button>
-            <button class="btn-secondary" onclick="finalizarCorte(${corteId})">Finalizar Corte</button>
+            <button class="btn-secondary" onclick="mostrarModalFinalizarCorte(${corteId}, '${corte.nombreCorte || corte.nombrePrendaOriginal || corte.nombrePrenda}')">Finalizar Corte</button>
           </div>
         ` : `
           <div class="completed-section">
@@ -102,13 +102,6 @@ export async function cargarPestanaCorte(corteId) {
         `}
       </div>
     `;
-
-    window.finalizarCorte = async function (id) {
-      if (!confirm('¿Finalizar este corte?')) return;
-      await db.cortes.update(id, { estado: 'terminado' });
-      mostrarMensaje('✅ Corte finalizado');
-      setTimeout(() => location.reload(), 1500);
-    };
 
   } catch (error) {
     console.error("Error:", error);

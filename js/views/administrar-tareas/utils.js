@@ -8,6 +8,11 @@ export function calcularManoObraTotal(corte) {
   }, 0);
 }
 
+// Calcular costo por prenda (suma de precios unitarios de todas las tareas)
+export function calcularCostoPorPrenda(tareas) {
+  return tareas.reduce((total, tarea) => total + tarea.precioUnitario, 0);
+}
+
 // Calcular mano de obra REAL (asignada)
 export function calcularManoObraReal(corte) {
   let total = 0;
@@ -74,6 +79,54 @@ export function getTareasDisponibles(corte) {
   });
 }
 
+// Mostrar modal de confirmación para finalizar corte
+export function mostrarModalFinalizarCorte(corteId, nombreCorte) {
+  const modalExistente = document.querySelector('.modal-overlay');
+  if (modalExistente) modalExistente.remove();
+
+  const overlay = document.createElement('div');
+  overlay.className = 'modal-overlay';
+  overlay.onclick = (e) => {
+    if (e.target === overlay) cerrarModalFinalizar();
+  };
+
+  overlay.innerHTML = `
+    <div class="modal-container">
+      <h3 class="modal-title">✅ Finalizar Corte</h3>
+      <p class="modal-message">¿Estás seguro de que deseas finalizar el corte <strong>${nombreCorte}</strong>?</p>
+      <p class="modal-message" style="font-size: 13px; color: var(--text-secondary);">Una vez finalizado, no se podrán realizar más asignaciones.</p>
+      <div class="modal-actions">
+        <button class="btn-secondary" onclick="cerrarModalFinalizar()">Cancelar</button>
+        <button class="btn-primary" onclick="confirmarFinalizarCorte(${corteId})">Finalizar</button>
+      </div>
+    </div>
+  `;
+
+  document.body.appendChild(overlay);
+}
+
+// Cerrar modal de finalizar corte
+function cerrarModalFinalizar() {
+  const overlay = document.querySelector('.modal-overlay');
+  if (overlay) {
+    document.body.style.overflow = 'auto';
+    overlay.remove();
+  }
+}
+
+// Confirmar finalización del corte
+async function confirmarFinalizarCorte(corteId) {
+  try {
+    await db.cortes.update(corteId, { estado: 'terminado' });
+    cerrarModalFinalizar();
+    mostrarMensaje('✅ Corte finalizado');
+    setTimeout(() => location.reload(), 1500);
+  } catch (error) {
+    console.error('Error al finalizar corte:', error);
+    mostrarMensaje('❌ Error al finalizar corte');
+  }
+}
+
 // Exponer funciones globales
 window.cambiarPestana = cambiarPestana;
 window.cerrarModal = function(event) {
@@ -83,3 +136,6 @@ window.cerrarModal = function(event) {
     overlay.remove();
   }
 };
+window.mostrarModalFinalizarCorte = mostrarModalFinalizarCorte;
+window.cerrarModalFinalizar = cerrarModalFinalizar;
+window.confirmarFinalizarCorte = confirmarFinalizarCorte;

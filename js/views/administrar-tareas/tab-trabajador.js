@@ -2,6 +2,68 @@
 import { db } from '../../db.js';
 import { formatDate } from './utils.js';
 
+// Función para mostrar mensajes toast temporales
+function mostrarToast(mensaje, duracion = 2000) {
+  // Verificar si ya existe un toast y eliminarlo
+  const toastExistente = document.querySelector('.toast-message');
+  if (toastExistente) {
+    toastExistente.remove();
+  }
+
+  // Crear elemento toast
+  const toast = document.createElement('div');
+  toast.className = 'toast-message';
+  toast.textContent = mensaje;
+  
+  // Estilos inline para el toast
+  toast.style.cssText = `
+    position: fixed;
+    bottom: 80px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(40, 40, 40, 0.95);
+    color: #ffffff;
+    padding: 12px 24px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 500;
+    z-index: 10000;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    animation: toastFadeIn 0.3s ease;
+    max-width: 90%;
+    text-align: center;
+  `;
+
+  // Agregar keyframes para animación
+  if (!document.querySelector('#toast-styles')) {
+    const styleSheet = document.createElement('style');
+    styleSheet.id = 'toast-styles';
+    styleSheet.textContent = `
+      @keyframes toastFadeIn {
+        from { opacity: 0; transform: translateX(-50%) translateY(10px); }
+        to { opacity: 1; transform: translateX(-50%) translateY(0); }
+      }
+      @keyframes toastFadeOut {
+        from { opacity: 1; transform: translateX(-50%) translateY(0); }
+        to { opacity: 0; transform: translateX(-50%) translateY(-10px); }
+      }
+    `;
+    document.head.appendChild(styleSheet);
+  }
+
+  document.body.appendChild(toast);
+
+  // Programar eliminación
+  setTimeout(() => {
+    toast.style.animation = 'toastFadeOut 0.3s ease forwards';
+    setTimeout(() => {
+      if (toast.parentNode) {
+        toast.remove();
+      }
+    }, 300);
+  }, duracion);
+}
+
 export async function cargarPestanaTrabajador(corteId) {
   const content = document.getElementById('tab-content');
 
@@ -84,9 +146,14 @@ export async function cargarPestanaTrabajador(corteId) {
         <div class="worker-section">
           <div class="worker-header">
             <h3 class="worker-title">👤 ${nombre}</h3>
-            <button class="btn-share" onclick="compartirTrabajador(${corteId}, ${trabajadorId})">
-              📤 Compartir
-            </button>
+            <div class="worker-actions-btns">
+              <button class="btn-copy" onclick="copiarTrabajador(${corteId}, ${trabajadorId})">
+                📋 Copiar
+              </button>
+              <button class="btn-share" onclick="compartirTrabajador(${corteId}, ${trabajadorId})">
+                📤 Compartir
+              </button>
+            </div>
           </div>
           <table class="worker-table">
             <thead>
@@ -119,9 +186,13 @@ export async function cargarPestanaTrabajador(corteId) {
       </div>
     `;
 
-    // Exponer función de compartir globalmente
+    // Exponer funciones globalmente
     window.compartirTrabajador = async (cId, trabId) => {
-      await generarTextoCompartir(cId, trabId);
+      await compartirConWebShare(cId, trabId);
+    };
+    
+    window.copiarTrabajador = async (cId, trabId) => {
+      await copiarAlPortapapeles(cId, trabId);
     };
 
   } catch (error) {
@@ -151,63 +222,61 @@ function formatearTallas(tallas) {
   }).join(', ');
 }
 
-// Generar texto para compartir
-async function generarTextoCompartir(corteId, trabajadorId) {
-  try {
-    const corte = await db.cortes.get(corteId);
-    const trabajador = await db.trabajadores.get(trabajadorId);
+// Función auxiliar para generar el texto del resumen
+async function generarTextoResumen(corteId, trabajadorId) {
+  const corte = await db.cortes.get(corteId);
+  const trabajador = await db.trabajadores.get(trabajadorId);
+  
+  if (!corte || !trabajador) {
+    return null;
+  }
+
+  const nombreCorte = corte.nombreCorte || corte.nombrePrendaOriginal || corte.nombrePrenda;
+  const nombreTrabajador = trabajador.nombre;
+
+  // Obtener tareas asignadas a este trabajador
+  const tareasAsignadas = [];
+  let totalTrabajador = 0;
+
+  corte.tareas.forEach(tarea => {
+    const asignacionesTrabajador = tarea.asignaciones.filter(a => a.trabajadorId === trabajadorId);
     
-    if (!corte || !trabajador) {
-      alert('Error al generar texto');
-      return;
-    }
-
-    const nombreCorte = corte.nombreCorte || corte.nombrePrendaOriginal || corte.nombrePrenda;
-    const nombreTrabajador = trabajador.nombre;
-
-    // Obtener tareas asignadas a este trabajador
-    const tareasAsignadas = [];
-    let totalTrabajador = 0;
-
-    corte.tareas.forEach(tarea => {
-      const asignacionesTrabajador = tarea.asignaciones.filter(a => a.trabajadorId === trabajadorId);
+    if (asignacionesTrabajador.length > 0) {
+      const tallas = asignacionesTrabajador.map(a => ({
+        talla: a.talla || '-',
+        cantidad: a.cantidad
+      }));
       
-      if (asignacionesTrabajador.length > 0) {
-        const tallas = asignacionesTrabajador.map(a => ({
-          talla: a.talla || '-',
-          cantidad: a.cantidad
-        }));
-        
-        const subtotal = asignacionesTrabajador.reduce((sum, a) => sum + (a.cantidad * tarea.precioUnitario), 0);
-        totalTrabajador += subtotal;
-        
-        tareasAsignadas.push({
-          nombre: tarea.nombre,
-          tallas: tallas,
-          subtotal: subtotal
-        });
-      }
-    });
+      const subtotal = asignacionesTrabajador.reduce((sum, a) => sum + (a.cantidad * tarea.precioUnitario), 0);
+      totalTrabajador += subtotal;
+      
+      tareasAsignadas.push({
+        nombre: tarea.nombre,
+        tallas: tallas,
+        subtotal: subtotal
+      });
+    }
+  });
 
-    // Formatear tallas del corte
-    const tallasCorteStr = corte.tallas 
-      ? corte.tallas.map(t => `${t.talla}(${t.cantidad})`).join(', ')
-      : 'N/A';
+  // Formatear tallas del corte
+  const tallasCorteStr = corte.tallas 
+    ? corte.tallas.map(t => `${t.talla}(${t.cantidad})`).join(', ')
+    : 'N/A';
 
-    // Calcular fechas
-    const fechaInicio = formatDate(corte.fechaCreacion);
-    const fechaFin = corte.fechaFin ? formatDate(corte.fechaFin) : 'En progreso';
+  // Calcular fechas
+  const fechaInicio = formatDate(corte.fechaCreacion);
+  const fechaFin = corte.fechaFin ? formatDate(corte.fechaFin) : 'En progreso';
 
-    // Formatear tareas asignadas
-    const tareasStr = tareasAsignadas.map(t => {
-      const tallasFormateadas = t.tallas.map(talla => 
-        `${talla.talla.toLowerCase()}(${talla.cantidad})`
-      ).join(', ');
-      return `• ${t.nombre}: ${tallasFormateadas}. - $${t.subtotal.toFixed(2)}`;
-    }).join('\n');
+  // Formatear tareas asignadas
+  const tareasStr = tareasAsignadas.map(t => {
+    const tallasFormateadas = t.tallas.map(talla => 
+      `${talla.talla.toLowerCase()}(${talla.cantidad})`
+    ).join(', ');
+    return `• ${t.nombre}: ${tallasFormateadas}. - $${t.subtotal.toFixed(2)}`;
+  }).join('\n');
 
-    // Generar texto final
-    const textoCompartir = `
+  // Generar texto final
+  const texto = `
 ────────────────────
 👤 Trabajador: ${nombreTrabajador}
 📦 Corte: ${nombreCorte}
@@ -223,25 +292,84 @@ ${tareasStr}
 ────────────────────
 📱 Generado desde la App de Gestión de Cortes`.trim();
 
-    // Copiar al portapapeles
+  return {
+    texto,
+    nombreTrabajador
+  };
+}
+
+// Función para copiar al portapapeles
+async function copiarAlPortapapeles(corteId, trabajadorId) {
+  try {
+    const resultado = await generarTextoResumen(corteId, trabajadorId);
+    
+    if (!resultado) {
+      mostrarToast('❌ Error al generar texto');
+      return;
+    }
+
+    const { texto } = resultado;
+
+    // Intentar copiar con navigator.clipboard
     if (navigator.clipboard && navigator.clipboard.writeText) {
-      await navigator.clipboard.writeText(textoCompartir);
-      alert('✅ Texto copiado al portapapeles');
+      await navigator.clipboard.writeText(texto);
+      mostrarToast("✅ Texto copiado al portapapeles");
     } else {
       // Fallback para navegadores antiguos
       const textarea = document.createElement('textarea');
-      textarea.value = textoCompartir;
+      textarea.value = texto;
       textarea.style.position = 'fixed';
       textarea.style.opacity = '0';
       document.body.appendChild(textarea);
       textarea.select();
-      document.execCommand('copy');
+      const exito = document.execCommand('copy');
       document.body.removeChild(textarea);
-      alert('✅ Texto copiado al portapapeles');
+      
+      if (exito) {
+        mostrarToast("✅ Texto copiado al portapapeles");
+      } else {
+        mostrarToast("❌ Error al copiar");
+      }
+    }
+  } catch (error) {
+    console.error('Error al copiar:', error);
+    mostrarToast("❌ Error al copiar");
+  }
+}
+
+// Función para compartir con Web Share API
+async function compartirConWebShare(corteId, trabajadorId) {
+  try {
+    const resultado = await generarTextoResumen(corteId, trabajadorId);
+    
+    if (!resultado) {
+      mostrarToast('❌ Error al generar texto');
+      return;
     }
 
+    const { texto, nombreTrabajador } = resultado;
+
+    // Verificar si Web Share API está disponible
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: "Resumen de trabajo - " + nombreTrabajador,
+          text: texto
+        });
+        mostrarToast("✅ Compartido");
+      } catch (shareError) {
+        // Si el usuario cancela (AbortError), no mostrar mensaje
+        if (shareError.name !== 'AbortError') {
+          mostrarToast("❌ Error al compartir");
+        }
+      }
+    } else {
+      // Si no hay Web Share API, copiar al portapapeles como fallback
+      mostrarToast("⚠️ Compartir no disponible, copiando...");
+      await copiarAlPortapapeles(corteId, trabajadorId);
+    }
   } catch (error) {
-    console.error('Error al generar texto:', error);
-    alert('❌ Error al generar texto para compartir');
+    console.error('Error al compartir:', error);
+    mostrarToast('❌ Error al compartir');
   }
 }

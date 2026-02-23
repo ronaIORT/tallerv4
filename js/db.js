@@ -18,6 +18,22 @@ db.version(2).stores({
   pagos: "++id, trabajadorId, fecha",
 });
 
+// ✅ Versión 3: agrega índice para fechaFinalizacion
+db.version(3).stores({
+  prendas: "++id, &nombre",
+  trabajadores: "++id, &nombre",
+  cortes: "++id, estado, fechaCreacion",
+  pagos: "++id, trabajadorId, fecha",
+});
+
+// ✅ Versión 4: agrega índice corteId en pagos para poder eliminar por corte
+db.version(4).stores({
+  prendas: "++id, &nombre",
+  trabajadores: "++id, &nombre",
+  cortes: "++id, estado, fechaCreacion",
+  pagos: "++id, trabajadorId, fecha, corteId",
+});
+
 // Sembrar prendas base si la DB es nueva
 db.on("populate", async () => {
   console.log("🌱 Sembrando prendas base reales...");

@@ -54,6 +54,10 @@ async function cargarVista(ruta) {
             <div class="mobile-container">
                 <div class="header">
                     <h1 class="small-title">Dashboard Taller</h1>
+                    <button class="header-btn logout-btn" onclick="confirmarSalida()" title="Salir de la aplicación">
+                        <span class="btn-icon">🚪</span>
+                        <span class="btn-text">Salir</span>
+                    </button>
                 </div>
 
                 <div class="dashboard-content">
@@ -492,7 +496,33 @@ async function aplicarFiltro(tipo) {
   }
 }
 
-// Renderizar cortes en la lista (versión mejorada)
+// ===========================================================================
+// 📊 CALCULAR PROGRESO REAL DE UN CORTE
+// ===========================================================================
+function calcularProgresoReal(corte) {
+  // Total de unidades a procesar = cantidadPrendas × número de tareas
+  const totalTareas = corte.tareas.length;
+  const totalUnidadesEsperadas = corte.cantidadPrendas * totalTareas;
+  
+  // Total de unidades asignadas = suma de todas las cantidades en asignaciones
+  const unidadesAsignadas = corte.tareas.reduce((total, tarea) => {
+    const cantidadTarea = tarea.asignaciones.reduce((sum, a) => sum + a.cantidad, 0);
+    return total + cantidadTarea;
+  }, 0);
+  
+  // Calcular porcentaje
+  const progreso = totalUnidadesEsperadas > 0 
+    ? Math.round((unidadesAsignadas / totalUnidadesEsperadas) * 100) 
+    : 0;
+  
+  return {
+    progreso: Math.min(progreso, 100), // Cap al 100%
+    unidadesAsignadas,
+    totalUnidades: totalUnidadesEsperadas
+  };
+}
+
+// Renderizar cortes en la lista (versión minimalista)
 async function renderizarCortes(cortes) {
   const listaCortes = document.getElementById("lista-cortes");
   if (!listaCortes) return;
@@ -510,47 +540,75 @@ async function renderizarCortes(cortes) {
     return;
   }
 
-  // Renderizar cada corte (mismo código que cargarCortesRecientes pero adaptado)
+  // Renderizar cada corte con diseño minimalista
   const cortesHTML = cortes
     .map((corte) => {
-      // Usar el nombre personalizado del corte (si existe) o el nombre original
+      // Nombre del corte
       const nombreMostrar =
         corte.nombreCorte || corte.nombrePrendaOriginal || corte.nombrePrenda;
+      
+      // Estado
       const estadoClass =
         corte.estado === "activo" ? "estado-activo" : "estado-terminado";
       const estadoText = corte.estado === "activo" ? "Activo" : "Terminado";
-      const tareasAsignadas = corte.tareas.reduce(
-        (total, tarea) =>
-          total + (tarea.asignaciones ? tarea.asignaciones.length : 0),
-        0,
-      );
-      const totalTareas = corte.tareas.length;
-      const progreso =
-        totalTareas > 0 ? Math.round((tareasAsignadas / totalTareas) * 100) : 0;
+      
+      // Calcular progreso real
+      const { progreso } = calcularProgresoReal(corte);
+      
+      // Cantidad total
+      const cantidadTotal = corte.cantidadPrendas;
+      
+      // Fechas
+      const fechaInicio = formatDate(corte.fechaCreacion);
+      const fechaFin = corte.fechaFinalizacion 
+        ? formatDate(corte.fechaFinalizacion) 
+        : null;
 
       return `
             <div class="corte-card" data-id="${corte.id}">
-                <div class="corte-card-main">
-                    <div class="corte-info">
-                        <h3 class="corte-nombre">${nombreMostrar}</h3>
-                        <div class="corte-meta">
-                            <span class="corte-unidades">${corte.cantidadPrendas} und</span>
-                            <span class="corte-fecha">${formatDate(corte.fechaCreacion)}</span>
-                        </div>
-                    </div>
-                    <div class="corte-status">
-                        <span class="corte-estado ${estadoClass}">${estadoText}</span>
-                        <div class="corte-progreso">
-                            <div class="progreso-bar">
-                                <div class="progreso-fill" style="width: ${progreso}%"></div>
-                            </div>
+                <div class="corte-card-header">
+                    <h3 class="corte-nombre">${nombreMostrar}</h3>
+                    <span class="corte-estado ${estadoClass}">${estadoText}</span>
+                </div>
+                
+                <div class="corte-card-body">
+                    <div class="corte-progreso">
+                        <div class="progreso-header">
+                            <span class="progreso-label">Progreso</span>
                             <span class="progreso-text">${progreso}%</span>
                         </div>
+                        <div class="progreso-bar">
+                            <div class="progreso-fill" style="width: ${progreso}%"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="corte-detalles">
+                        <div class="detalle-item">
+                            <span class="detalle-icon">📦</span>
+                            <span class="detalle-label">Cantidad:</span>
+                            <span class="detalle-value">${cantidadTotal} und</span>
+                        </div>
+                        <div class="detalle-item">
+                            <span class="detalle-icon">📅</span>
+                            <span class="detalle-label">Inicio:</span>
+                            <span class="detalle-value">${fechaInicio}</span>
+                        </div>
+                        ${fechaFin ? `
+                        <div class="detalle-item">
+                            <span class="detalle-icon">✅</span>
+                            <span class="detalle-label">Finalizado:</span>
+                            <span class="detalle-value">${fechaFin}</span>
+                        </div>
+                        ` : ''}
                     </div>
                 </div>
-                <div class="corte-actions">
-                    <button class="action-btn small" onclick="window.location.hash='#administrar-tareas/${corte.id}'">
-                        Administrar
+                
+                <div class="corte-card-actions">
+                    <button class="action-btn small primary" onclick="window.location.hash='#administrar-tareas/${corte.id}'">
+                        <span>⚙️</span> Administrar
+                    </button>
+                    <button class="action-btn small danger" onclick="confirmarEliminarCorte(${corte.id}, '${nombreMostrar}')">
+                        <span>🗑️</span> Eliminar
                     </button>
                 </div>
             </div>
@@ -625,3 +683,157 @@ window.inicializarBusquedaDashboard = function () {
     inicializarBusqueda();
   }, 100);
 };
+
+// ===========================================================================
+// 🚪 FUNCIÓN DE SALIDA DE LA APLICACIÓN
+// ===========================================================================
+function confirmarSalida() {
+  // Crear modal de confirmación
+  const modal = document.createElement('div');
+  modal.className = 'modal-overlay';
+  modal.innerHTML = `
+    <div class="modal-content confirm-modal">
+      <div class="modal-icon">🚪</div>
+      <h3 class="modal-title">¿Salir de la aplicación?</h3>
+      <p class="modal-text">Se cerrará la sesión actual.</p>
+      <div class="modal-actions">
+        <button class="action-btn" onclick="cerrarModalSalida()">Cancelar</button>
+        <button class="action-btn primary danger" onclick="salirAplicacion()">Salir</button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(modal);
+  
+  // Cerrar modal al hacer clic fuera
+  modal.addEventListener('click', (e) => {
+    if (e.target === modal) {
+      cerrarModalSalida();
+    }
+  });
+}
+
+function cerrarModalSalida() {
+  const modal = document.querySelector('.modal-overlay');
+  if (modal) {
+    modal.remove();
+  }
+}
+
+function salirAplicacion() {
+  cerrarModalSalida();
+  
+  // Mostrar mensaje de despedida
+  mostrarMensaje('👋 ¡Hasta pronto!');
+  
+  // Cerrar la pestaña/ventana si es posible
+  setTimeout(() => {
+    // Intentar cerrar la ventana
+    if (window.close) {
+      window.close();
+    }
+    // Si no se puede cerrar (común en navegadores modernos), redirigir a una página en blanco
+    document.body.innerHTML = `
+      <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; background: #1a1a2e; color: #eee; font-family: system-ui;">
+        <div style="font-size: 4rem; margin-bottom: 1rem;">👋</div>
+        <h2 style="margin-bottom: 0.5rem;">¡Gracias por usar Taller!</h2>
+        <p style="color: #888;">Puedes cerrar esta pestaña.</p>
+      </div>
+    `;
+  }, 500);
+}
+
+// Exponer funciones de salida globalmente
+window.confirmarSalida = confirmarSalida;
+window.cerrarModalSalida = cerrarModalSalida;
+window.salirAplicacion = salirAplicacion;
+
+// ===========================================================================
+// 🗑️ FUNCIONES PARA ELIMINAR CORTE
+// ===========================================================================
+async function confirmarEliminarCorte(corteId, nombreCorte) {
+  // Obtener información del corte para advertencias
+  const corte = await db.cortes.get(corteId);
+  const tieneAsignaciones = corte.tareas.some(t => t.asignaciones && t.asignaciones.length > 0);
+  const tienePagos = await db.pagos.where('corteId').equals(corteId).count();
+  
+  // Crear modal de confirmación
+  const modal = document.createElement('div');
+  modal.className = 'modal-overlay';
+  modal.id = 'modal-eliminar-corte';
+  
+  let advertenciaHTML = '';
+  if (tieneAsignaciones || tienePagos > 0) {
+    advertenciaHTML = `
+      <div class="modal-warning">
+        <span class="warning-icon">⚠️</span>
+        <div class="warning-text">
+          ${tieneAsignaciones ? '<p>• Este corte tiene tareas asignadas a trabajadores.</p>' : ''}
+          ${tienePagos > 0 ? `<p>• Este corte tiene ${tienePagos} pago(s) registrado(s).</p>` : ''}
+          <p class="warning-note">Todos los datos relacionados serán eliminados.</p>
+        </div>
+      </div>
+    `;
+  }
+  
+  modal.innerHTML = `
+    <div class="modal-content confirm-modal delete-modal">
+      <div class="modal-icon danger">🗑️</div>
+      <h3 class="modal-title">¿Eliminar corte?</h3>
+      <p class="modal-text">Se eliminará "<strong>${nombreCorte}</strong>" permanentemente.</p>
+      ${advertenciaHTML}
+      <div class="modal-actions">
+        <button class="action-btn" onclick="cerrarModalEliminar()">Cancelar</button>
+        <button class="action-btn danger" onclick="eliminarCorte(${corteId})">
+          <span>🗑️</span> Eliminar
+        </button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(modal);
+  
+  // Cerrar modal al hacer clic fuera
+  modal.addEventListener('click', (e) => {
+    if (e.target === modal) {
+      cerrarModalEliminar();
+    }
+  });
+}
+
+function cerrarModalEliminar() {
+  const modal = document.getElementById('modal-eliminar-corte');
+  if (modal) {
+    modal.remove();
+  }
+}
+
+async function eliminarCorte(corteId) {
+  try {
+    cerrarModalEliminar();
+    
+    // Mostrar mensaje de carga
+    mostrarMensaje('⏳ Eliminando corte...');
+    
+    // Eliminar pagos relacionados al corte
+    const pagosEliminados = await db.pagos.where('corteId').equals(corteId).delete();
+    console.log(`Pagos eliminados: ${pagosEliminados}`);
+    
+    // Eliminar el corte
+    await db.cortes.delete(corteId);
+    
+    // Mostrar mensaje de éxito
+    mostrarMensaje('✅ Corte eliminado correctamente');
+    
+    // Recargar lista de cortes y estadísticas
+    await cargarCortesRecientes();
+    await cargarEstadisticas();
+    
+  } catch (error) {
+    console.error('Error al eliminar corte:', error);
+    mostrarMensaje('❌ Error al eliminar el corte');
+  }
+}
+
+// Exponer funciones de eliminación globalmente
+window.confirmarEliminarCorte = confirmarEliminarCorte;
+window.cerrarModalEliminar = cerrarModalEliminar;
+window.eliminarCorte = eliminarCorte;

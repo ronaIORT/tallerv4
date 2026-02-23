@@ -96,10 +96,27 @@ export function renderNuevoCorte() {
             </tbody>
           </table>
         </div>
+        
+        <!-- Botones flotantes para tareas -->
+        <div id="floating-actions-tareas-nuevo-corte" class="floating-action-btns" style="display: none;">
+          <button class="btn-edit-floating" onclick="mostrarModalEditarTareaNuevoCorte()">
+            ✏️ Editar
+          </button>
+          <button class="btn-danger-floating" onclick="mostrarModalEliminarTareaNuevoCorte()">
+            🗑️ Eliminar
+          </button>
+          <button class="btn-add-floating" onclick="mostrarModalAgregarTareaNuevoCorte()">
+            ➕ Agregar
+          </button>
+        </div>
       </div>
       
       <div class="summary-card">
         <h2 class="section-title">Resumen de Costos</h2>
+        <div class="summary-row">
+          <span>Costo por Prenda:</span>
+          <span id="costo-por-prenda" class="money">$0.00</span>
+        </div>
         <div class="summary-row">
           <span>Total Venta:</span>
           <span id="total-venta" class="money">$0.00</span>
@@ -297,9 +314,13 @@ async function cargarTareas() {
     return;
   }
 
-  // Generar filas de tareas
+  // Generar filas de tareas con clase clickable
   prenda.tareas.forEach((tarea, index) => {
     const row = document.createElement('tr');
+    row.className = 'tarea-row-clickable';
+    row.dataset.index = index;
+    row.dataset.nombre = tarea.nombre;
+    row.dataset.precio = tarea.precioUnitario;
     row.innerHTML = `
       <td class="task-name">${tarea.nombre}</td>
       <td class="task-price-cell">
@@ -322,6 +343,9 @@ async function cargarTareas() {
     input.addEventListener('input', recalcularTotales);
     input.addEventListener('blur', validarPrecioTarea);
   });
+
+  // Inicializar eventos de selección de tareas
+  inicializarEventosSeleccionTareasNuevoCorte(prenda);
 }
 
 // Validar nombre del corte
@@ -395,12 +419,14 @@ function recalcularTotales() {
   const precioVenta = parseFloat(document.getElementById('precio-venta').value) || 0;
   const inputs = document.querySelectorAll('.task-price');
   let totalManoObra = 0;
+  let costoPorPrenda = 0;
 
   // Recalcular cada tarea
   inputs.forEach(input => {
     const precio = parseFloat(input.value) || 0;
     const totalTarea = precio * cantidad;
     totalManoObra += totalTarea;
+    costoPorPrenda += precio; // Sumar precio unitario para costo por prenda
 
     // Actualizar visualmente
     const totalCell = input.closest('tr').querySelector('.task-total');
@@ -413,15 +439,18 @@ function recalcularTotales() {
   const ganancia = totalVenta - totalManoObra;
 
   // Actualizar resumen
+  const costoPorPrendaEl = document.getElementById('costo-por-prenda');
   const totalVentaEl = document.getElementById('total-venta');
   const totalManoObraEl = document.getElementById('total-mano-obra');
   const gananciaEl = document.getElementById('ganancia-estimada');
 
+  costoPorPrendaEl.textContent = `$${costoPorPrenda.toFixed(2)}`;
   totalVentaEl.textContent = `$${totalVenta.toFixed(2)}`;
   totalManoObraEl.textContent = `$${totalManoObra.toFixed(2)}`;
   gananciaEl.textContent = `$${ganancia.toFixed(2)}`;
 
   // Estilo dinámico para ganancia
+  costoPorPrendaEl.className = `money ${costoPorPrenda > 0 ? 'positive' : ''}`;
   totalVentaEl.className = `money ${totalVenta > 0 ? 'positive' : ''}`;
   totalManoObraEl.className = `money ${totalManoObra > 0 ? '' : ''}`;
   gananciaEl.className = `money ${ganancia >= 0 ? 'positive' : 'negative'}`;
@@ -478,14 +507,14 @@ async function guardarCorte() {
     const prenda = await db.prendas.get(parseInt(prendaId));
     const tareas = [];
 
-    // Recoger datos de las tareas
+    // Recoger datos de las tareas desde tareasTemporales (que incluye las agregadas/editadas)
     inputs.forEach(input => {
-      const index = input.dataset.index;
+      const index = parseInt(input.dataset.index);
       const precio = parseFloat(input.value) || 0;
 
       tareas.push({
         id: `task-${Date.now()}-${index}`,
-        nombre: prenda.tareas[index].nombre,
+        nombre: tareasTemporales[index].nombre,
         precioUnitario: precio,
         unidadesTotales: cantidad,
         asignaciones: []
@@ -537,4 +566,342 @@ function mostrarMensaje(mensaje) {
   setTimeout(() => {
     mensajeEl.remove();
   }, 2000);
+}
+
+// ==================== SELECCIÓN DE TAREAS Y BOTONES FLOTANTES ====================
+
+// Variable para almacenar las tareas temporales del corte
+let tareasTemporales = [];
+
+// Inicializar eventos de selección de tareas
+function inicializarEventosSeleccionTareasNuevoCorte(prenda) {
+  const floatingBtns = document.getElementById('floating-actions-tareas-nuevo-corte');
+  
+  // Copiar tareas de la prenda a tareas temporales
+  tareasTemporales = [...prenda.tareas];
+  
+  // Variable para la tarea seleccionada
+  window._tareaSeleccionadaNuevoCorte = null;
+
+  // Evento: Clic en fila de tarea
+  document.querySelectorAll('.tarea-row-clickable').forEach(row => {
+    row.addEventListener('click', function(e) {
+      // Evitar que se active si se hace clic en un input
+      if (e.target.tagName === 'INPUT') return;
+      
+      // Quitar selección anterior
+      document.querySelectorAll('.tarea-row-clickable').forEach(r => r.classList.remove('selected'));
+      // Seleccionar esta fila
+      this.classList.add('selected');
+      
+      // Guardar datos de la tarea seleccionada
+      const index = parseInt(this.dataset.index);
+      window._tareaSeleccionadaNuevoCorte = {
+        index: index,
+        nombre: this.dataset.nombre,
+        precio: parseFloat(this.dataset.precio)
+      };
+      
+      // Mostrar botones flotantes
+      floatingBtns.style.display = 'flex';
+    });
+  });
+
+  // Cerrar botones flotantes al hacer clic fuera
+  document.addEventListener('click', function(e) {
+    if (!e.target.closest('.tarea-row-clickable') && !e.target.closest('#floating-actions-tareas-nuevo-corte')) {
+      floatingBtns.style.display = 'none';
+      document.querySelectorAll('.tarea-row-clickable').forEach(r => r.classList.remove('selected'));
+      window._tareaSeleccionadaNuevoCorte = null;
+    }
+  });
+}
+
+// Función global para mostrar modal de edición
+window.mostrarModalEditarTareaNuevoCorte = function() {
+  if (!window._tareaSeleccionadaNuevoCorte) return;
+  
+  const tarea = window._tareaSeleccionadaNuevoCorte;
+  
+  mostrarModalEditarNuevoCorte(
+    tarea.nombre,
+    tarea.precio,
+    (nuevoNombre, nuevoPrecio) => {
+      // Actualizar en el array temporal
+      tareasTemporales[tarea.index].nombre = nuevoNombre;
+      tareasTemporales[tarea.index].precioUnitario = nuevoPrecio;
+      
+      // Actualizar visualmente
+      actualizarVistaTareas();
+      
+      // Ocultar botones flotantes
+      document.getElementById('floating-actions-tareas-nuevo-corte').style.display = 'none';
+      window._tareaSeleccionadaNuevoCorte = null;
+    }
+  );
+};
+
+// Función global para mostrar modal de eliminación
+window.mostrarModalEliminarTareaNuevoCorte = function() {
+  if (!window._tareaSeleccionadaNuevoCorte) return;
+  
+  const tarea = window._tareaSeleccionadaNuevoCorte;
+  
+  mostrarModalConfirmacionNuevoCorte(
+    '⚠️ Confirmar Eliminación',
+    `¿Eliminar la tarea <strong>"${tarea.nombre}"</strong>?`,
+    () => {
+      // Eliminar del array temporal
+      tareasTemporales.splice(tarea.index, 1);
+      
+      // Actualizar visualmente
+      actualizarVistaTareas();
+      
+      // Ocultar botones flotantes
+      document.getElementById('floating-actions-tareas-nuevo-corte').style.display = 'none';
+      window._tareaSeleccionadaNuevoCorte = null;
+    }
+  );
+};
+
+// Función global para mostrar modal de agregar tarea
+window.mostrarModalAgregarTareaNuevoCorte = function() {
+  if (!window._tareaSeleccionadaNuevoCorte) return;
+  
+  const tareaSeleccionada = window._tareaSeleccionadaNuevoCorte;
+  
+  mostrarModalAgregarNuevoCorte(
+    tareaSeleccionada.index + 1,
+    (nombre, precio) => {
+      // Insertar en la posición específica
+      tareasTemporales.splice(tareaSeleccionada.index + 1, 0, {
+        nombre: nombre,
+        precioUnitario: precio
+      });
+      
+      // Actualizar visualmente
+      actualizarVistaTareas();
+      
+      // Ocultar botones flotantes
+      document.getElementById('floating-actions-tareas-nuevo-corte').style.display = 'none';
+      window._tareaSeleccionadaNuevoCorte = null;
+    }
+  );
+};
+
+// Actualizar la vista de tareas basado en tareasTemporales
+function actualizarVistaTareas() {
+  const tbody = document.getElementById('tareas-lista');
+  tbody.innerHTML = '';
+  
+  if (tareasTemporales.length === 0) {
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="3" class="no-data">
+          <div class="empty-state">
+            <div class="empty-icon">📭</div>
+            <p>No hay tareas definidas</p>
+          </div>
+        </td>
+      </tr>
+    `;
+    recalcularTotales();
+    return;
+  }
+  
+  tareasTemporales.forEach((tarea, index) => {
+    const row = document.createElement('tr');
+    row.className = 'tarea-row-clickable';
+    row.dataset.index = index;
+    row.dataset.nombre = tarea.nombre;
+    row.dataset.precio = tarea.precioUnitario;
+    row.innerHTML = `
+      <td class="task-name">${tarea.nombre}</td>
+      <td class="task-price-cell">
+        <input type="number" class="task-price form-control" 
+               value="${tarea.precioUnitario.toFixed(2)}" 
+               step="0.01" min="0" 
+               data-index="${index}"
+               data-original="${tarea.precioUnitario}">
+      </td>
+      <td class="task-total money">$0.00</td>
+    `;
+    tbody.appendChild(row);
+  });
+  
+  // Re-inicializar eventos
+  const prendaDummy = { tareas: tareasTemporales };
+  inicializarEventosSeleccionTareasNuevoCorte(prendaDummy);
+  
+  // Añadir eventos a los inputs de precios
+  document.querySelectorAll('.task-price').forEach(input => {
+    input.addEventListener('input', recalcularTotales);
+    input.addEventListener('blur', validarPrecioTarea);
+  });
+  
+  recalcularTotales();
+}
+
+// ==================== MODALES ====================
+
+// Modal de edición
+function mostrarModalEditarNuevoCorte(nombreActual, precioActual, onSave) {
+  const overlay = document.createElement('div');
+  overlay.className = 'modal-overlay';
+  overlay.innerHTML = `
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>✏️ Editar Tarea</h3>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label for="edit-nombre-nuevo">Nombre</label>
+          <input type="text" id="edit-nombre-nuevo" class="form-control" value="${nombreActual}">
+        </div>
+        <div class="form-group">
+          <label for="edit-precio-nuevo">Precio Unitario</label>
+          <input type="number" id="edit-precio-nuevo" class="form-control" value="${precioActual.toFixed(2)}" step="0.01" min="0">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-secondary" id="modal-cancel-nuevo">Cancelar</button>
+        <button class="btn-primary" id="modal-save-nuevo">Guardar</button>
+      </div>
+    </div>
+  `;
+
+  document.body.appendChild(overlay);
+  document.body.style.overflow = 'hidden';
+
+  setTimeout(() => {
+    document.getElementById('edit-nombre-nuevo').focus();
+  }, 100);
+
+  document.getElementById('modal-cancel-nuevo').addEventListener('click', () => {
+    overlay.remove();
+    document.body.style.overflow = 'auto';
+  });
+
+  document.getElementById('modal-save-nuevo').addEventListener('click', () => {
+    const nuevoNombre = document.getElementById('edit-nombre-nuevo').value.trim();
+    const nuevoPrecio = parseFloat(document.getElementById('edit-precio-nuevo').value);
+
+    if (!nuevoNombre || isNaN(nuevoPrecio) || nuevoPrecio < 0) {
+      mostrarMensaje('❌ Datos inválidos');
+      return;
+    }
+
+    overlay.remove();
+    document.body.style.overflow = 'auto';
+    if (onSave) onSave(nuevoNombre, nuevoPrecio);
+  });
+
+  overlay.addEventListener('click', (e) => {
+    if (e.target === overlay) {
+      overlay.remove();
+      document.body.style.overflow = 'auto';
+    }
+  });
+}
+
+// Modal de confirmación
+function mostrarModalConfirmacionNuevoCorte(titulo, mensaje, onConfirm) {
+  const overlay = document.createElement('div');
+  overlay.className = 'modal-overlay';
+  overlay.innerHTML = `
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>${titulo}</h3>
+      </div>
+      <div class="modal-body">
+        <p>${mensaje}</p>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-secondary" id="modal-cancel-conf">Cancelar</button>
+        <button class="btn-danger" id="modal-confirm-conf">Eliminar</button>
+      </div>
+    </div>
+  `;
+
+  document.body.appendChild(overlay);
+  document.body.style.overflow = 'hidden';
+
+  document.getElementById('modal-cancel-conf').addEventListener('click', () => {
+    overlay.remove();
+    document.body.style.overflow = 'auto';
+  });
+
+  document.getElementById('modal-confirm-conf').addEventListener('click', () => {
+    overlay.remove();
+    document.body.style.overflow = 'auto';
+    if (onConfirm) onConfirm();
+  });
+
+  overlay.addEventListener('click', (e) => {
+    if (e.target === overlay) {
+      overlay.remove();
+      document.body.style.overflow = 'auto';
+    }
+  });
+}
+
+// Modal de agregar tarea
+function mostrarModalAgregarNuevoCorte(posicion, onSave) {
+  const overlay = document.createElement('div');
+  overlay.className = 'modal-overlay';
+  overlay.innerHTML = `
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>➕ Agregar Nueva Tarea</h3>
+      </div>
+      <div class="modal-body">
+        <p class="modal-info-text">Se agregará la nueva tarea en la posición ${posicion + 1}</p>
+        <div class="form-group">
+          <label for="add-nombre-nuevo">Nombre de la tarea</label>
+          <input type="text" id="add-nombre-nuevo" class="form-control" placeholder="Ej: Costura especial">
+        </div>
+        <div class="form-group">
+          <label for="add-precio-nuevo">Precio Unitario</label>
+          <input type="number" id="add-precio-nuevo" class="form-control" placeholder="0.00" step="0.01" min="0">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-secondary" id="modal-cancel-add">Cancelar</button>
+        <button class="btn-primary" id="modal-add-btn">Agregar</button>
+      </div>
+    </div>
+  `;
+
+  document.body.appendChild(overlay);
+  document.body.style.overflow = 'hidden';
+
+  setTimeout(() => {
+    document.getElementById('add-nombre-nuevo').focus();
+  }, 100);
+
+  document.getElementById('modal-cancel-add').addEventListener('click', () => {
+    overlay.remove();
+    document.body.style.overflow = 'auto';
+  });
+
+  document.getElementById('modal-add-btn').addEventListener('click', () => {
+    const nombre = document.getElementById('add-nombre-nuevo').value.trim();
+    const precio = parseFloat(document.getElementById('add-precio-nuevo').value);
+
+    if (!nombre || isNaN(precio) || precio < 0) {
+      mostrarMensaje('❌ Datos inválidos');
+      return;
+    }
+
+    overlay.remove();
+    document.body.style.overflow = 'auto';
+    if (onSave) onSave(nombre, precio);
+  });
+
+  overlay.addEventListener('click', (e) => {
+    if (e.target === overlay) {
+      overlay.remove();
+      document.body.style.overflow = 'auto';
+    }
+  });
 }

@@ -1,0 +1,666 @@
+/* ==========================================================================
+   RESPONSIVE CSS - Media Queries para todos los tamaños de pantalla
+   ========================================================================== */
+
+/* ==========================================================================
+   MÓVILES MUY PEQUEÑOS (< 320px)
+   ========================================================================== */
+
+@media (max-width: 319px) {
+    .form-section {
+        padding: 10px 6px;
+    }
+
+    .form-card {
+        padding: 12px;
+    }
+
+    .form-row {
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .tasks-section {
+        padding: 0 6px;
+    }
+
+    .tasks-table th,
+    .tasks-table td {
+        padding: 8px 10px;
+        font-size: 11px;
+    }
+
+    .task-price-cell .form-control {
+        padding: 6px 8px;
+        max-width: 70px;
+    }
+
+    .summary-card {
+        margin: 12px 6px;
+        padding: 12px;
+    }
+
+    .actions-section {
+        padding: 10px 6px;
+    }
+
+    .btn-primary,
+    .btn-secondary {
+        padding: 12px;
+        font-size: 13px;
+    }
+
+    /* Dashboard */
+    .dashboard-content {
+        padding: 16px 12px;
+    }
+
+    .stats-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .stat-card {
+        padding: 16px;
+        min-height: 90px;
+    }
+
+    .stat-icon {
+        width: 48px;
+        height: 48px;
+        font-size: 24px;
+    }
+
+    .stat-value {
+        font-size: 24px;
+    }
+
+    .quick-actions {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .action-btn {
+        min-height: 100px;
+    }
+
+    .corte-card-main {
+        grid-template-columns: 1fr;
+        gap: 12px;
+    }
+
+    .corte-status {
+        align-items: flex-start;
+    }
+}
+
+/* ==========================================================================
+   MÓVILES PEQUEÑOS (320px - 359px)
+   ========================================================================== */
+
+@media (min-width: 320px) and (max-width: 359px) {
+    .header {
+        padding: 12px 10px;
+    }
+
+    .small-title {
+        font-size: 17px;
+    }
+
+    .form-section,
+    .prendas-section,
+    .tasks-section {
+        padding: 12px 10px;
+    }
+
+    .form-card,
+    .summary-card {
+        padding: 16px;
+    }
+
+    .prenda-card-main {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+    }
+
+    .prenda-summary {
+        text-align: left;
+        min-width: auto;
+        width: 100%;
+        margin-left: 0;
+    }
+
+    .prenda-actions {
+        flex-direction: column;
+    }
+
+    .action-btn {
+        padding: 12px;
+    }
+
+    .task-price-cell .form-control {
+        max-width: 100px;
+        padding: 8px 10px;
+    }
+
+    .tasks-table th,
+    .tasks-table td {
+        padding: 12px 14px;
+    }
+
+    .modal-container {
+        padding: 20px;
+        margin: 0 10px;
+    }
+
+    .modal-actions {
+        flex-direction: column;
+    }
+
+    /* Worker section */
+    .worker-section {
+        margin-bottom: 12px;
+        border-radius: var(--radius-sm);
+    }
+
+    .worker-title {
+        padding: 14px 12px;
+        font-size: 14px;
+    }
+
+    .worker-table th,
+    .worker-table td {
+        padding: 10px 12px;
+        font-size: 13px;
+    }
+
+    .worker-table .task-name {
+        min-width: 100px;
+        font-size: 13px;
+    }
+
+    .worker-table .task-quantity {
+        min-width: 50px;
+        font-size: 13px;
+    }
+
+    .worker-table .task-total {
+        min-width: 80px;
+        font-size: 13px;
+    }
+}
+
+/* ==========================================================================
+   MÓVILES ESTÁNDAR (360px - 414px) - Estilos base ya aplicados
+   ========================================================================== */
+
+/* No necesita media query - son los estilos por defecto */
+
+/* ==========================================================================
+   MÓVILES GRANDES / PHABLETS (414px - 767px)
+   ========================================================================== */
+
+@media (min-width: 414px) and (max-width: 767px) {
+    .mobile-container {
+        max-width: 100%;
+        margin: 0 auto;
+    }
+
+    .tab-item {
+        padding: 16px 12px;
+        font-size: 15px;
+    }
+
+    .section-title {
+        font-size: 20px;
+    }
+
+    .task-name {
+        max-width: 200px;
+    }
+
+    .actions-section {
+        flex-direction: row;
+        flex-wrap: wrap;
+        gap: 12px;
+    }
+
+    .actions-section .btn-primary,
+    .actions-section .btn-secondary {
+        flex: 1;
+        min-width: 160px;
+    }
+
+    /* Mejorar tablas en phablets */
+    .table-container {
+        margin: 24px 0;
+    }
+
+    .tasks-table th,
+    .tasks-table td {
+        padding: 18px 16px;
+    }
+
+    /* Dashboard */
+    .dashboard-content {
+        padding: 24px 20px;
+    }
+
+    .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 20px;
+    }
+
+    .stat-card {
+        padding: 24px;
+        min-height: 120px;
+    }
+
+    .stat-icon {
+        width: 64px;
+        height: 64px;
+        font-size: 32px;
+    }
+
+    .stat-value {
+        font-size: 32px;
+    }
+
+    .quick-actions {
+        gap: 16px;
+    }
+
+    .action-btn {
+        padding: 24px 16px;
+        min-height: 140px;
+    }
+}
+
+/* ==========================================================================
+   TABLETS (768px - 1023px)
+   ========================================================================== */
+
+@media (min-width: 768px) {
+    body {
+        padding: 20px;
+        background: linear-gradient(135deg, #0d1117 0%, #161b22 100%);
+        display: flex;
+        justify-content: center;
+        align-items: flex-start;
+        min-height: 100vh;
+    }
+
+    .mobile-container {
+        max-width: 750px;
+        width: 100%;
+        border-radius: var(--radius-lg);
+        overflow: hidden;
+        box-shadow: var(--shadow-lg);
+        margin: 0 auto;
+    }
+
+    .tab-item {
+        font-size: 15px;
+        padding: 16px;
+    }
+
+    .section-title {
+        font-size: 22px;
+    }
+
+    .task-name {
+        max-width: 250px;
+    }
+
+    .actions-section {
+        flex-direction: row;
+        justify-content: center;
+        gap: 20px;
+    }
+
+    .actions-section .btn-primary,
+    .actions-section .btn-secondary {
+        width: auto;
+        min-width: 220px;
+        max-width: 300px;
+    }
+
+    /* Layout de dos columnas para formularios */
+    .assignment-form,
+    .add-task-form {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 20px;
+    }
+
+    .form-group:last-child {
+        grid-column: span 2;
+    }
+
+    /* Dashboard */
+    .mobile-container {
+        max-width: 100% !important;
+    }
+
+    .dashboard-content {
+        padding: 32px;
+        max-width: 1200px;
+        margin: 0 auto;
+    }
+
+    .stats-grid {
+        grid-template-columns: repeat(4, 1fr);
+        gap: 24px;
+    }
+
+    .quick-actions {
+        grid-template-columns: repeat(4, 1fr);
+        gap: 20px;
+    }
+
+    .action-btn {
+        padding: 28px 20px;
+        min-height: 160px;
+        font-size: 15px;
+    }
+
+    .action-icon {
+        font-size: 40px;
+    }
+
+    .search-filters {
+        flex-wrap: nowrap;
+    }
+
+    .help-cards {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    /* Prendas */
+    .prenda-card-main {
+        flex-direction: row;
+    }
+
+    .prenda-summary {
+        text-align: right;
+        min-width: 120px;
+        margin-left: 20px;
+    }
+
+    .prenda-actions {
+        flex-direction: row;
+    }
+}
+
+/* ==========================================================================
+   DESKTOP (1024px+)
+   ========================================================================== */
+
+@media (min-width: 1024px) {
+    .mobile-container {
+        max-width: 900px;
+        margin: 40px auto;
+    }
+
+    .tab-content {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 30px;
+        align-items: start;
+    }
+
+    /* Algunas pestañas ocupan ambas columnas */
+    .tasks-section,
+    .workers-summary,
+    .editar-corte-section,
+    .assignment-section {
+        grid-column: span 2;
+    }
+
+    /* Estadísticas en grid */
+    .summary-card {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 20px;
+    }
+
+    .summary-row {
+        flex-direction: column;
+        text-align: center;
+        border: none;
+        padding: 20px;
+        background: rgba(255, 255, 255, 0.03);
+        border-radius: var(--radius-sm);
+    }
+
+    /* Dashboard */
+    .stats-grid {
+        gap: 32px;
+    }
+
+    .stat-card {
+        padding: 32px;
+        min-height: 140px;
+    }
+
+    .stat-value {
+        font-size: 36px;
+    }
+
+    .quick-actions {
+        gap: 24px;
+    }
+
+    .action-btn {
+        padding: 32px 24px;
+        min-height: 180px;
+        font-size: 16px;
+    }
+
+    .action-icon {
+        font-size: 48px;
+    }
+
+    .recent-section {
+        max-width: 800px;
+        margin: 0 auto 32px;
+    }
+
+    .help-cards {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+/* ==========================================================================
+   ORIENTACIÓN LANDSCAPE
+   ========================================================================== */
+
+@media (max-height: 600px) and (orientation: landscape) {
+    .header {
+        padding: 12px 16px;
+    }
+
+    .back-btn {
+        width: 40px;
+        height: 40px;
+    }
+
+    .tab-menu {
+        top: 64px;
+    }
+
+    .tab-item {
+        padding: 12px 8px;
+    }
+
+    .tab-content {
+        padding: 16px;
+    }
+
+    .table-container {
+        max-height: 40vh;
+        overflow-y: auto;
+    }
+
+    .corte-header,
+    .summary-card {
+        padding: 16px;
+    }
+
+    .form-section,
+    .prendas-section,
+    .tasks-section {
+        padding: 10px 12px;
+    }
+
+    .form-card,
+    .summary-card {
+        padding: 16px;
+    }
+
+    .prendas-list {
+        max-height: 300px;
+    }
+
+    .empty-state,
+    .error-state {
+        padding: 30px 16px;
+    }
+
+    .empty-icon,
+    .error-icon {
+        font-size: 36px;
+        margin-bottom: 16px;
+    }
+
+    /* Dashboard landscape */
+    .dashboard-content {
+        padding: 16px;
+    }
+
+    .stats-grid {
+        grid-template-columns: repeat(4, 1fr);
+        margin-bottom: 16px;
+    }
+
+    .stat-card {
+        padding: 16px;
+        min-height: 80px;
+    }
+
+    .quick-actions {
+        margin-bottom: 20px;
+    }
+
+    .action-btn {
+        min-height: 100px;
+        padding: 16px 12px;
+    }
+
+    .cortes-list {
+        max-height: 300px;
+    }
+}
+
+/* ==========================================================================
+   MEJORAS TÁCTILES PARA MÓVILES
+   ========================================================================== */
+
+@media (hover: none) and (pointer: coarse) {
+    /* Dispositivos táctiles sin hover */
+    .back-btn:hover,
+    .tab-item:hover,
+    .btn-primary:hover,
+    .btn-secondary:hover {
+        /* Eliminar efectos hover en táctiles */
+        transform: none;
+    }
+
+    .back-btn:active,
+    .tab-item:active,
+    .btn-primary:active:not(:disabled),
+    .btn-secondary:active:not(:disabled) {
+        transform: scale(0.95);
+    }
+
+    /* Aumentar áreas táctiles */
+    .tab-item {
+        min-height: 50px;
+    }
+
+    .form-control {
+        font-size: 16px;
+        /* Evitar zoom automático en iOS */
+    }
+
+    input,
+    select,
+    textarea {
+        font-size: 16px;
+        /* Previene zoom automático en iOS */
+    }
+}
+
+/* ==========================================================================
+   ALTO CONTRASTE PARA ACCESIBILIDAD
+   ========================================================================== */
+
+@media (prefers-contrast: high) {
+    :root {
+        --text-primary: #ffffff;
+        --text-secondary: #f0f0f0;
+        --border-color: #ffffff;
+    }
+
+    .form-control {
+        border-width: 2px;
+    }
+
+    .stat-card,
+    .action-btn,
+    .corte-card {
+        border-width: 3px;
+    }
+}
+
+/* ==========================================================================
+   MODO OSCURO NATIVO
+   ========================================================================== */
+
+@media (prefers-color-scheme: dark) {
+    :root {
+        --bg-dark: #0d1117;
+        --bg-card: #161b22;
+        --border-color: #30363d;
+    }
+}
+
+/* ==========================================================================
+   REDUCCIÓN DE MOVIMIENTO (ACCESIBILIDAD)
+   ========================================================================== */
+
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+}
+
+/* ==========================================================================
+   SOporte para navegadores sin backdrop-filter
+   ========================================================================== */
+
+@supports not (backdrop-filter: blur(10px)) {
+    .header,
+    .form-card,
+    .modal-container,
+    .toast-message {
+        background: rgba(20, 20, 20, 0.98);
+    }
+
+    .modal-overlay {
+        background: rgba(0, 0, 0, 0.95);
+    }
+}

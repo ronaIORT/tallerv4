@@ -1,0 +1,445 @@
+/* ==========================================================================
+   HISTORIAL DE PAGOS CSS - Estilos para el skill de Historial de Pagos
+   ========================================================================== */
+
+/* ==========================================================================
+   RESUMEN GLOBAL - Dos tarjetas de totales
+   ========================================================================== */
+
+.pagos-resumen-global {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    padding: 16px;
+}
+
+.global-stat-card {
+    border-radius: var(--radius-lg);
+    padding: 16px 12px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    border: 1px solid var(--border-color);
+    transition: var(--transition-normal);
+}
+
+.global-stat-card.pendiente-card {
+    background: rgba(239, 68, 68, 0.08);
+    border-color: rgba(239, 68, 68, 0.3);
+}
+
+.global-stat-card.pagado-card {
+    background: rgba(16, 185, 129, 0.08);
+    border-color: rgba(16, 185, 129, 0.3);
+}
+
+.global-stat-icon {
+    font-size: 26px;
+    flex-shrink: 0;
+}
+
+.global-stat-info {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    min-width: 0;
+}
+
+.global-stat-value {
+    font-size: 16px;
+    font-weight: 800;
+    color: var(--text-primary);
+    font-family: 'Menlo', 'Monaco', 'Courier New', monospace;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.global-stat-label {
+    font-size: 10px;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-weight: 600;
+}
+
+/* ==========================================================================
+   LISTA DE TRABAJADORES EN RESUMEN
+   ========================================================================== */
+
+.pagos-trabajadores-list {
+    padding: 0 16px 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.pago-worker-card {
+    background: var(--bg-card);
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--border-color);
+    overflow: hidden;
+    transition: var(--transition-normal);
+}
+
+.pago-worker-card.tiene-pendiente {
+    border-color: rgba(239, 68, 68, 0.35);
+    box-shadow: 0 2px 8px rgba(239, 68, 68, 0.08);
+}
+
+.pago-worker-card.al-dia {
+    border-color: rgba(16, 185, 129, 0.25);
+    opacity: 0.85;
+}
+
+.pago-worker-card:hover {
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-md);
+}
+
+/* Header de la tarjeta del trabajador */
+.pago-worker-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--border-color);
+    background: rgba(255, 255, 255, 0.02);
+    gap: 12px;
+}
+
+.pago-worker-info {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    min-width: 0;
+}
+
+.pago-worker-name {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.pago-worker-badge {
+    font-size: 11px;
+    font-weight: 600;
+    padding: 3px 8px;
+    border-radius: 10px;
+    width: fit-content;
+    letter-spacing: 0.3px;
+}
+
+.badge-pendiente {
+    background: rgba(239, 68, 68, 0.15);
+    color: #f87171;
+    border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+.badge-al-dia {
+    background: rgba(16, 185, 129, 0.15);
+    color: #34d399;
+    border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+/* Botón pagar */
+.btn-pagar {
+    background: var(--primary);
+    color: white;
+    border: none;
+    border-radius: var(--radius-md);
+    padding: 10px 14px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: var(--transition-normal);
+    white-space: nowrap;
+    flex-shrink: 0;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.btn-pagar:hover {
+    background: var(--primary-hover);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(88, 166, 255, 0.3);
+}
+
+.btn-pagar:active {
+    transform: scale(0.97);
+}
+
+/* Grid de estadísticas del trabajador */
+.pago-worker-stats {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+}
+
+.pago-stat {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 12px 8px;
+    border-right: 1px solid var(--border-color);
+    text-align: center;
+    gap: 4px;
+}
+
+.pago-stat:last-child {
+    border-right: none;
+}
+
+.pago-stat.destacado {
+    background: rgba(255, 255, 255, 0.025);
+}
+
+.pago-stat-label {
+    font-size: 10px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    font-weight: 500;
+}
+
+.pago-stat-value {
+    font-size: 14px;
+    font-weight: 700;
+    font-family: 'Menlo', 'Monaco', 'Courier New', monospace;
+}
+
+.valor-ganado   { color: var(--text-primary); }
+.valor-pagado   { color: var(--success); }
+.valor-pendiente { color: var(--danger); }
+.valor-cero     { color: var(--success); }
+
+/* ==========================================================================
+   FORMULARIO DE REGISTRO DE PAGO
+   ========================================================================== */
+
+.registrar-pago-form {
+    padding: 16px;
+}
+
+.registrar-pago-form .form-card {
+    background: var(--bg-card);
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--border-color);
+    padding: 20px;
+}
+
+.label-opcional {
+    font-size: 11px;
+    color: var(--text-muted);
+    font-weight: 400;
+    font-style: italic;
+}
+
+/* Panel de información del trabajador seleccionado */
+.info-trabajador-pago {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border-color);
+    overflow: hidden;
+    margin-bottom: 20px;
+}
+
+.info-pago-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 14px;
+    font-size: 14px;
+    color: var(--text-secondary);
+    border-bottom: 1px solid var(--border-color);
+}
+
+.info-pago-row:last-child {
+    border-bottom: none;
+}
+
+.info-pago-row-destacada {
+    background: rgba(255, 255, 255, 0.03);
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.info-value {
+    font-weight: 700;
+    font-family: 'Menlo', 'Monaco', 'Courier New', monospace;
+    font-size: 15px;
+}
+
+/* Textarea de notas */
+.textarea-pago {
+    resize: vertical;
+    min-height: 72px;
+    max-height: 140px;
+    font-family: inherit;
+    line-height: 1.5;
+}
+
+/* Botón registrar */
+.btn-registrar-pago {
+    width: 100%;
+    margin-top: 4px;
+    padding: 14px;
+    font-size: 15px;
+    font-weight: 700;
+    letter-spacing: 0.3px;
+}
+
+.btn-registrar-pago:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+/* ==========================================================================
+   HISTORIAL DE PAGOS
+   ========================================================================== */
+
+.historial-container {
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+/* Filtro por trabajador */
+.historial-filtros {
+    margin-bottom: 0;
+}
+
+/* Barra de resumen del historial */
+.historial-summary {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 14px;
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border-color);
+}
+
+.historial-count {
+    font-size: 13px;
+    color: var(--text-secondary);
+    font-weight: 500;
+}
+
+.historial-total {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--success);
+    font-family: 'Menlo', 'Monaco', 'Courier New', monospace;
+}
+
+/* Lista de pagos */
+.pagos-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+/* Tarjeta individual de pago */
+.pago-item {
+    background: var(--bg-card);
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border-color);
+    overflow: hidden;
+    transition: var(--transition-normal);
+    animation: fadeIn 0.25s ease;
+}
+
+.pago-item:hover {
+    border-color: var(--primary);
+    box-shadow: var(--shadow-sm);
+}
+
+.pago-item-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 14px;
+    gap: 12px;
+}
+
+.pago-item-info {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 0;
+}
+
+.pago-item-nombre {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.pago-item-fecha {
+    font-size: 12px;
+    color: var(--text-muted);
+}
+
+.pago-item-right {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-shrink: 0;
+}
+
+.pago-item-monto {
+    font-size: 17px;
+    font-weight: 800;
+    color: var(--success);
+    font-family: 'Menlo', 'Monaco', 'Courier New', monospace;
+    white-space: nowrap;
+}
+
+/* Botón eliminar pago */
+.btn-eliminar-pago {
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: var(--radius-sm);
+    color: var(--text-muted);
+    font-size: 16px;
+    cursor: pointer;
+    padding: 5px 7px;
+    line-height: 1;
+    transition: var(--transition-fast);
+    -webkit-tap-highlight-color: transparent;
+}
+
+.btn-eliminar-pago:hover {
+    background: rgba(239, 68, 68, 0.1);
+    border-color: rgba(239, 68, 68, 0.3);
+    color: var(--danger);
+}
+
+.btn-eliminar-pago:active {
+    transform: scale(0.92);
+}
+
+/* Notas del pago */
+.pago-item-notas {
+    padding: 8px 14px 10px;
+    font-size: 12px;
+    color: var(--text-secondary);
+    font-style: italic;
+    border-top: 1px dashed var(--border-color);
+    margin: 0;
+    background: rgba(255, 255, 255, 0.02);
+    line-height: 1.4;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}

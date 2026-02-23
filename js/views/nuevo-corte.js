@@ -1,10 +1,13 @@
-// nuevo-corte.js - Versión con nombre personalizado del corte
+// nuevo-corte.js - Versión con nombre personalizado del corte y gestión de tallas
 import { db } from '../db.js';
+
+// Array local para almacenar las tallas
+let tallas = [];
 
 export function renderNuevoCorte() {
   const app = document.getElementById('app');
   app.innerHTML = `
-    <div class="mobile-container">
+    <div class="mobile-container nuevo-corte-view">
       <div class="header">
         <button onclick="location.hash='#dashboard'" class="back-btn">←</button>
         <h1 class="small-title">Nuevo Corte</h1>
@@ -30,15 +33,40 @@ export function renderNuevoCorte() {
           
           <div class="form-row">
             <div class="form-group-half">
-              <label for="cantidad">Cantidad</label>
-              <input type="number" id="cantidad" class="form-control" min="1" value="100">
-              <small id="error-cantidad" class="error-message"></small>
+              <label for="cantidad">Cantidad Total</label>
+              <input type="number" id="cantidad" class="form-control" min="0" value="0" readonly>
+              <small class="info-message">Se calcula desde las tallas</small>
             </div>
             <div class="form-group-half">
               <label for="precio-venta">$ Venta/unidad</label>
               <input type="number" id="precio-venta" class="form-control" min="0" step="0.01" value="10.00">
               <small id="error-precio" class="error-message"></small>
             </div>
+          </div>
+        </div>
+        
+        <!-- Sección de Tallas -->
+        <div class="form-card tallas-card">
+          <h3 class="card-subtitle">📏 Tallas del Corte</h3>
+          <div class="tallas-input-row">
+            <div class="form-group-half">
+              <label for="talla-input">Talla</label>
+              <input type="text" id="talla-input" class="form-control" placeholder="Ej: M, L, XL, 36">
+            </div>
+            <div class="form-group-half">
+              <label for="talla-cantidad">Cantidad</label>
+              <input type="number" id="talla-cantidad" class="form-control" min="1" placeholder="0">
+            </div>
+          </div>
+          <button id="btn-agregar-talla" class="btn-add-talla">+ Agregar Talla</button>
+          
+          <!-- Lista de tallas registradas -->
+          <div id="tallas-lista" class="tallas-lista"></div>
+          
+          <!-- Total de tallas -->
+          <div class="tallas-total">
+            <span>Total unidades:</span>
+            <span id="total-tallas" class="total-valor">0</span>
           </div>
         </div>
       </div>
@@ -93,22 +121,117 @@ export function renderNuevoCorte() {
     </div>
   `;
 
+  // Reiniciar array de tallas
+  tallas = [];
+
   // Cargar prendas en el selector
   cargarPrendas();
 
   // Eventos para recalcular TODO cuando cambian los inputs clave
   document.getElementById('nombre-corte').addEventListener('input', validarNombreCorte);
   document.getElementById('prenda').addEventListener('change', cargarTareas);
-  document.getElementById('cantidad').addEventListener('input', recalcularTotales);
   document.getElementById('precio-venta').addEventListener('input', recalcularTotales);
 
   // Validación en tiempo real
-  document.getElementById('cantidad').addEventListener('blur', validarCantidad);
   document.getElementById('precio-venta').addEventListener('blur', validarPrecio);
   document.getElementById('nombre-corte').addEventListener('blur', validarNombreCorte);
 
+  // Eventos para tallas
+  document.getElementById('btn-agregar-talla').addEventListener('click', agregarTalla);
+  document.getElementById('talla-input').addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') agregarTalla();
+  });
+  document.getElementById('talla-cantidad').addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') agregarTalla();
+  });
+
   document.getElementById('btn-guardar').addEventListener('click', guardarCorte);
 }
+
+// Agregar una talla al registro
+function agregarTalla() {
+  const tallaInput = document.getElementById('talla-input');
+  const cantidadInput = document.getElementById('talla-cantidad');
+  
+  const talla = tallaInput.value.trim().toUpperCase();
+  const cantidad = parseInt(cantidadInput.value);
+
+  // Validaciones
+  if (!talla) {
+    mostrarMensaje('❌ Ingresa una talla');
+    tallaInput.focus();
+    return;
+  }
+
+  if (!cantidad || cantidad < 1) {
+    mostrarMensaje('❌ Ingresa una cantidad válida');
+    cantidadInput.focus();
+    return;
+  }
+
+  // Verificar si la talla ya existe
+  const existeIndex = tallas.findIndex(t => t.talla === talla);
+  if (existeIndex !== -1) {
+    // Sumar a la existente
+    tallas[existeIndex].cantidad += cantidad;
+    mostrarMensaje(`✅ Actualizado: ${talla} ahora tiene ${tallas[existeIndex].cantidad} unidades`);
+  } else {
+    // Agregar nueva
+    tallas.push({ talla, cantidad });
+    mostrarMensaje(`✅ Talla ${talla} agregada`);
+  }
+
+  // Limpiar inputs
+  tallaInput.value = '';
+  cantidadInput.value = '';
+  tallaInput.focus();
+
+  // Actualizar vista
+  renderizarTallas();
+  actualizarCantidadTotal();
+}
+
+// Eliminar una talla del registro
+function eliminarTalla(index) {
+  const tallaEliminada = tallas[index].talla;
+  tallas.splice(index, 1);
+  mostrarMensaje(`🗑️ Talla ${tallaEliminada} eliminada`);
+  renderizarTallas();
+  actualizarCantidadTotal();
+}
+
+// Renderizar la lista de tallas
+function renderizarTallas() {
+  const container = document.getElementById('tallas-lista');
+  
+  if (tallas.length === 0) {
+    container.innerHTML = `
+      <div class="tallas-empty">
+        <p>No hay tallas registradas</p>
+      </div>
+    `;
+    return;
+  }
+
+  container.innerHTML = tallas.map((t, index) => `
+    <div class="talla-item">
+      <span class="talla-nombre">${t.talla}</span>
+      <span class="talla-cantidad">${t.cantidad} unid.</span>
+      <button class="btn-eliminar-talla" onclick="window.eliminarTallaNueva(${index})" title="Eliminar">×</button>
+    </div>
+  `).join('');
+}
+
+// Actualizar el campo de cantidad total
+function actualizarCantidadTotal() {
+  const total = tallas.reduce((sum, t) => sum + t.cantidad, 0);
+  document.getElementById('cantidad').value = total;
+  document.getElementById('total-tallas').textContent = total;
+  recalcularTotales();
+}
+
+// Exponer función globalmente para los botones de eliminar
+window.eliminarTallaNueva = eliminarTalla;
 
 // Cargar prendas en el selector
 async function cargarPrendas() {
@@ -237,23 +360,6 @@ function validarNombreCorte() {
   return true;
 }
 
-// Validar cantidad
-function validarCantidad() {
-  const input = document.getElementById('cantidad');
-  const error = document.getElementById('error-cantidad');
-  const cantidad = parseInt(input.value);
-
-  if (!cantidad || cantidad < 1) {
-    error.textContent = 'La cantidad debe ser al menos 1';
-    input.classList.add('error');
-    return false;
-  }
-
-  error.textContent = '';
-  input.classList.remove('error');
-  return true;
-}
-
 // Validar precio de venta
 function validarPrecio() {
   const input = document.getElementById('precio-venta');
@@ -324,7 +430,7 @@ function recalcularTotales() {
 // Guardar el corte en la base de datos
 async function guardarCorte() {
   // Validaciones
-  if (!validarNombreCorte() || !validarCantidad() || !validarPrecio()) {
+  if (!validarNombreCorte() || !validarPrecio()) {
     mostrarMensaje('❌ Corrige los errores en el formulario');
     return;
   }
@@ -333,6 +439,12 @@ async function guardarCorte() {
   if (!prendaId) {
     document.getElementById('error-prenda').textContent = 'Selecciona una prenda';
     mostrarMensaje('❌ Debes seleccionar un tipo de prenda');
+    return;
+  }
+
+  // Validar que haya tallas registradas
+  if (tallas.length === 0) {
+    mostrarMensaje('❌ Debes agregar al menos una talla');
     return;
   }
 
@@ -382,11 +494,12 @@ async function guardarCorte() {
 
     // Crear el corte
     const nuevoCorte = {
-      nombreCorte: nombreCorte, // NUEVO CAMPO
+      nombreCorte: nombreCorte,
       prendaId: parseInt(prendaId),
-      nombrePrendaOriginal: prenda.nombre, // Para mantener el tipo original
+      nombrePrendaOriginal: prenda.nombre,
       cantidadPrendas: cantidad,
       precioVentaUnitario: precioVenta,
+      tallas: [...tallas], // Guardar array de tallas
       estado: 'activo',
       fechaCreacion: new Date(),
       tareas: tareas

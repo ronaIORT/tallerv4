@@ -1,0 +1,230 @@
+/* ==========================================================================
+   GESTIÓN DE TRABAJADORES CSS - Estilos para administración de trabajadores
+   ========================================================================== */
+
+/* Sección de formulario específica */
+.gestion-trabajadores .form-section {
+    padding: 12px 8px;
+}
+
+.gestion-trabajadores .form-card {
+    background: #1e1e1e;
+    border-radius: var(--radius-md);
+    padding: 16px;
+    border: 1px solid #333333;
+    margin-bottom: 16px;
+}
+
+/* ==========================================================================
+   LISTA DE TRABAJADORES
+   ========================================================================== */
+
+.gestion-trabajadores .workers-section {
+    padding: 0 8px;
+}
+
+.gestion-trabajadores .workers-list {
+    max-height: 400px;
+    overflow-y: auto;
+    padding: 4px;
+}
+
+.gestion-trabajadores .workers-list::-webkit-scrollbar {
+    width: 4px;
+}
+
+.gestion-trabajadores .workers-list::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 2px;
+}
+
+.gestion-trabajadores .workers-list::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 2px;
+}
+
+/* ==========================================================================
+   TARJETA DE TRABAJADOR
+   ========================================================================== */
+
+.gestion-trabajadores .worker-card {
+    background: rgba(255, 255, 255, 0.02);
+    border-radius: var(--radius-md);
+    border: 1px solid #333333;
+    margin-bottom: 8px;
+    overflow: hidden;
+    transition: all 0.2s;
+}
+
+.gestion-trabajadores .worker-card:hover {
+    background: rgba(255, 255, 255, 0.05);
+    border-color: #444444;
+}
+
+.gestion-trabajadores .worker-card-main {
+    padding: 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.gestion-trabajadores .worker-info {
+    flex: 1;
+}
+
+.gestion-trabajadores .worker-name {
+    font-size: 14px;
+    font-weight: 600;
+    color: #ffffff;
+    margin: 0 0 4px 0;
+    line-height: 1.2;
+}
+
+.gestion-trabajadores .worker-meta {
+    display: flex;
+    gap: 10px;
+    font-size: 11px;
+    color: #a0a0a0;
+}
+
+.gestion-trabajadores .worker-status {
+    padding: 2px 6px;
+    border-radius: 10px;
+    font-size: 10px;
+    font-weight: 600;
+}
+
+.gestion-trabajadores .worker-status.active {
+    background: rgba(16, 185, 129, 0.15);
+    color: #10b981;
+    border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.gestion-trabajadores .worker-earnings {
+    text-align: right;
+    min-width: 100px;
+}
+
+.gestion-trabajadores .earnings-label {
+    display: block;
+    font-size: 10px;
+    color: #a0a0a0;
+    margin-bottom: 4px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.gestion-trabajadores .earnings-value {
+    font-size: 16px;
+    font-weight: 700;
+    font-family: 'Menlo', 'Monaco', 'Courier New', monospace;
+}
+
+.gestion-trabajadores .earnings-value.positive {
+    color: #10b981;
+}
+
+.gestion-trabajadores .earnings-value.negative {
+    color: #ef4444;
+}
+
+.gestion-trabajadores .worker-actions {
+    padding: 8px 12px;
+    background: rgba(0, 0, 0, 0.2);
+    border-top: 1px solid #333333;
+    display: flex;
+    gap: 8px;
+}
+
+.gestion-trabajadores .action-btn {
+    flex: 1;
+    padding: 8px 12px;
+    border-radius: var(--radius-sm);
+    font-size: 12px;
+    font-weight: 500;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+}
+
+.gestion-trabajadores .action-btn.edit {
+    background: rgba(37, 99, 235, 0.15);
+    color: #60a5fa;
+    border: 1px solid rgba(37, 99, 235, 0.3);
+}
+
+.gestion-trabajadores .action-btn.edit:hover {
+    background: rgba(37, 99, 235, 0.25);
+}
+
+.gestion-trabajadores .action-btn.delete {
+    background: rgba(239, 68, 68, 0.15);
+    color: #f87171;
+    border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+.gestion-trabajadores .action-btn.delete:hover {
+    background: rgba(239, 68, 68, 0.25);
+}
+
+.gestion-trabajadores .action-icon {
+    font-size: 14px;
+}
+
+/* ==========================================================================
+   ESTADOS DE CARGA, VACÍO Y ERROR
+   ========================================================================== */
+
+.gestion-trabajadores .loading-item {
+    padding: 12px;
+    background: rgba(255, 255, 255, 0.02);
+    border-radius: var(--radius-sm);
+    margin-bottom: 6px;
+    border: 1px solid #333333;
+}
+
+.gestion-trabajadores .loading-line {
+    height: 12px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 2px;
+    margin-bottom: 6px;
+    animation: pulse 1.5s infinite;
+}
+
+.gestion-trabajadores .loading-line.short {
+    width: 60%;
+}
+
+.gestion-trabajadores .empty-state,
+.gestion-trabajadores .error-state {
+    padding: 32px 16px;
+    text-align: center;
+    background: rgba(255, 255, 255, 0.02);
+    border-radius: var(--radius-md);
+    border: 1px solid #333333;
+    margin: 8px 0;
+}
+
+.gestion-trabajadores .empty-icon,
+.gestion-trabajadores .error-icon {
+    font-size: 32px;
+    margin-bottom: 12px;
+    opacity: 0.5;
+}
+
+.gestion-trabajadores .empty-text,
+.gestion-trabajadores .error-text {
+    color: #a0a0a0;
+    font-size: 14px;
+    margin-bottom: 8px;
+}
+
+.gestion-trabajadores .empty-subtext {
+    color: #707070;
+    font-size: 12px;
+    margin-bottom: 16px;
+}

@@ -445,3 +445,416 @@
     overflow: hidden;
     text-overflow: ellipsis;
 }
+
+/* ==========================================================================
+   HISTORIAL PAGOS - RESPONSIVE ADICIONAL
+   ========================================================================== */
+
+/* Tablets */
+@media (min-width: 768px) {
+    .tab-menu {
+        padding: 0 16px;
+    }
+
+    .tab-container {
+        max-width: 100%;
+    }
+
+    .tab-item {
+        font-size: 14px;
+        padding: 16px 20px;
+    }
+
+    .tab-item span {
+        font-size: 14px;
+    }
+
+    .tab-content {
+        padding: 16px;
+    }
+
+    /* Resumen */
+    .pagos-resumen-global {
+        padding: 20px;
+        gap: 16px;
+    }
+
+    .global-stat-card {
+        padding: 20px 16px;
+    }
+
+    .global-stat-icon {
+        font-size: 28px;
+    }
+
+    .global-stat-value {
+        font-size: 20px;
+    }
+
+    .global-stat-label {
+        font-size: 11px;
+    }
+
+    .pagos-trabajadores-list {
+        padding: 0 16px 16px;
+    }
+
+    .pago-worker-header {
+        padding: 16px 20px;
+    }
+
+    .pago-worker-name {
+        font-size: 16px;
+    }
+
+    .pago-worker-badge {
+        font-size: 12px;
+        padding: 4px 10px;
+    }
+
+    .btn-pagar {
+        padding: 12px 18px;
+        font-size: 14px;
+    }
+
+    .pago-worker-stats {
+        padding: 14px 16px;
+    }
+
+    .pago-stat-label {
+        font-size: 11px;
+    }
+
+    .pago-stat-value {
+        font-size: 15px;
+    }
+
+    /* Registrar */
+    .registrar-pago-form {
+        padding: 16px;
+    }
+
+    .registrar-pago-form .form-card {
+        padding: 24px;
+    }
+
+    .registrar-pago-form .section-title {
+        font-size: 18px;
+    }
+
+    .info-trabajador-pago {
+        padding: 14px 18px;
+    }
+
+    .info-pago-row {
+        padding: 12px 16px;
+        font-size: 15px;
+    }
+
+    .info-value {
+        font-size: 16px;
+    }
+
+    .btn-registrar-pago {
+        padding: 16px;
+        font-size: 16px;
+    }
+
+    /* Historial */
+    .historial-container {
+        padding: 16px;
+    }
+
+    .historial-filtros {
+        max-width: 350px;
+    }
+
+    .historial-summary {
+        padding: 12px 18px;
+    }
+
+    .historial-count {
+        font-size: 14px;
+    }
+
+    .historial-total {
+        font-size: 16px;
+    }
+
+    .pago-item-header {
+        padding: 14px 18px;
+    }
+
+    .pago-item-nombre {
+        font-size: 15px;
+    }
+
+    .pago-item-fecha {
+        font-size: 13px;
+    }
+
+    .pago-item-monto {
+        font-size: 18px;
+    }
+
+    .btn-eliminar-pago {
+        padding: 6px 10px;
+        font-size: 17px;
+    }
+
+    .pago-item-notas {
+        padding: 10px 18px 12px;
+        font-size: 13px;
+    }
+}
+
+/* Desktop */
+@media (min-width: 1024px) {
+    .tab-menu {
+        padding: 0 24px;
+    }
+
+    .tab-item {
+        font-size: 15px;
+        padding: 18px 28px;
+    }
+
+    .tab-item span {
+        font-size: 15px;
+    }
+
+    .tab-content {
+        padding: 20px;
+    }
+
+    /* Resumen */
+    .pagos-resumen-global {
+        padding: 24px;
+        gap: 20px;
+        max-width: 900px;
+        margin: 0 auto;
+    }
+
+    .global-stat-card {
+        padding: 24px 20px;
+        border-radius: var(--radius-lg);
+    }
+
+    .global-stat-icon {
+        font-size: 32px;
+    }
+
+    .global-stat-value {
+        font-size: 24px;
+    }
+
+    .global-stat-label {
+        font-size: 12px;
+    }
+
+    .pagos-trabajadores-list {
+        padding: 0 24px 24px;
+        gap: 20px;
+    }
+
+    .pago-worker-card {
+        border-radius: var(--radius-lg);
+    }
+
+    .pago-worker-header {
+        padding: 20px 24px;
+    }
+
+    .pago-worker-name {
+        font-size: 17px;
+    }
+
+    .pago-worker-badge {
+        font-size: 12px;
+        padding: 5px 12px;
+    }
+
+    .btn-pagar {
+        padding: 14px 22px;
+        font-size: 15px;
+    }
+
+    .pago-worker-stats {
+        padding: 16px 20px;
+    }
+
+    .pago-stat {
+        padding: 14px 12px;
+    }
+
+    .pago-stat-label {
+        font-size: 12px;
+    }
+
+    .pago-stat-value {
+        font-size: 17px;
+    }
+
+    /* Registrar */
+    .registrar-pago-form {
+        padding: 24px;
+    }
+
+    .registrar-pago-form .form-card {
+        padding: 30px;
+        max-width: 650px;
+        margin: 0 auto;
+        border-radius: var(--radius-lg);
+    }
+
+    .registrar-pago-form .section-title {
+        font-size: 20px;
+        margin-bottom: 24px;
+    }
+
+    .registrar-pago-form .form-group {
+        margin-bottom: 20px;
+    }
+
+    .registrar-pago-form .form-group label {
+        font-size: 14px;
+        margin-bottom: 10px;
+    }
+
+    .registrar-pago-form .form-control {
+        padding: 16px 18px;
+        font-size: 16px;
+    }
+
+    .info-trabajador-pago {
+        padding: 16px 20px;
+        border-radius: var(--radius-md);
+    }
+
+    .info-pago-row {
+        padding: 14px 18px;
+        font-size: 16px;
+    }
+
+    .info-value {
+        font-size: 18px;
+    }
+
+    .textarea-pago {
+        min-height: 90px;
+    }
+
+    .btn-registrar-pago {
+        padding: 18px;
+        font-size: 17px;
+        margin-top: 8px;
+    }
+
+    /* Historial */
+    .historial-container {
+        padding: 24px;
+        gap: 16px;
+    }
+
+    .historial-filtros {
+        max-width: 450px;
+    }
+
+    .historial-filtros .form-control {
+        padding: 14px 18px;
+        font-size: 15px;
+    }
+
+    .historial-summary {
+        padding: 14px 20px;
+        border-radius: var(--radius-md);
+    }
+
+    .historial-count {
+        font-size: 15px;
+    }
+
+    .historial-total {
+        font-size: 18px;
+    }
+
+    .pagos-list {
+        gap: 16px;
+    }
+
+    .pago-item {
+        border-radius: var(--radius-md);
+    }
+
+    .pago-item-header {
+        padding: 18px 24px;
+    }
+
+    .pago-item-nombre {
+        font-size: 16px;
+    }
+
+    .pago-item-fecha {
+        font-size: 14px;
+    }
+
+    .pago-item-monto {
+        font-size: 22px;
+    }
+
+    .btn-eliminar-pago {
+        padding: 8px 12px;
+        font-size: 18px;
+    }
+
+    .pago-item-notas {
+        padding: 12px 24px 14px;
+        font-size: 14px;
+        line-height: 1.5;
+    }
+}
+
+/* Pantallas muy grandes */
+@media (min-width: 1440px) {
+    .pagos-resumen-global {
+        max-width: 1000px;
+    }
+
+    .pagos-trabajadores-list {
+        grid-template-columns: repeat(auto-fill, minmax(500px, 1fr));
+        gap: 24px;
+    }
+
+    .pago-worker-header {
+        padding: 24px 28px;
+    }
+
+    .pago-worker-name {
+        font-size: 18px;
+    }
+
+    .pago-worker-stats {
+        padding: 18px 24px;
+    }
+
+    .pago-stat-value {
+        font-size: 18px;
+    }
+
+    .registrar-pago-form .form-card {
+        max-width: 700px;
+    }
+
+    .pagos-list {
+        grid-template-columns: repeat(auto-fill, minmax(450px, 1fr));
+        gap: 20px;
+    }
+
+    .pago-item-header {
+        padding: 20px 28px;
+    }
+
+    .pago-item-monto {
+        font-size: 24px;
+    }
+}

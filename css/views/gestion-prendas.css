@@ -617,3 +617,320 @@
         opacity: 0;
     }
 }
+
+/* ==========================================================================
+   GESTIÓN PRENDAS - RESPONSIVE ADICIONAL
+   ========================================================================== */
+
+/* Tablets */
+@media (min-width: 768px) {
+    .gestion-prendas .mobile-container {
+        max-width: 100%;
+    }
+
+    .gestion-prendas .header {
+        padding: 16px 24px;
+    }
+
+    .gestion-prendas .small-title {
+        font-size: 20px;
+    }
+
+    .gestion-prendas .form-section {
+        padding: 20px 16px;
+    }
+
+    .gestion-prendas .form-card {
+        padding: 24px;
+    }
+
+    .gestion-prendas .section-title {
+        font-size: 18px;
+    }
+
+    .gestion-prendas .form-control {
+        padding: 14px 16px;
+        font-size: 15px;
+    }
+
+    .gestion-prendas .btn-primary {
+        padding: 16px;
+        font-size: 15px;
+    }
+
+    .gestion-prendas .prendas-section {
+        padding: 0 20px;
+    }
+
+    .gestion-prendas .section-header {
+        margin-bottom: 16px;
+    }
+
+    .gestion-prendas .refresh-btn {
+        width: 40px;
+        height: 40px;
+        font-size: 18px;
+    }
+
+    .gestion-prendas .prenda-card-main {
+        padding: 20px;
+    }
+
+    .gestion-prendas .prenda-name {
+        font-size: 16px;
+    }
+
+    .gestion-prendas .prenda-meta {
+        font-size: 12px;
+    }
+
+    .gestion-prendas .prenda-summary {
+        min-width: 120px;
+    }
+
+    .gestion-prendas .summary-value {
+        font-size: 20px;
+    }
+
+    .gestion-prendas .empty-state,
+    .gestion-prendas .error-state {
+        padding: 48px 24px;
+    }
+
+    .gestion-prendas .empty-icon,
+    .gestion-prendas .error-icon {
+        font-size: 48px;
+    }
+
+    .gestion-prendas .empty-text,
+    .gestion-prendas .error-text {
+        font-size: 16px;
+    }
+
+    .gestion-prendas .empty-subtext {
+        font-size: 13px;
+    }
+
+    /* Ver prenda */
+    .gestion-prendas .tasks-section {
+        padding: 0 20px;
+    }
+
+    .gestion-prendas .tasks-table th,
+    .gestion-prendas .tasks-table td {
+        padding: 16px 20px;
+    }
+
+    .gestion-prendas .summary-card {
+        margin: 0 20px 20px;
+    }
+}
+
+/* Desktop */
+@media (min-width: 1024px) {
+    .gestion-prendas .header {
+        padding: 20px 32px;
+    }
+
+    .gestion-prendas .small-title {
+        font-size: 22px;
+    }
+
+    .gestion-prendas .form-section {
+        max-width: 700px;
+        margin: 0 auto;
+        padding: 24px 20px;
+    }
+
+    .gestion-prendas .form-card {
+        padding: 30px;
+    }
+
+    .gestion-prendas .section-title {
+        font-size: 20px;
+        margin-bottom: 20px;
+    }
+
+    .gestion-prendas .form-group {
+        margin-bottom: 20px;
+    }
+
+    .gestion-prendas .form-group label {
+        font-size: 14px;
+        margin-bottom: 10px;
+    }
+
+    .gestion-prendas .form-control {
+        padding: 16px 18px;
+        font-size: 16px;
+    }
+
+    .gestion-prendas .btn-primary {
+        padding: 18px;
+        font-size: 16px;
+    }
+
+    .gestion-prendas .prendas-section {
+        padding: 0 32px;
+    }
+
+    .gestion-prendas .section-header {
+        margin-bottom: 20px;
+    }
+
+    .gestion-prendas .refresh-btn {
+        width: 44px;
+        height: 44px;
+        font-size: 20px;
+    }
+
+    .gestion-prendas .prendas-list {
+        gap: 16px;
+    }
+
+    .gestion-prendas .prenda-card {
+        border-radius: var(--radius-lg);
+    }
+
+    .gestion-prendas .prenda-card-main {
+        padding: 24px;
+    }
+
+    .gestion-prendas .prenda-name {
+        font-size: 17px;
+    }
+
+    .gestion-prendas .prenda-meta {
+        gap: 16px;
+        font-size: 13px;
+    }
+
+    .gestion-prendas .prenda-id {
+        padding: 6px 12px;
+    }
+
+    .gestion-prendas .prenda-summary {
+        min-width: 140px;
+        margin-left: 24px;
+    }
+
+    .gestion-prendas .summary-label {
+        font-size: 11px;
+        margin-bottom: 8px;
+    }
+
+    .gestion-prendas .summary-value {
+        font-size: 22px;
+    }
+
+    .gestion-prendas .prenda-actions {
+        padding: 16px 24px;
+        gap: 12px;
+    }
+
+    .gestion-prendas .action-btn {
+        padding: 12px 20px;
+        font-size: 14px;
+    }
+
+    .gestion-prendas .empty-state,
+    .gestion-prendas .error-state {
+        padding: 60px 32px;
+        border-radius: var(--radius-xl);
+    }
+
+    .gestion-prendas .empty-icon,
+    .gestion-prendas .error-icon {
+        font-size: 56px;
+        margin-bottom: 20px;
+    }
+
+    .gestion-prendas .empty-text,
+    .gestion-prendas .error-text {
+        font-size: 18px;
+        margin-bottom: 12px;
+    }
+
+    .gestion-prendas .empty-subtext {
+        font-size: 14px;
+        margin-bottom: 20px;
+    }
+
+    /* Ver prenda */
+    .gestion-prendas .tasks-section {
+        padding: 0 32px;
+    }
+
+    .gestion-prendas .table-container {
+        border-radius: var(--radius-lg);
+    }
+
+    .gestion-prendas .tasks-table th {
+        font-size: 13px;
+        padding: 18px 24px;
+    }
+
+    .gestion-prendas .tasks-table td {
+        padding: 18px 24px;
+    }
+
+    .gestion-prendas .task-name {
+        font-size: 15px;
+    }
+
+    .gestion-prendas .task-price-cell .form-control {
+        padding: 12px 16px;
+        font-size: 14px;
+        max-width: 140px;
+    }
+
+    .gestion-prendas .summary-card {
+        margin: 0 32px 24px;
+        padding: 24px;
+    }
+
+    .gestion-prendas .summary-row {
+        padding: 16px 0;
+    }
+
+    .gestion-prendas .summary-row span:first-child {
+        font-size: 15px;
+    }
+
+    .gestion-prendas .summary-row span:last-child {
+        font-size: 18px;
+    }
+
+    /* Botones flotantes en desktop */
+    .gestion-prendas .floating-actions {
+        bottom: 40px;
+        right: 40px;
+        flex-direction: row;
+    }
+
+    .gestion-prendas .floating-btn {
+        width: 50px;
+        height: 50px;
+        font-size: 18px;
+    }
+}
+
+/* Pantallas muy grandes */
+@media (min-width: 1440px) {
+    .gestion-prendas .prendas-list {
+        grid-template-columns: repeat(auto-fill, minmax(450px, 1fr));
+        gap: 20px;
+    }
+
+    .gestion-prendas .prenda-card-main {
+        padding: 28px;
+    }
+
+    .gestion-prendas .prenda-name {
+        font-size: 18px;
+    }
+
+    .gestion-prendas .summary-value {
+        font-size: 24px;
+    }
+}

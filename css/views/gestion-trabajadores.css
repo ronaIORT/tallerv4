@@ -228,3 +228,259 @@
     font-size: 12px;
     margin-bottom: 16px;
 }
+
+/* ==========================================================================
+   GESTIÓN TRABAJADORES - RESPONSIVE ADICIONAL
+   ========================================================================== */
+
+/* Tablets */
+@media (min-width: 768px) {
+    .gestion-trabajadores .mobile-container {
+        max-width: 100%;
+    }
+
+    .gestion-trabajadores .header {
+        padding: 16px 24px;
+    }
+
+    .gestion-trabajadores .small-title {
+        font-size: 20px;
+    }
+
+    .gestion-trabajadores .form-section {
+        max-width: 600px;
+        margin: 0 auto;
+        padding: 20px 16px;
+    }
+
+    .gestion-trabajadores .form-card {
+        padding: 24px;
+    }
+
+    .gestion-trabajadores .section-title {
+        font-size: 18px;
+    }
+
+    .gestion-trabajadores .form-control {
+        padding: 14px 16px;
+        font-size: 15px;
+    }
+
+    .gestion-trabajadores .btn-primary {
+        padding: 16px;
+        font-size: 15px;
+    }
+
+    .gestion-trabajadores .workers-section {
+        padding: 0 20px;
+    }
+
+    .gestion-trabajadores .section-header {
+        padding: 0 4px 12px;
+    }
+
+    .gestion-trabajadores .worker-card-main {
+        padding: 16px 20px;
+    }
+
+    .gestion-trabajadores .worker-name {
+        font-size: 16px;
+    }
+
+    .gestion-trabajadores .worker-meta {
+        font-size: 12px;
+    }
+
+    .gestion-trabajadores .worker-earnings {
+        min-width: 120px;
+    }
+
+    .gestion-trabajadores .earnings-label {
+        font-size: 11px;
+    }
+
+    .gestion-trabajadores .earnings-value {
+        font-size: 18px;
+    }
+
+    .gestion-trabajadores .empty-state,
+    .gestion-trabajadores .error-state {
+        padding: 48px 24px;
+    }
+
+    .gestion-trabajadores .empty-icon,
+    .gestion-trabajadores .error-icon {
+        font-size: 48px;
+    }
+
+    .gestion-trabajadores .empty-text,
+    .gestion-trabajadores .error-text {
+        font-size: 16px;
+    }
+
+    .gestion-trabajadores .empty-subtext {
+        font-size: 13px;
+    }
+}
+
+/* Desktop */
+@media (min-width: 1024px) {
+    .gestion-trabajadores .header {
+        padding: 20px 32px;
+    }
+
+    .gestion-trabajadores .small-title {
+        font-size: 22px;
+    }
+
+    .gestion-trabajadores .form-section {
+        max-width: 700px;
+        padding: 24px 20px;
+    }
+
+    .gestion-trabajadores .form-card {
+        padding: 30px;
+    }
+
+    .gestion-trabajadores .section-title {
+        font-size: 20px;
+        margin-bottom: 20px;
+    }
+
+    .gestion-trabajadores .form-group {
+        margin-bottom: 20px;
+    }
+
+    .gestion-trabajadores .form-group label {
+        font-size: 14px;
+        margin-bottom: 10px;
+    }
+
+    .gestion-trabajadores .form-control {
+        padding: 16px 18px;
+        font-size: 16px;
+    }
+
+    .gestion-trabajadores .btn-primary {
+        padding: 18px;
+        font-size: 16px;
+    }
+
+    .gestion-trabajadores .workers-section {
+        padding: 0 32px;
+    }
+
+    .gestion-trabajadores .section-header {
+        margin-bottom: 16px;
+    }
+
+    .gestion-trabajadores .section-title {
+        font-size: 20px;
+    }
+
+    .gestion-trabajadores .refresh-btn {
+        width: 44px;
+        height: 44px;
+        font-size: 20px;
+    }
+
+    .gestion-trabajadores .workers-list {
+        gap: 16px;
+    }
+
+    .gestion-trabajadores .worker-card {
+        border-radius: var(--radius-lg);
+    }
+
+    .gestion-trabajadores .worker-card-main {
+        padding: 20px 24px;
+    }
+
+    .gestion-trabajadores .worker-name {
+        font-size: 17px;
+    }
+
+    .gestion-trabajadores .worker-meta {
+        gap: 14px;
+        font-size: 13px;
+    }
+
+    .gestion-trabajadores .worker-status {
+        padding: 4px 10px;
+        font-size: 11px;
+    }
+
+    .gestion-trabajadores .worker-earnings {
+        min-width: 140px;
+    }
+
+    .gestion-trabajadores .earnings-label {
+        font-size: 12px;
+        margin-bottom: 6px;
+    }
+
+    .gestion-trabajadores .earnings-value {
+        font-size: 20px;
+    }
+
+    .gestion-trabajadores .empty-state,
+    .gestion-trabajadores .error-state {
+        padding: 60px 32px;
+        border-radius: var(--radius-xl);
+    }
+
+    .gestion-trabajadores .empty-icon,
+    .gestion-trabajadores .error-icon {
+        font-size: 56px;
+        margin-bottom: 20px;
+    }
+
+    .gestion-trabajadores .empty-text,
+    .gestion-trabajadores .error-text {
+        font-size: 18px;
+        margin-bottom: 12px;
+    }
+
+    .gestion-trabajadores .empty-subtext {
+        font-size: 14px;
+        margin-bottom: 20px;
+    }
+
+    .gestion-trabajadores .action-btn {
+        padding: 14px 24px;
+        font-size: 14px;
+    }
+
+    /* Botones flotantes en desktop */
+    .gestion-trabajadores .floating-actions {
+        bottom: 40px;
+        right: 40px;
+        flex-direction: row;
+    }
+
+    .gestion-trabajadores .floating-btn {
+        width: 50px;
+        height: 50px;
+        font-size: 18px;
+    }
+}
+
+/* Pantallas muy grandes */
+@media (min-width: 1440px) {
+    .gestion-trabajadores .workers-list {
+        grid-template-columns: repeat(auto-fill, minmax(450px, 1fr));
+        gap: 20px;
+    }
+
+    .gestion-trabajadores .worker-card-main {
+        padding: 24px 28px;
+    }
+
+    .gestion-trabajadores .worker-name {
+        font-size: 18px;
+    }
+
+    .gestion-trabajadores .earnings-value {
+        font-size: 22px;
+    }
+}

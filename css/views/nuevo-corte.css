@@ -382,3 +382,259 @@
     margin-top: 4px;
     display: block;
 }
+
+/* ==========================================================================
+   NUEVO CORTE - RESPONSIVE ADICIONAL
+   ========================================================================== */
+
+/* Tablets */
+@media (min-width: 768px) {
+    .nuevo-corte-view .mobile-container {
+        max-width: 100%;
+    }
+
+    .nuevo-corte-view .header {
+        padding: 16px 24px;
+    }
+
+    .nuevo-corte-view .small-title {
+        font-size: 20px;
+    }
+
+    .nuevo-corte-view .form-control {
+        padding: 12px 16px;
+        font-size: 14px;
+    }
+
+    .nuevo-corte-view .form-group label {
+        font-size: 13px;
+    }
+
+    .nuevo-corte-view .card-subtitle {
+        font-size: 16px;
+    }
+
+    .nuevo-corte-view .btn-add-talla {
+        padding: 14px;
+        font-size: 14px;
+    }
+
+    .nuevo-corte-view .talla-item {
+        padding: 12px 16px;
+    }
+
+    .nuevo-corte-view .talla-nombre {
+        font-size: 14px;
+    }
+
+    .nuevo-corte-view .talla-cantidad {
+        font-size: 13px;
+    }
+
+    .nuevo-corte-view .total-valor {
+        font-size: 22px;
+    }
+
+    .nuevo-corte-view .btn-primary,
+    .nuevo-corte-view .btn-secondary {
+        padding: 16px;
+        font-size: 15px;
+    }
+
+    .nuevo-corte-view .empty-state p {
+        font-size: 14px;
+    }
+}
+
+/* Desktop */
+@media (min-width: 1024px) {
+    .nuevo-corte-view .header {
+        padding: 20px 32px;
+    }
+
+    .nuevo-corte-view .small-title {
+        font-size: 22px;
+    }
+
+    .nuevo-corte-view .form-section {
+        max-width: 100%;
+    }
+
+    .nuevo-corte-view .form-card {
+        padding: 24px;
+    }
+
+    .nuevo-corte-view .form-control {
+        padding: 14px 18px;
+        font-size: 15px;
+    }
+
+    .nuevo-corte-view .form-group label {
+        font-size: 14px;
+        margin-bottom: 8px;
+    }
+
+    .nuevo-corte-view .form-row {
+        gap: 20px;
+    }
+
+    .nuevo-corte-view .card-subtitle {
+        font-size: 17px;
+        margin-bottom: 16px;
+    }
+
+    .nuevo-corte-view .tallas-card {
+        padding: 24px;
+    }
+
+    .nuevo-corte-view .tallas-input-row {
+        gap: 20px;
+        margin-bottom: 16px;
+    }
+
+    .nuevo-corte-view .btn-add-talla {
+        padding: 16px 24px;
+        font-size: 15px;
+        max-width: 250px;
+    }
+
+    .nuevo-corte-view .tallas-lista {
+        gap: 16px;
+        margin-bottom: 16px;
+    }
+
+    .nuevo-corte-view .talla-item {
+        padding: 14px 18px;
+    }
+
+    .nuevo-corte-view .talla-nombre {
+        font-size: 15px;
+        min-width: 60px;
+    }
+
+    .nuevo-corte-view .talla-cantidad {
+        font-size: 14px;
+    }
+
+    .nuevo-corte-view .btn-eliminar-talla {
+        width: 32px;
+        height: 32px;
+        font-size: 18px;
+    }
+
+    .nuevo-corte-view .tallas-total {
+        padding: 16px 20px;
+    }
+
+    .nuevo-corte-view .tallas-total span:first-child {
+        font-size: 14px;
+    }
+
+    .nuevo-corte-view .total-valor {
+        font-size: 26px;
+    }
+
+    .nuevo-corte-view .tasks-section {
+        max-width: 100%;
+    }
+
+    .nuevo-corte-view .section-title {
+        font-size: 20px;
+    }
+
+    .nuevo-corte-view .tasks-table th {
+        font-size: 12px;
+        padding: 16px 24px;
+    }
+
+    .nuevo-corte-view .tasks-table td {
+        padding: 16px 24px;
+        font-size: 14px;
+    }
+
+    .nuevo-corte-view .task-name {
+        font-size: 15px;
+        max-width: 400px;
+    }
+
+    .nuevo-corte-view .task-price-cell .form-control {
+        padding: 12px 16px;
+        font-size: 14px;
+        max-width: 140px;
+    }
+
+    .nuevo-corte-view .task-total {
+        font-size: 15px;
+    }
+
+    .nuevo-corte-view .summary-card {
+        padding: 24px;
+    }
+
+    .nuevo-corte-view .section-title {
+        font-size: 18px;
+        margin-bottom: 20px;
+    }
+
+    .nuevo-corte-view .summary-row {
+        padding: 16px;
+        font-size: 14px;
+    }
+
+    .nuevo-corte-view .summary-row.ganancia {
+        font-size: 16px;
+    }
+
+    .nuevo-corte-view .money {
+        font-size: 18px;
+    }
+
+    .nuevo-corte-view .actions-section {
+        padding: 24px;
+        gap: 24px;
+    }
+
+    .nuevo-corte-view .btn-primary,
+    .nuevo-corte-view .btn-secondary {
+        padding: 18px 32px;
+        font-size: 16px;
+        max-width: 280px;
+    }
+
+    .nuevo-corte-view .empty-state {
+        padding: 40px;
+    }
+
+    .nuevo-corte-view .empty-icon {
+        font-size: 48px;
+    }
+
+    .nuevo-corte-view .empty-state p {
+        font-size: 16px;
+    }
+}
+
+/* Pantallas muy grandes */
+@media (min-width: 1440px) {
+    .nuevo-corte-view .form-section {
+        gap: 30px;
+        padding: 30px;
+    }
+
+    .nuevo-corte-view .form-card {
+        padding: 30px;
+    }
+
+    .nuevo-corte-view .tallas-card {
+        padding: 30px;
+    }
+
+    .nuevo-corte-view .tallas-lista {
+        grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    }
+
+    .nuevo-corte-view .summary-card {
+        padding: 30px;
+        gap: 24px;
+    }
+}

@@ -56,30 +56,41 @@
     }
 
     .stats-grid {
-        grid-template-columns: 1fr;
+        grid-template-columns: repeat(2, 1fr);
     }
 
     .stat-card {
         padding: 16px;
-        min-height: 90px;
+        min-height: 100px;
     }
 
     .stat-icon {
-        width: 48px;
-        height: 48px;
-        font-size: 24px;
+        width: 44px;
+        height: 44px;
+        font-size: 22px;
     }
 
     .stat-value {
-        font-size: 24px;
+        font-size: 20px;
     }
 
     .quick-actions {
-        grid-template-columns: repeat(2, 1fr);
+        grid-template-columns: repeat(3, 1fr);
     }
 
-    .action-btn {
-        min-height: 100px;
+    .quick-actions .action-btn {
+        min-height: 90px;
+        padding: 14px 8px;
+    }
+
+    .quick-actions .action-icon {
+        width: 40px;
+        height: 40px;
+        font-size: 22px;
+    }
+
+    .quick-actions .action-text {
+        font-size: 11px;
     }
 
     .corte-card-main {
@@ -108,7 +119,7 @@
     .form-section,
     .prendas-section,
     .tasks-section {
-        padding: 12px 10px;
+        padding: 2px 2px;
     }
 
     .form-card,
@@ -193,7 +204,54 @@
    MÓVILES ESTÁNDAR (360px - 414px) - Estilos base ya aplicados
    ========================================================================== */
 
-/* No necesita media query - son los estilos por defecto */
+@media (min-width: 360px) and (max-width: 413px) {
+    /* Dashboard en móviles estándar */
+    .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 12px;
+    }
+
+    .stat-card {
+        padding: 18px 14px;
+        min-height: 105px;
+    }
+
+    .stat-icon {
+        width: 46px;
+        height: 46px;
+        font-size: 23px;
+    }
+
+    .stat-value {
+        font-size: 21px;
+    }
+
+    .stat-label {
+        font-size: 10px;
+    }
+
+    /* Grid de 5 acciones en 2 filas: 3 + 2 */
+    .quick-actions {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 10px;
+    }
+
+    .quick-actions .action-btn {
+        min-height: 95px;
+        padding: 14px 10px;
+        font-size: 11px;
+    }
+
+    .quick-actions .action-icon {
+        width: 42px;
+        height: 42px;
+        font-size: 22px;
+    }
+
+    .quick-actions .action-text {
+        font-size: 11px;
+    }
+}
 
 /* ==========================================================================
    MÓVILES GRANDES / PHABLETS (414px - 767px)
@@ -247,31 +305,48 @@
 
     .stats-grid {
         grid-template-columns: repeat(2, 1fr);
-        gap: 20px;
-    }
-
-    .stat-card {
-        padding: 24px;
-        min-height: 120px;
-    }
-
-    .stat-icon {
-        width: 64px;
-        height: 64px;
-        font-size: 32px;
-    }
-
-    .stat-value {
-        font-size: 32px;
-    }
-
-    .quick-actions {
         gap: 16px;
     }
 
-    .action-btn {
-        padding: 24px 16px;
-        min-height: 140px;
+    .stat-card {
+        padding: 20px 16px;
+        min-height: 110px;
+    }
+
+    .stat-icon {
+        width: 52px;
+        height: 52px;
+        font-size: 26px;
+    }
+
+    .stat-value {
+        font-size: 26px;
+    }
+
+    .stat-label {
+        font-size: 11px;
+    }
+
+    /* Acciones en phablets: 3 + 2 */
+    .quick-actions {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 12px;
+    }
+
+    .quick-actions .action-btn {
+        padding: 18px 14px;
+        min-height: 110px;
+        font-size: 12px;
+    }
+
+    .quick-actions .action-icon {
+        width: 46px;
+        height: 46px;
+        font-size: 24px;
+    }
+
+    .quick-actions .action-text {
+        font-size: 12px;
     }
 }
 
@@ -352,19 +427,22 @@
         gap: 24px;
     }
 
+    /* Grid de 5 acciones en tablets */
     .quick-actions {
-        grid-template-columns: repeat(4, 1fr);
-        gap: 20px;
+        grid-template-columns: repeat(5, 1fr);
+        gap: 16px;
     }
 
-    .action-btn {
-        padding: 28px 20px;
-        min-height: 160px;
-        font-size: 15px;
+    .quick-actions .action-btn {
+        padding: 24px 16px;
+        min-height: 140px;
+        font-size: 14px;
     }
 
-    .action-icon {
-        font-size: 40px;
+    .quick-actions .action-icon {
+        width: 52px;
+        height: 52px;
+        font-size: 28px;
     }
 
     .search-filters {

@@ -4,51 +4,119 @@
 
 /* Contenedor principal del dashboard */
 .dashboard-content {
-    padding: 20px 16px;
-    padding-bottom: max(20px, env(safe-area-inset-bottom, 20px));
+    /* padding: 24px 20px; */
+    padding: 8px 3px;
+    padding-bottom: max(24px, env(safe-area-inset-bottom, 24px));
     background: var(--dashboard-bg);
     min-height: calc(100vh - 60px);
 }
 
 /* ==========================================================================
-   GRID DE ESTADÍSTICAS
+   HEADER TITLE
+   ========================================================================== */
+
+.header-title {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--dashboard-text);
+    margin: 0;
+    flex: 1;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+/* ==========================================================================
+   GRID DE ESTADÍSTICAS - CON COLORES ÚNICOS (MOBILE-FIRST)
    ========================================================================== */
 
 .stats-grid {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
-    gap: 16px;
+    gap: 12px;
     margin-bottom: 24px;
 }
 
 .stat-card {
-    background: var(--dashboard-card);
+    background: linear-gradient(145deg, var(--dashboard-card) 0%, rgba(30, 41, 59, 0.8) 100%);
     border-radius: var(--radius-lg);
-    padding: 20px;
+    padding: 16px 12px;
     border: 1px solid var(--dashboard-border);
     display: flex;
+    flex-direction: column;
     align-items: center;
-    gap: 16px;
+    text-align: center;
+    gap: 8px;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     position: relative;
     overflow: hidden;
     min-height: 100px;
 }
 
-.stat-card::before {
+/* Colores únicos por tarjeta */
+.stat-card.stat-activos::before {
     content: '';
     position: absolute;
     top: 0;
     left: 0;
     right: 0;
     height: 4px;
-    background: linear-gradient(90deg, var(--dashboard-primary), var(--dashboard-success));
+    background: linear-gradient(90deg, #3b82f6, #60a5fa);
+}
+
+.stat-card.stat-ganancias::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, #10b981, #34d399);
+}
+
+.stat-card.stat-trabajadores::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, #f59e0b, #fbbf24);
+}
+
+.stat-card.stat-eficiencia::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, #8b5cf6, #a78bfa);
 }
 
 .stat-card:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.3);
-    border-color: var(--dashboard-primary);
+    transform: translateY(-6px);
+    box-shadow: 0 16px 32px rgba(0, 0, 0, 0.3);
+}
+
+.stat-card.stat-activos:hover {
+    border-color: #3b82f6;
+    box-shadow: 0 16px 32px rgba(59, 130, 246, 0.2);
+}
+
+.stat-card.stat-ganancias:hover {
+    border-color: #10b981;
+    box-shadow: 0 16px 32px rgba(16, 185, 129, 0.2);
+}
+
+.stat-card.stat-trabajadores:hover {
+    border-color: #f59e0b;
+    box-shadow: 0 16px 32px rgba(245, 158, 11, 0.2);
+}
+
+.stat-card.stat-eficiencia:hover {
+    border-color: #8b5cf6;
+    box-shadow: 0 16px 32px rgba(139, 92, 246, 0.2);
 }
 
 .stat-card.loading {
@@ -61,14 +129,14 @@
 }
 
 .stat-icon {
-    font-size: 25px;
-    width: 40px;
-    height: 40px;
+    font-size: 24px;
+    width: 44px;
+    height: 44px;
     display: flex;
     align-items: center;
     justify-content: center;
-    background: rgba(255, 255, 255, 0.05);
-    border-radius: 14px;
+    background: rgba(255, 255, 255, 0.08);
+    border-radius: 12px;
     flex-shrink: 0;
 }
 
@@ -78,70 +146,84 @@
 }
 
 .stat-value {
-    font-size: 28px;
+    font-size: 20px;
     font-weight: 800;
     color: var(--dashboard-text);
-    margin-bottom: 4px;
-    line-height: 1;
+    margin-bottom: 2px;
+    line-height: 1.1;
     letter-spacing: -0.5px;
 }
 
-.stat-value::before {
-    content: attr(data-prefix);
-    font-size: 16px;
-    font-weight: 600;
+.stat-label {
+    font-size: 10px;
     color: var(--dashboard-text-secondary);
-    margin-right: 4px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
 }
 
-.stat-label {
-    font-size: 13px;
+/* ==========================================================================
+   SECCIÓN DE ACCIONES RÁPIDAS
+   ========================================================================== */
+
+.quick-actions-section {
+    margin-bottom: 24px;
+}
+
+.section-label {
+    font-size: 14px;
+    font-weight: 600;
     color: var(--dashboard-text-secondary);
-    font-weight: 500;
+    margin: 0 0 16px 0;
     text-transform: uppercase;
     letter-spacing: 0.5px;
 }
 
-/* ==========================================================================
-   ACCIONES RÁPIDAS
-   ========================================================================== */
-
 .quick-actions {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
-    gap: 12px;
-    margin-bottom: 32px;
+    gap: 10px;
 }
 
 .quick-actions .action-btn {
-    background: var(--dashboard-card);
+    background: linear-gradient(145deg, var(--dashboard-card) 0%, rgba(30, 41, 59, 0.8) 100%);
     border: 2px solid var(--dashboard-border);
     border-radius: var(--radius-lg);
-    padding: 20px 12px;
+    padding: 14px 10px;
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 12px;
+    gap: 8px;
     cursor: pointer;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     color: var(--dashboard-text);
-    font-size: 14px;
+    font-size: 11px;
     font-weight: 600;
     text-decoration: none;
     -webkit-tap-highlight-color: transparent;
-    min-height: 120px;
+    min-height: 90px;
+}
+
+.quick-actions .action-btn:hover {
+    transform: translateY(-4px);
+    border-color: var(--dashboard-primary);
+    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.2);
 }
 
 .quick-actions .action-btn:active {
     transform: scale(0.98);
-    background: var(--dashboard-hover);
 }
 
 .quick-actions .action-btn.primary {
     background: linear-gradient(135deg, var(--dashboard-primary), #1d4ed8);
     border-color: transparent;
     color: white;
-    box-shadow: 0 8px 20px rgba(59, 130, 246, 0.3);
+    box-shadow: 0 8px 24px rgba(59, 130, 246, 0.35);
+}
+
+.quick-actions .action-btn.primary:hover {
+    box-shadow: 0 12px 32px rgba(59, 130, 246, 0.45);
+    transform: translateY(-6px);
 }
 
 .quick-actions .action-btn.primary:active {
@@ -150,25 +232,77 @@
 }
 
 .quick-actions .action-icon {
-    font-size: 32px;
-    width: 48px;
-    height: 48px;
+    font-size: 22px;
+    width: 40px;
+    height: 40px;
     display: flex;
     align-items: center;
     justify-content: center;
     background: rgba(255, 255, 255, 0.1);
-    border-radius: var(--radius-md);
-    transition: transform 0.3s;
+    border-radius: 12px;
+    transition: all 0.3s;
 }
 
 .quick-actions .action-btn:hover .action-icon {
     transform: scale(1.1);
+    background: rgba(255, 255, 255, 0.15);
+}
+
+.quick-actions .action-btn.primary .action-icon {
+    background: rgba(255, 255, 255, 0.2);
 }
 
 .quick-actions .action-text {
     font-weight: 600;
     text-align: center;
-    line-height: 1.3;
+    line-height: 1.2;
+}
+
+/* ==========================================================================
+   VISTA DE GESTIÓN DE CORTES
+   ========================================================================== */
+
+.search-filters-section {
+    background: var(--dashboard-card);
+    border-radius: var(--radius-xl);
+    border: 2px solid var(--dashboard-border);
+    padding: 20px;
+    margin-bottom: 20px;
+}
+
+.search-filters-section .search-container {
+    margin-bottom: 16px;
+}
+
+.search-filters-section .filter-buttons {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.search-filters-section .filter-btn {
+    padding: 10px 16px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 2px solid var(--dashboard-border);
+    border-radius: 10px;
+    color: var(--dashboard-text-secondary);
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    flex: 1;
+    min-width: 80px;
+    text-align: center;
+}
+
+.search-filters-section .filter-btn.active {
+    background: var(--dashboard-primary);
+    border-color: var(--dashboard-primary);
+    color: white;
+}
+
+.search-filters-section .filter-btn:hover {
+    border-color: var(--dashboard-primary);
 }
 
 /* ==========================================================================
@@ -301,7 +435,7 @@
    ========================================================================== */
 
 .cortes-list {
-    padding: 12px;
+    padding: 0px;
     max-height: 500px;
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;

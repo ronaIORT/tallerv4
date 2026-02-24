@@ -53,116 +53,69 @@ async function cargarVista(ruta) {
     app.innerHTML = `
             <div class="mobile-container">
                 <div class="header">
-                    <h1 class="small-title">Dashboard Taller</h1>
+                    <h1 class="header-title">🏠 Dashboard Taller</h1>
                     <button class="header-btn logout-btn" onclick="confirmarSalida()" title="Salir de la aplicación">
                         <span class="btn-icon">🚪</span>
-                        <span class="btn-text">Salir</span>
                     </button>
                 </div>
 
                 <div class="dashboard-content">
-                    <!-- Modificar stats-grid para más métricas -->
+                    <!-- Métricas principales -->
                     <div class="stats-grid" id="estadisticas">
-                        <div class="stat-card">
+                        <div class="stat-card stat-activos">
                             <div class="stat-icon">📊</div>
                             <div class="stat-content">
-                                <div class="stat-value" data-prefix="">5</div>
+                                <div class="stat-value">-</div>
                                 <div class="stat-label">Cortes Activos</div>
                             </div>
                         </div>
-                        <div class="stat-card">
+                        <div class="stat-card stat-ganancias">
                             <div class="stat-icon">💰</div>
                             <div class="stat-content">
-                                <div class="stat-value" data-prefix="Bs">0</div>
-                                <div class="stat-label">Ganancias Totales</div>
+                                <div class="stat-value">Bs -</div>
+                                <div class="stat-label">Ganancias</div>
                             </div>
                         </div>
-                        <div class="stat-card">
+                        <div class="stat-card stat-trabajadores">
                             <div class="stat-icon">👷</div>
                             <div class="stat-content">
-                                <div class="stat-value" data-prefix="">8</div>
+                                <div class="stat-value">-</div>
                                 <div class="stat-label">Trabajadores</div>
                             </div>
                         </div>
-                        <div class="stat-card">
+                        <div class="stat-card stat-eficiencia">
                             <div class="stat-icon">⚡</div>
                             <div class="stat-content">
-                                <div class="stat-value" data-prefix="">75%</div>
+                                <div class="stat-value">-%</div>
                                 <div class="stat-label">Eficiencia</div>
                             </div>
                         </div>
                     </div>
 
                     <!-- Acciones rápidas -->
-                    <div class="quick-actions">
-                        <button class="action-btn primary" onclick="window.location.hash='#nuevo-corte'">
-                            <span class="action-icon">✂️</span>
-                            <span class="action-text">Nuevo Corte</span>
-                        </button>
-                        <button class="action-btn" onclick="window.location.hash='#gestion-trabajadores'">
-                            <span class="action-icon">👷</span>
-                            <span class="action-text">Trabajadores</span>
-                        </button>
-                        <button class="action-btn" onclick="window.location.hash='#gestion-prendas'">
-                            <span class="action-icon">👕</span>
-                            <span class="action-text">Prendas</span>
-                        </button>
-                        <button class="action-btn" onclick="window.location.hash='#historial-pagos'">
-                            <span class="action-icon">💳</span>
-                            <span class="action-text">Pagos</span>
-                        </button>
-                    </div>
-
-                    <!-- Cortes recientes -->
-                    <div class="recent-section">
-                        <div class="section-header">
-                            <h2 class="section-title">Cortes</h2>
-                            <button class="refresh-btn" onclick="cargarCortesRecientes()">↻</button>
-                        </div>
-                        <!-- 🔍 NUEVA BARRA DE BÚSQUEDA -->
-                        <div class="search-filters">
-                            <div class="search-container">
-                                <input type="text" class="search-input"
-                                    placeholder="🔍 Buscar por nombre, fecha o cantidad...">
-                                <button class="search-clear" title="Limpiar búsqueda">✕</button>
-                            </div>
-                            <div class="filter-buttons">
-                                <button class="filter-btn active" data-filter="all">Todos</button>
-                                <button class="filter-btn" data-filter="activo">Activos</button>
-                                <button class="filter-btn" data-filter="terminado">Terminados</button>
-                                <button class="filter-btn" data-filter="reciente">Última semana</button>
-                            </div>
-                        </div>
-                        <div id="lista-cortes" class="cortes-list">
-                            <div class="loading-item">
-                                <div class="loading-line"></div>
-                                <div class="loading-line short"></div>
-                            </div>
-                            <div class="loading-item">
-                                <div class="loading-line"></div>
-                                <div class="loading-line short"></div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="help-cards">
-                        <div class="help-card">
-                            <h3>📈 Consejos de Productividad</h3>
-                            <p>Mejora la eficiencia de tu taller:</p>
-                            <ul>
-                                <li>Asigna tareas en lotes</li>
-                                <li>Revisa el progreso diario</li>
-                                <li>Finaliza cortes a tiempo</li>
-                            </ul>
-                        </div>
-
-                        <div class="help-card">
-                            <h3>💰 Optimiza Ganancias</h3>
-                            <p>Maximiza tus beneficios:</p>
-                            <ul>
-                                <li>Controla costos de mano de obra</li>
-                                <li>Monitorea tiempos de producción</li>
-                                <li>Analiza ganancias por prenda</li>
-                            </ul>
+                    <div class="quick-actions-section">
+                        <h2 class="section-label">⚡ Acciones Rápidas</h2>
+                        <div class="quick-actions">
+                            <button class="action-btn primary" onclick="window.location.hash='#nuevo-corte'">
+                                <span class="action-icon">✂️</span>
+                                <span class="action-text">Nuevo Corte</span>
+                            </button>
+                            <button class="action-btn" onclick="window.location.hash='#gestion-trabajadores'">
+                                <span class="action-icon">👷</span>
+                                <span class="action-text">Trabajadores</span>
+                            </button>
+                            <button class="action-btn" onclick="window.location.hash='#gestion-prendas'">
+                                <span class="action-icon">👕</span>
+                                <span class="action-text">Prendas</span>
+                            </button>
+                            <button class="action-btn" onclick="window.location.hash='#historial-pagos'">
+                                <span class="action-icon">💳</span>
+                                <span class="action-text">Pagos</span>
+                            </button>
+                            <button class="action-btn" onclick="window.location.hash='#gestion-cortes'">
+                                <span class="action-icon">📋</span>
+                                <span class="action-text">Cortes</span>
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -171,8 +124,12 @@ async function cargarVista(ruta) {
 
     // Cargar estadísticas reales
     await cargarEstadisticas();
-    cargarCortesRecientes();
-    setTimeout(() => inicializarBusqueda(), 100);
+    return;
+  }
+
+  // Nueva vista de gestión de cortes
+  if (ruta === "#gestion-cortes") {
+    renderGestionCortes();
     return;
   }
 
@@ -302,18 +259,32 @@ async function cargarEstadisticas() {
     const statsContainer = document.getElementById("estadisticas");
     if (statsContainer) {
       statsContainer.innerHTML = `
-                <div class="stat-card">
+                <div class="stat-card stat-activos">
                     <div class="stat-icon">📊</div>
                     <div class="stat-content">
                         <div class="stat-value">${cortesActivos}</div>
                         <div class="stat-label">Cortes Activos</div>
                     </div>
                 </div>
-                <div class="stat-card">
-
+                <div class="stat-card stat-ganancias">
+                    <div class="stat-icon">💰</div>
                     <div class="stat-content">
                         <div class="stat-value">Bs ${gananciasRealesTotales.toFixed(0)}</div>
-                        <div class="stat-label">Ganancias Reales</div>
+                        <div class="stat-label">Ganancias</div>
+                    </div>
+                </div>
+                <div class="stat-card stat-trabajadores">
+                    <div class="stat-icon">👷</div>
+                    <div class="stat-content">
+                        <div class="stat-value">${trabajadoresCount}</div>
+                        <div class="stat-label">Trabajadores</div>
+                    </div>
+                </div>
+                <div class="stat-card stat-eficiencia">
+                    <div class="stat-icon">⚡</div>
+                    <div class="stat-content">
+                        <div class="stat-value">${eficienciaPromedio}%</div>
+                        <div class="stat-label">Eficiencia</div>
                     </div>
                 </div>
             `;
@@ -837,3 +808,306 @@ async function eliminarCorte(corteId) {
 window.confirmarEliminarCorte = confirmarEliminarCorte;
 window.cerrarModalEliminar = cerrarModalEliminar;
 window.eliminarCorte = eliminarCorte;
+
+// ===========================================================================
+// 📋 FUNCIÓN PARA RENDERIZAR VISTA DE GESTIÓN DE CORTES
+// ===========================================================================
+function renderGestionCortes() {
+  const app = document.getElementById("app");
+  
+  app.innerHTML = `
+    <div class="mobile-container">
+      <div class="header">
+        <button class="back-btn" onclick="window.location.hash='#dashboard'">←</button>
+        <h1 class="small-title">📋 Gestión de Cortes</h1>
+      </div>
+
+      <div class="dashboard-content">
+        <!-- Barra de búsqueda y filtros -->
+        <div class="search-filters-section">
+          <div class="search-container">
+            <input type="text" class="search-input" id="search-cortes"
+              placeholder="🔍 Buscar por nombre, fecha o cantidad...">
+            <button class="search-clear" onclick="limpiarBusquedaCortes()" title="Limpiar búsqueda">✕</button>
+          </div>
+          <div class="filter-buttons" id="filtros-cortes">
+            <button class="filter-btn active" data-filter="all">Todos</button>
+            <button class="filter-btn" data-filter="activo">Activos</button>
+            <button class="filter-btn" data-filter="terminado">Terminados</button>
+            <button class="filter-btn" data-filter="reciente">Última semana</button>
+          </div>
+        </div>
+
+        <!-- Lista de cortes -->
+        <div id="lista-cortes" class="cortes-list">
+          <div class="loading-item">
+            <div class="loading-line"></div>
+            <div class="loading-line short"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+
+  // Cargar cortes
+  cargarCortesGestion();
+  
+  // Inicializar búsqueda y filtros
+  setTimeout(() => inicializarBusquedaCortes(), 100);
+}
+
+// Cargar cortes en la vista de gestión
+async function cargarCortesGestion() {
+  const listaCortes = document.getElementById("lista-cortes");
+  if (!listaCortes) return;
+
+  try {
+    listaCortes.innerHTML = `
+      <div class="loading-item">
+        <div class="loading-line"></div>
+        <div class="loading-line short"></div>
+      </div>
+    `;
+
+    const cortes = await db.cortes
+      .orderBy("fechaCreacion")
+      .reverse()
+      .limit(50)
+      .toArray();
+
+    await renderizarCortesGestion(cortes);
+  } catch (error) {
+    console.error("Error al cargar cortes:", error);
+    listaCortes.innerHTML = `
+      <div class="error-state">
+        <div class="error-icon">⚠️</div>
+        <p class="error-text">Error al cargar cortes</p>
+        <button class="action-btn" onclick="cargarCortesGestion()">
+          Reintentar
+        </button>
+      </div>
+    `;
+  }
+}
+
+// Inicializar búsqueda en vista de cortes
+function inicializarBusquedaCortes() {
+  const searchInput = document.getElementById("search-cortes");
+  const filterButtons = document.querySelectorAll("#filtros-cortes .filter-btn");
+
+  if (searchInput) {
+    searchInput.addEventListener("input", async (e) => {
+      const term = e.target.value.toLowerCase();
+      await filtrarCortesGestion(term);
+    });
+  }
+
+  if (filterButtons.length > 0) {
+    filterButtons.forEach((btn) => {
+      btn.addEventListener("click", async () => {
+        filterButtons.forEach((b) => b.classList.remove("active"));
+        btn.classList.add("active");
+        const filterType = btn.dataset.filter;
+        await aplicarFiltroGestion(filterType);
+      });
+    });
+  }
+}
+
+// Filtrar cortes por texto
+async function filtrarCortesGestion(termino) {
+  try {
+    const cortes = await db.cortes
+      .orderBy("fechaCreacion")
+      .reverse()
+      .limit(50)
+      .toArray();
+
+    const filtrados = cortes.filter((corte) => {
+      const nombre = (
+        corte.nombreCorte ||
+        corte.nombrePrendaOriginal ||
+        corte.nombrePrenda ||
+        ""
+      ).toLowerCase();
+      const fecha = formatDate(corte.fechaCreacion).toLowerCase();
+
+      return (
+        nombre.includes(termino) ||
+        fecha.includes(termino) ||
+        corte.cantidadPrendas.toString().includes(termino)
+      );
+    });
+
+    await renderizarCortesGestion(filtrados);
+  } catch (error) {
+    console.error("Error al filtrar cortes:", error);
+    mostrarMensaje("❌ Error al buscar cortes");
+  }
+}
+
+// Aplicar filtro en vista de gestión
+async function aplicarFiltroGestion(tipo) {
+  try {
+    let cortes;
+
+    switch (tipo) {
+      case "activo":
+        cortes = await db.cortes
+          .where("estado")
+          .equals("activo")
+          .reverse()
+          .sortBy("fechaCreacion");
+        break;
+
+      case "terminado":
+        cortes = await db.cortes
+          .where("estado")
+          .equals("terminado")
+          .reverse()
+          .sortBy("fechaCreacion");
+        break;
+
+      case "reciente":
+        const fechaLimite = new Date();
+        fechaLimite.setDate(fechaLimite.getDate() - 7);
+
+        cortes = await db.cortes
+          .filter((corte) => new Date(corte.fechaCreacion) > fechaLimite)
+          .reverse()
+          .sortBy("fechaCreacion");
+        break;
+
+      default:
+        cortes = await db.cortes
+          .orderBy("fechaCreacion")
+          .reverse()
+          .limit(50)
+          .toArray();
+    }
+
+    await renderizarCortesGestion(cortes);
+  } catch (error) {
+    console.error("Error al aplicar filtro:", error);
+    mostrarMensaje("❌ Error al filtrar cortes");
+  }
+}
+
+// Renderizar cortes en vista de gestión
+async function renderizarCortesGestion(cortes) {
+  const listaCortes = document.getElementById("lista-cortes");
+  if (!listaCortes) return;
+
+  if (cortes.length === 0) {
+    listaCortes.innerHTML = `
+      <div class="empty-state">
+        <div class="empty-icon">📋</div>
+        <p class="empty-text">No se encontraron cortes</p>
+        <button class="action-btn primary" onclick="window.location.hash='#nuevo-corte'">
+          ✂️ Crear Nuevo Corte
+        </button>
+      </div>
+    `;
+    return;
+  }
+
+  const cortesHTML = cortes
+    .map((corte) => {
+      const nombreMostrar =
+        corte.nombreCorte || corte.nombrePrendaOriginal || corte.nombrePrenda;
+      
+      const estadoClass =
+        corte.estado === "activo" ? "estado-activo" : "estado-terminado";
+      const estadoText = corte.estado === "activo" ? "Activo" : "Terminado";
+      
+      const { progreso } = calcularProgresoReal(corte);
+      const cantidadTotal = corte.cantidadPrendas;
+      const fechaInicio = formatDate(corte.fechaCreacion);
+      const fechaFin = corte.fechaFinalizacion 
+        ? formatDate(corte.fechaFinalizacion) 
+        : null;
+
+      return `
+        <div class="corte-card" data-id="${corte.id}">
+          <div class="corte-card-header">
+            <h3 class="corte-nombre">${nombreMostrar}</h3>
+            <span class="corte-estado ${estadoClass}">${estadoText}</span>
+          </div>
+          
+          <div class="corte-card-body">
+            <div class="corte-progreso">
+              <div class="progreso-header">
+                <span class="progreso-label">Progreso</span>
+                <span class="progreso-text">${progreso}%</span>
+              </div>
+              <div class="progreso-bar">
+                <div class="progreso-fill" style="width: ${progreso}%"></div>
+              </div>
+            </div>
+            
+            <div class="corte-detalles">
+              <div class="detalle-item">
+                <span class="detalle-icon">📦</span>
+                <span class="detalle-label">Cantidad:</span>
+                <span class="detalle-value">${cantidadTotal} und</span>
+              </div>
+              <div class="detalle-item">
+                <span class="detalle-icon">📅</span>
+                <span class="detalle-label">Inicio:</span>
+                <span class="detalle-value">${fechaInicio}</span>
+              </div>
+              ${fechaFin ? `
+              <div class="detalle-item">
+                <span class="detalle-icon">✅</span>
+                <span class="detalle-label">Finalizado:</span>
+                <span class="detalle-value">${fechaFin}</span>
+              </div>
+              ` : ''}
+            </div>
+          </div>
+          
+          <div class="corte-card-actions">
+            <button class="action-btn small primary" onclick="window.location.hash='#administrar-tareas/${corte.id}'">
+              <span>⚙️</span> Administrar
+            </button>
+            <button class="action-btn small danger" onclick="confirmarEliminarCorteGestion(${corte.id}, '${nombreMostrar}')">
+              <span>🗑️</span> Eliminar
+            </button>
+          </div>
+        </div>
+      `;
+    })
+    .join("");
+
+  listaCortes.innerHTML = cortesHTML;
+}
+
+// Limpiar búsqueda en vista de gestión
+function limpiarBusquedaCortes() {
+  const searchInput = document.getElementById("search-cortes");
+  const filterButtons = document.querySelectorAll("#filtros-cortes .filter-btn");
+
+  if (searchInput) searchInput.value = "";
+  filterButtons.forEach((btn) => {
+    if (btn.dataset.filter === "all") {
+      btn.classList.add("active");
+    } else {
+      btn.classList.remove("active");
+    }
+  });
+
+  cargarCortesGestion();
+}
+
+// Confirmar eliminación desde vista de gestión
+async function confirmarEliminarCorteGestion(corteId, nombreCorte) {
+  await confirmarEliminarCorte(corteId, nombreCorte);
+  // Recargar la lista después de eliminar
+  setTimeout(() => cargarCortesGestion(), 500);
+}
+
+// Exponer funciones de gestión de cortes globalmente
+window.renderGestionCortes = renderGestionCortes;
+window.cargarCortesGestion = cargarCortesGestion;
+window.limpiarBusquedaCortes = limpiarBusquedaCortes;
+window.confirmarEliminarCorteGestion = confirmarEliminarCorteGestion;

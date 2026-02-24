@@ -108,7 +108,7 @@
 }
 
 .tab-content {
-    padding: 20px 16px;
+    padding: 11px 2px;
     animation: fadeIn 0.3s ease;
 }
 
@@ -185,7 +185,7 @@
     border: 1px solid var(--border-color);
     box-shadow: var(--shadow-sm);
     transition: var(--transition-normal);
-    padding: 20px;
+    padding: 0px;
     margin-bottom: 16px;
 }
 

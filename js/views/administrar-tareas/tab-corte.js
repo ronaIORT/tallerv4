@@ -1,6 +1,6 @@
 // tab-corte.js - Pestaña de vista general del corte
 import { db } from '../../db.js';
-import { mostrarMensaje, mostrarModalFinalizarCorte } from './utils.js';
+import { mostrarMensaje, mostrarModalFinalizarCorte, formatBs, centavosABolivianos, formatCentavos } from './utils.js';
 
 export async function cargarPestanaCorte(corteId) {
   const content = document.getElementById('tab-content');
@@ -15,12 +15,12 @@ export async function cargarPestanaCorte(corteId) {
     const trabajadores = await db.trabajadores.toArray();
     const trabajadoresMap = new Map(trabajadores.map(t => [t.id, t.nombre]));
 
-    let totalManoObra = 0;
+    let totalManoObraCentavos = 0;
     let totalTareasAsignadas = 0;
 
     const filasTareas = corte.tareas.map(tarea => {
-      const totalTarea = tarea.precioUnitario * tarea.unidadesTotales;
-      totalManoObra += totalTarea;
+      const totalTareaCentavos = tarea.precioUnitario * tarea.unidadesTotales;
+      totalManoObraCentavos += totalTareaCentavos;
 
       const trabajadoresAsignados = [];
       const totalesTrabajadores = [];
@@ -28,11 +28,11 @@ export async function cargarPestanaCorte(corteId) {
 
       tarea.asignaciones.forEach(asignacion => {
         const nombreTrabajador = trabajadoresMap.get(asignacion.trabajadorId) || 'Desconocido';
-        const totalTrabajador = asignacion.cantidad * tarea.precioUnitario;
+        const totalTrabajadorCentavos = asignacion.cantidad * tarea.precioUnitario;
         const talla = asignacion.talla || 'N/A';
 
         trabajadoresAsignados.push(`${nombreTrabajador} (${talla})`);
-        totalesTrabajadores.push(`$${totalTrabajador.toFixed(2)}`);
+        totalesTrabajadores.push(formatBs(totalTrabajadorCentavos));
         tieneAsignaciones = true;
       });
 
@@ -44,11 +44,11 @@ export async function cargarPestanaCorte(corteId) {
 
       const displayTotales = tieneAsignaciones
         ? totalesTrabajadores.join('<br>')
-        : '$0.00';
+        : '0.00Bs';
 
       return `
         <tr>
-          <td class="task-name">${tarea.nombre}<br><span class="task-price-small">($${tarea.precioUnitario.toFixed(2)}/unidad)</span></td>
+          <td class="task-name">${tarea.nombre}<br><span class="task-price-small">(${formatCentavos(tarea.precioUnitario)}/unidad)</span></td>
           <td class="task-total">${displayTotales}</td>
           <td class="task-workers">${displayTrabajadores}</td>
         </tr>

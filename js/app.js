@@ -217,18 +217,22 @@ async function cargarEstadisticas() {
       .toArray();
 
     // Calcular ganancias REALES totales (solo cortes terminados)
+    // Los precios de tareas están en centavos, precioVentaUnitario está en Bolivianos
     const gananciasRealesTotales = cortesTerminados.reduce((total, corte) => {
-      const totalVenta = corte.cantidadPrendas * corte.precioVentaUnitario;
+      const totalVentaBs = corte.cantidadPrendas * corte.precioVentaUnitario;
 
-      // Calcular mano de obra REAL del corte (solo lo asignado)
-      const totalManoObraReal = corte.tareas.reduce((sum, tarea) => {
+      // Calcular mano de obra REAL del corte (solo lo asignado) - en centavos
+      const totalManoObraCentavos = corte.tareas.reduce((sum, tarea) => {
         const cantidadAsignada = tarea.asignaciones.reduce((t, asignacion) => {
           return t + asignacion.cantidad;
         }, 0);
         return sum + tarea.precioUnitario * cantidadAsignada;
       }, 0);
+      
+      // Convertir centavos a Bolivianos
+      const totalManoObraBs = totalManoObraCentavos / 100;
 
-      return total + (totalVenta - totalManoObraReal);
+      return total + (totalVentaBs - totalManoObraBs);
     }, 0);
 
     // Calcular cantidad de trabajadores

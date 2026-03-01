@@ -132,15 +132,18 @@ export async function cargarPestanaTrabajador(corteId) {
 
       totalGeneral += totalTrabajador;
 
-      // Generar filas de tabla con nuevo formato
+      // Generar filas de tabla con nuevo formato (centavos a Bolivianos)
       const filas = Array.from(tareasAgrupadas.values()).map(tarea => {
         const tallasStr = formatearTallas(tarea.tallas);
+        const subtotalBs = tarea.subtotal / 100; // Convertir centavos a Bolivianos
         return `<tr>
           <td class="task-name-cell">${tarea.tareaNombre}</td>
           <td class="tallas-cell">${tallasStr}</td>
-          <td class="total-cell">$${tarea.subtotal.toFixed(2)}</td>
+          <td class="total-cell">${subtotalBs.toFixed(2)}Bs</td>
         </tr>`;
       }).join('');
+
+      const totalTrabajadorBs = totalTrabajador / 100; // Convertir centavos a Bolivianos
 
       return `
         <div class="worker-section">
@@ -160,14 +163,14 @@ export async function cargarPestanaTrabajador(corteId) {
               <tr>
                 <th>Tarea</th>
                 <th>Tallas</th>
-                <th>Total $</th>
+                <th>Total</th>
               </tr>
             </thead>
             <tbody>${filas}</tbody>
             <tfoot>
               <tr>
                 <td colspan="2"><strong>Total ${nombre}:</strong></td>
-                <td><strong>$${totalTrabajador.toFixed(2)}</strong></td>
+                <td><strong>${totalTrabajadorBs.toFixed(2)}Bs</strong></td>
               </tr>
             </tfoot>
           </table>
@@ -175,13 +178,15 @@ export async function cargarPestanaTrabajador(corteId) {
       `;
     }).join('');
 
+    const totalGeneralBs = totalGeneral / 100; // Convertir centavos a Bolivianos
+
     content.innerHTML = `
       <div class="workers-summary">
         <h2>Resumen por Trabajador</h2>
         ${trabajadoresHTML}
         <div class="general-total">
           <span>Total General:</span>
-          <span>$${totalGeneral.toFixed(2)}</span>
+          <span>${totalGeneralBs.toFixed(2)}Bs</span>
         </div>
       </div>
     `;
@@ -234,6 +239,15 @@ async function generarTextoResumen(corteId, trabajadorId) {
   const nombreCorte = corte.nombreCorte || corte.nombrePrendaOriginal || corte.nombrePrenda;
   const nombreTrabajador = trabajador.nombre;
 
+  // Crear mapa de tallas del corte con sus cantidades totales
+  const tallasCorteMap = new Map();
+  if (corte.tallas) {
+    corte.tallas.forEach(t => {
+      tallasCorteMap.set(t.talla, t.cantidad);
+    });
+  }
+  const cantidadTallasCorte = tallasCorteMap.size;
+
   // Obtener tareas asignadas a este trabajador
   const tareasAsignadas = [];
   let totalTrabajador = 0;
@@ -242,53 +256,116 @@ async function generarTextoResumen(corteId, trabajadorId) {
     const asignacionesTrabajador = tarea.asignaciones.filter(a => a.trabajadorId === trabajadorId);
     
     if (asignacionesTrabajador.length > 0) {
-      const tallas = asignacionesTrabajador.map(a => ({
-        talla: a.talla || '-',
-        cantidad: a.cantidad
-      }));
+      // Agrupar asignaciones por talla y sumar cantidades
+      const tallasAsignadasMap = new Map();
+      asignacionesTrabajador.forEach(a => {
+        const talla = a.talla || '-';
+        const cantidadActual = tallasAsignadasMap.get(talla) || 0;
+        tallasAsignadasMap.set(talla, cantidadActual + a.cantidad);
+      });
       
       const subtotal = asignacionesTrabajador.reduce((sum, a) => sum + (a.cantidad * tarea.precioUnitario), 0);
       totalTrabajador += subtotal;
       
       tareasAsignadas.push({
         nombre: tarea.nombre,
-        tallas: tallas,
+        tallasAsignadas: tallasAsignadasMap,
         subtotal: subtotal
       });
     }
   });
 
-  // Formatear tallas del corte
-  const tallasCorteStr = corte.tallas 
-    ? corte.tallas.map(t => `${t.talla}(${t.cantidad})`).join(', ')
-    : 'N/A';
+  // Formatear tallas del corte en formato de lista
+  let tallasCorteStr = 'N/A';
+  if (corte.tallas && corte.tallas.length > 0) {
+    const tallasList = corte.tallas.map(t => `- *${t.talla}* = ${t.cantidad}`).join('\n');
+    tallasCorteStr = `${cantidadTallasCorte}\n${tallasList}`;
+  }
 
   // Calcular fechas
   const fechaInicio = formatDate(corte.fechaCreacion);
   const fechaFin = corte.fechaFin ? formatDate(corte.fechaFin) : 'En progreso';
 
-  // Formatear tareas asignadas
+  // Función para formatear el estado de una tarea
+  const formatearEstadoTarea = (tallasAsignadas, tallasCorteMap) => {
+    const tallasCompletas = []; // Tallas hechas completamente
+    const tallasParciales = []; // Tallas con cantidad parcial
+    const tallasSoloAsignadas = []; // Tallas que solo están asignadas (no están en el corte)
+    
+    // Verificar cada talla asignada
+    tallasAsignadas.forEach((cantidadAsignada, talla) => {
+      const cantidadTotal = tallasCorteMap.get(talla);
+      
+      if (cantidadTotal !== undefined) {
+        // La talla está en el corte
+        if (cantidadAsignada >= cantidadTotal) {
+          tallasCompletas.push(talla);
+        } else {
+          tallasParciales.push({ talla, hecha: cantidadAsignada, total: cantidadTotal });
+        }
+      } else {
+        // La talla no está en el corte (caso especial)
+        tallasSoloAsignadas.push({ talla, cantidad: cantidadAsignada });
+      }
+    });
+    
+    // Verificar si completó TODAS las tallas del corte
+    const todasTallasCorteCompletas = Array.from(tallasCorteMap.keys()).every(talla => {
+      const cantidadAsignada = tallasAsignadas.get(talla) || 0;
+      const cantidadTotal = tallasCorteMap.get(talla);
+      return cantidadAsignada >= cantidadTotal;
+    });
+    
+    // Generar el string de resultado
+    if (todasTallasCorteCompletas && tallasParciales.length === 0 && tallasSoloAsignadas.length === 0) {
+      return 'Completo';
+    }
+    
+    const partes = [];
+    
+    // Agregar tallas completas
+    if (tallasCompletas.length > 0) {
+      partes.push(tallasCompletas.join(', '));
+    }
+    
+    // Agregar tallas parciales con formato talla(hecha/total)
+    tallasParciales.forEach(tp => {
+      partes.push(`${tp.talla}(${tp.hecha}/${tp.total})`);
+    });
+    
+    // Agregar tallas que no están en el corte
+    tallasSoloAsignadas.forEach(tsa => {
+      partes.push(`${tsa.talla}(${tsa.cantidad})`);
+    });
+    
+    return partes.join(', ');
+  };
+
+  // Formatear tareas asignadas (convertir centavos a Bolivianos)
   const tareasStr = tareasAsignadas.map(t => {
-    const tallasFormateadas = t.tallas.map(talla => 
-      `${talla.talla.toLowerCase()}(${talla.cantidad})`
-    ).join(', ');
-    return `• ${t.nombre}: ${tallasFormateadas}. - $${t.subtotal.toFixed(2)}`;
+    const estadoTarea = formatearEstadoTarea(t.tallasAsignadas, tallasCorteMap);
+    const subtotalBs = t.subtotal / 100;
+    return `• *${t.nombre}:* ${estadoTarea}. - *${subtotalBs.toFixed(2)}Bs*`;
   }).join('\n');
 
-  // Generar texto final
+  // Convertir total a Bolivianos
+  const totalTrabajadorBs = totalTrabajador / 100;
+
+  // Generar texto final con formato para WhatsApp/Telegram
   const texto = `
 ────────────────────
-👤 Trabajador: ${nombreTrabajador}
-📦 Corte: ${nombreCorte}
-📊 Unidades del corte: ${corte.cantidadPrendas}
-📊 Tallas: ${tallasCorteStr}
-📅 Fecha Inicio: ${fechaInicio}
-📅 Fecha Fin: ${fechaFin}
+👤 *Trabajador:* ${nombreTrabajador}
+📦 *Corte:* ${nombreCorte}
+📊 *Unidades del corte:* ${corte.cantidadPrendas}
+📊 *Tallas:* ${tallasCorteStr}
 
-📊 TAREAS ASIGNADAS:
+📅 *Fecha Inicio:* ${fechaInicio}
+📅 *Fecha Fin:* ${fechaFin}
+
+📊 *TAREAS ASIGNADAS:*
 ${tareasStr}
 
-💰 TOTAL ${nombreTrabajador}: $${totalTrabajador.toFixed(2)}
+💰 *TOTAL ${nombreTrabajador}:* ${totalTrabajadorBs.toFixed(2)}Bs
 ────────────────────
 📱 Generado desde la App de Gestión de Cortes`.trim();
 

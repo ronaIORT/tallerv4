@@ -206,6 +206,17 @@
     box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
 }
 
+/* Tarjeta de prenda seleccionada */
+.gestion-prendas .prenda-card.selectable-row {
+    cursor: pointer;
+}
+
+.gestion-prendas .prenda-card.selectable-row.selected {
+    background: rgba(37, 99, 235, 0.15);
+    border-color: #2563eb;
+    border-left: 3px solid #2563eb;
+}
+
 .gestion-prendas .prenda-card-main {
     padding: 16px;
     display: flex;
@@ -372,7 +383,6 @@
 .gestion-prendas .tasks-table {
     width: 100%;
     border-collapse: collapse;
-    min-width: 400px;
 }
 
 .gestion-prendas .tasks-table th {
@@ -388,7 +398,7 @@
 }
 
 .gestion-prendas .tasks-table td {
-    padding: 16px;
+    padding: 10px;
     border-bottom: 1px solid #2a2a2a;
     background: rgba(255, 255, 255, 0.02);
 }
@@ -402,9 +412,13 @@
 }
 
 .gestion-prendas .task-name {
-    font-size: 14px;
-    font-weight: 600;
     color: #ffffff;
+    font-weight: 500;
+    word-wrap: break-word;
+    white-space: normal;
+    line-height: 1.4;
+    padding: 12px 14px;
+    width: 70%;
 }
 
 .gestion-prendas .task-price,
@@ -415,14 +429,15 @@
 }
 
 .gestion-prendas .task-price-cell {
-    min-width: 120px;
+    width: 30%;
+    text-align: right;
 }
 
 .gestion-prendas .task-price-cell .form-control {
     padding: 10px 12px;
     font-size: 13px;
     text-align: right;
-    max-width: 120px;
+    max-width: 60px;
     margin: 0;
     font-family: 'SF Mono', 'Menlo', 'Monaco', 'Courier New', monospace;
 }
@@ -583,6 +598,145 @@
     color: #a0a0a0;
     border: 1px solid #333333;
     letter-spacing: 0.5px;
+}
+
+/* ==========================================================================
+   BOTONES FLOTANTES
+   ========================================================================== */
+
+/* Contenedor de botones flotantes */
+.gestion-prendas .floating-action-btns {
+    position: fixed;
+    bottom: 100px;
+    right: 20px;
+    z-index: 1000;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    animation: fadeInUp 0.3s ease;
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Botón flotante de ver (gris/cyan) */
+.gestion-prendas .btn-view-floating {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 14px 24px;
+    background: linear-gradient(135deg, #6b7280 0%, #4b5563 100%);
+    color: white;
+    border: none;
+    border-radius: var(--radius-md);
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    box-shadow: 0 4px 15px rgba(107, 114, 128, 0.4);
+    transition: all 0.2s;
+}
+
+.gestion-prendas .btn-view-floating:hover {
+    background: linear-gradient(135deg, #9ca3af 0%, #6b7280 100%);
+    box-shadow: 0 6px 20px rgba(107, 114, 128, 0.5);
+    transform: translateY(-2px);
+}
+
+.gestion-prendas .btn-view-floating:active {
+    transform: translateY(0);
+}
+
+/* Botón flotante de editar (azul) */
+.gestion-prendas .btn-edit-floating {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 14px 24px;
+    background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+    color: white;
+    border: none;
+    border-radius: var(--radius-md);
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    box-shadow: 0 4px 15px rgba(37, 99, 235, 0.4);
+    transition: all 0.2s;
+}
+
+.gestion-prendas .btn-edit-floating:hover {
+    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+    box-shadow: 0 6px 20px rgba(37, 99, 235, 0.5);
+    transform: translateY(-2px);
+}
+
+.gestion-prendas .btn-edit-floating:active {
+    transform: translateY(0);
+}
+
+/* Botón flotante de eliminar (rojo) */
+.gestion-prendas .btn-danger-floating {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 14px 24px;
+    background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+    color: white;
+    border: none;
+    border-radius: var(--radius-md);
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    box-shadow: 0 4px 15px rgba(220, 38, 38, 0.4);
+    transition: all 0.2s;
+}
+
+.gestion-prendas .btn-danger-floating:hover {
+    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+    box-shadow: 0 6px 20px rgba(220, 38, 38, 0.5);
+    transform: translateY(-2px);
+}
+
+.gestion-prendas .btn-danger-floating:active {
+    transform: translateY(0);
+}
+
+/* Botón flotante de agregar (verde) */
+.gestion-prendas .btn-add-floating {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 14px 24px;
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    color: white;
+    border: none;
+    border-radius: var(--radius-md);
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4);
+    transition: all 0.2s;
+}
+
+.gestion-prendas .btn-add-floating:hover {
+    background: linear-gradient(135deg, #34d399 0%, #10b981 100%);
+    box-shadow: 0 6px 20px rgba(16, 185, 129, 0.5);
+    transform: translateY(-2px);
+}
+
+.gestion-prendas .btn-add-floating:active {
+    transform: translateY(0);
 }
 
 /* ==========================================================================
@@ -902,16 +1056,18 @@
     }
 
     /* Botones flotantes en desktop */
-    .gestion-prendas .floating-actions {
-        bottom: 40px;
-        right: 40px;
+    .gestion-prendas .floating-action-btns {
+        bottom: 120px;
+        right: 32px;
         flex-direction: row;
     }
 
-    .gestion-prendas .floating-btn {
-        width: 50px;
-        height: 50px;
-        font-size: 18px;
+    .gestion-prendas .btn-view-floating,
+    .gestion-prendas .btn-edit-floating,
+    .gestion-prendas .btn-danger-floating,
+    .gestion-prendas .btn-add-floating {
+        padding: 16px 28px;
+        font-size: 15px;
     }
 }
 

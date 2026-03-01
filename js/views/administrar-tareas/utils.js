@@ -1,19 +1,38 @@
 // utils.js - Funciones auxiliares compartidas
 import { db } from '../../db.js';
 
-// Calcular mano de obra total del corte
+// ==================== FUNCIONES DE FORMATO DE MONEDA ====================
+
+// Convertir centavos a Bolivianos
+export function centavosABolivianos(centavos) {
+  return centavos / 100;
+}
+
+// Formatear centavos como string de Bolivianos
+export function formatBs(centavos) {
+  return `${(centavos / 100).toFixed(2)}Bs`;
+}
+
+// Formatear centavos como string de centavos
+export function formatCentavos(centavos) {
+  return `${centavos}¢`;
+}
+
+// ==================== FUNCIONES DE CÁLCULO ====================
+
+// Calcular mano de obra total del corte (devuelve centavos)
 export function calcularManoObraTotal(corte) {
   return corte.tareas.reduce((total, tarea) => {
     return total + (tarea.precioUnitario * tarea.unidadesTotales);
   }, 0);
 }
 
-// Calcular costo por prenda (suma de precios unitarios de todas las tareas)
+// Calcular costo por prenda (suma de precios unitarios de todas las tareas) - devuelve centavos
 export function calcularCostoPorPrenda(tareas) {
   return tareas.reduce((total, tarea) => total + tarea.precioUnitario, 0);
 }
 
-// Calcular mano de obra REAL (asignada)
+// Calcular mano de obra REAL (asignada) - devuelve centavos
 export function calcularManoObraReal(corte) {
   let total = 0;
   corte.tareas.forEach(tarea => {

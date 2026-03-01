@@ -38,7 +38,7 @@ export function renderNuevoCorte() {
               <small class="info-message">Se calcula desde las tallas</small>
             </div>
             <div class="form-group-half">
-              <label for="precio-venta">$ Venta/unidad</label>
+              <label for="precio-venta">Bs Venta/unidad</label>
               <input type="number" id="precio-venta" class="form-control" min="0" step="0.01" value="10.00">
               <small id="error-precio" class="error-message"></small>
             </div>
@@ -80,7 +80,7 @@ export function renderNuevoCorte() {
             <thead>
               <tr>
                 <th>Tarea</th>
-                <th>$ Uni</th>
+                <th>¢/uni</th>
                 <th>Total</th>
               </tr>
             </thead>
@@ -115,19 +115,19 @@ export function renderNuevoCorte() {
         <h2 class="section-title">Resumen de Costos</h2>
         <div class="summary-row">
           <span>Costo por Prenda:</span>
-          <span id="costo-por-prenda" class="money">$0.00</span>
+          <span id="costo-por-prenda" class="money">0.00Bs</span>
         </div>
         <div class="summary-row">
           <span>Total Venta:</span>
-          <span id="total-venta" class="money">$0.00</span>
+          <span id="total-venta" class="money">0.00Bs</span>
         </div>
         <div class="summary-row">
           <span>Mano de Obra:</span>
-          <span id="total-mano-obra" class="money">$0.00</span>
+          <span id="total-mano-obra" class="money">0.00Bs</span>
         </div>
         <div class="summary-row ganancia">
           <span>Ganancia Estimada:</span>
-          <span id="ganancia-estimada" class="money positive">$0.00</span>
+          <span id="ganancia-estimada" class="money positive">0.00Bs</span>
         </div>
       </div>
       
@@ -325,12 +325,12 @@ async function cargarTareas() {
       <td class="task-name">${tarea.nombre}</td>
       <td class="task-price-cell">
         <input type="number" class="task-price form-control" 
-               value="${tarea.precioUnitario.toFixed(2)}" 
-               step="0.01" min="0" 
+               value="${tarea.precioUnitario}" 
+               step="1" min="0" 
                data-index="${index}"
                data-original="${tarea.precioUnitario}">
       </td>
-      <td class="task-total money">$0.00</td>
+      <td class="task-total money">0.00Bs</td>
     `;
     tbody.appendChild(row);
   });
@@ -414,29 +414,34 @@ function validarPrecioTarea(e) {
 }
 
 // Recalcular totales en tiempo real
+// Los precios de tareas están en centavos, se dividen entre 100 para mostrar en Bolivianos
 function recalcularTotales() {
   const cantidad = parseInt(document.getElementById('cantidad').value) || 0;
   const precioVenta = parseFloat(document.getElementById('precio-venta').value) || 0;
   const inputs = document.querySelectorAll('.task-price');
-  let totalManoObra = 0;
-  let costoPorPrenda = 0;
+  let totalManoObraCentavos = 0;
+  let costoPorPrendaCentavos = 0;
 
-  // Recalcular cada tarea
+  // Recalcular cada tarea (precios en centavos)
   inputs.forEach(input => {
-    const precio = parseFloat(input.value) || 0;
-    const totalTarea = precio * cantidad;
-    totalManoObra += totalTarea;
-    costoPorPrenda += precio; // Sumar precio unitario para costo por prenda
+    const precioCentavos = parseFloat(input.value) || 0;
+    const totalTareaCentavos = precioCentavos * cantidad;
+    totalManoObraCentavos += totalTareaCentavos;
+    costoPorPrendaCentavos += precioCentavos;
 
-    // Actualizar visualmente
+    // Actualizar visualmente (convertir centavos a Bolivianos)
     const totalCell = input.closest('tr').querySelector('.task-total');
-    totalCell.textContent = `$${totalTarea.toFixed(2)}`;
-    totalCell.className = `task-total money ${totalTarea > 0 ? 'positive' : 'negative'}`;
+    const totalTareaBs = totalTareaCentavos / 100;
+    totalCell.textContent = `${totalTareaBs.toFixed(2)}Bs`;
+    totalCell.className = `task-total money ${totalTareaBs > 0 ? 'positive' : 'negative'}`;
   });
 
   // Calcular totales generales
-  const totalVenta = cantidad * precioVenta;
-  const ganancia = totalVenta - totalManoObra;
+  // Mano de obra en Bolivianos (centavos / 100)
+  const totalManoObraBs = totalManoObraCentavos / 100;
+  const costoPorPrendaBs = costoPorPrendaCentavos / 100;
+  const totalVentaBs = cantidad * precioVenta;
+  const gananciaBs = totalVentaBs - totalManoObraBs;
 
   // Actualizar resumen
   const costoPorPrendaEl = document.getElementById('costo-por-prenda');
@@ -444,16 +449,16 @@ function recalcularTotales() {
   const totalManoObraEl = document.getElementById('total-mano-obra');
   const gananciaEl = document.getElementById('ganancia-estimada');
 
-  costoPorPrendaEl.textContent = `$${costoPorPrenda.toFixed(2)}`;
-  totalVentaEl.textContent = `$${totalVenta.toFixed(2)}`;
-  totalManoObraEl.textContent = `$${totalManoObra.toFixed(2)}`;
-  gananciaEl.textContent = `$${ganancia.toFixed(2)}`;
+  costoPorPrendaEl.textContent = `${costoPorPrendaBs.toFixed(2)}Bs`;
+  totalVentaEl.textContent = `${totalVentaBs.toFixed(2)}Bs`;
+  totalManoObraEl.textContent = `${totalManoObraBs.toFixed(2)}Bs`;
+  gananciaEl.textContent = `${gananciaBs.toFixed(2)}Bs`;
 
   // Estilo dinámico para ganancia
-  costoPorPrendaEl.className = `money ${costoPorPrenda > 0 ? 'positive' : ''}`;
-  totalVentaEl.className = `money ${totalVenta > 0 ? 'positive' : ''}`;
-  totalManoObraEl.className = `money ${totalManoObra > 0 ? '' : ''}`;
-  gananciaEl.className = `money ${ganancia >= 0 ? 'positive' : 'negative'}`;
+  costoPorPrendaEl.className = `money ${costoPorPrendaBs > 0 ? 'positive' : ''}`;
+  totalVentaEl.className = `money ${totalVentaBs > 0 ? 'positive' : ''}`;
+  totalManoObraEl.className = `money ${totalManoObraBs > 0 ? '' : ''}`;
+  gananciaEl.className = `money ${gananciaBs >= 0 ? 'positive' : 'negative'}`;
 }
 
 // Guardar el corte en la base de datos
@@ -719,12 +724,12 @@ function actualizarVistaTareas() {
       <td class="task-name">${tarea.nombre}</td>
       <td class="task-price-cell">
         <input type="number" class="task-price form-control" 
-               value="${tarea.precioUnitario.toFixed(2)}" 
-               step="0.01" min="0" 
+               value="${tarea.precioUnitario}" 
+               step="1" min="0" 
                data-index="${index}"
                data-original="${tarea.precioUnitario}">
       </td>
-      <td class="task-total money">$0.00</td>
+      <td class="task-total money">0.00Bs</td>
     `;
     tbody.appendChild(row);
   });
@@ -759,8 +764,8 @@ function mostrarModalEditarNuevoCorte(nombreActual, precioActual, onSave) {
           <input type="text" id="edit-nombre-nuevo" class="form-control" value="${nombreActual}">
         </div>
         <div class="form-group">
-          <label for="edit-precio-nuevo">Precio Unitario</label>
-          <input type="number" id="edit-precio-nuevo" class="form-control" value="${precioActual.toFixed(2)}" step="0.01" min="0">
+          <label for="edit-precio-nuevo">Precio (¢)</label>
+          <input type="number" id="edit-precio-nuevo" class="form-control" value="${precioActual}" step="1" min="0" placeholder="Ej: 5, 10">
         </div>
       </div>
       <div class="modal-footer">
@@ -861,8 +866,8 @@ function mostrarModalAgregarNuevoCorte(posicion, onSave) {
           <input type="text" id="add-nombre-nuevo" class="form-control" placeholder="Ej: Costura especial">
         </div>
         <div class="form-group">
-          <label for="add-precio-nuevo">Precio Unitario</label>
-          <input type="number" id="add-precio-nuevo" class="form-control" placeholder="0.00" step="0.01" min="0">
+          <label for="add-precio-nuevo">Precio (¢)</label>
+          <input type="number" id="add-precio-nuevo" class="form-control" placeholder="Ej: 5, 10" step="1" min="0">
         </div>
       </div>
       <div class="modal-footer">

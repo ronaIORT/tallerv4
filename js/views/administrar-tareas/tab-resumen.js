@@ -1,6 +1,6 @@
 // tab-resumen.js - Pestaña de información/resumen del corte
 import { db } from '../../db.js';
-import { calcularManoObraTotal, calcularManoObraReal, calcularCostoPorPrenda, formatDate, mostrarModalFinalizarCorte } from './utils.js';
+import { calcularManoObraTotal, calcularManoObraReal, calcularCostoPorPrenda, formatDate, mostrarModalFinalizarCorte, formatBs, centavosABolivianos } from './utils.js';
 
 export async function cargarPestanaResumen(corteId) {
   const content = document.getElementById('tab-content');
@@ -13,17 +13,35 @@ export async function cargarPestanaResumen(corteId) {
     }
 
     const nombreCorte = corte.nombreCorte || corte.nombrePrendaOriginal || corte.nombrePrenda;
-    const totalVenta = corte.cantidadPrendas * corte.precioVentaUnitario;
-    const costoPorPrenda = calcularCostoPorPrenda(corte.tareas);
-    const totalManoObraEstimada = calcularManoObraTotal(corte);
-    const totalManoObraReal = calcularManoObraReal(corte);
-    const gananciaEstimada = totalVenta - totalManoObraEstimada;
-    const gananciaReal = totalVenta - totalManoObraReal;
+    const totalVentaBs = corte.cantidadPrendas * corte.precioVentaUnitario;
+    const costoPorPrendaCentavos = calcularCostoPorPrenda(corte.tareas);
+    const totalManoObraEstimadaCentavos = calcularManoObraTotal(corte);
+    const totalManoObraRealCentavos = calcularManoObraReal(corte);
+    
+    // Convertir centavos a Bolivianos para mostrar
+    const costoPorPrendaBs = centavosABolivianos(costoPorPrendaCentavos);
+    const totalManoObraEstimadaBs = centavosABolivianos(totalManoObraEstimadaCentavos);
+    const totalManoObraRealBs = centavosABolivianos(totalManoObraRealCentavos);
+    const gananciaEstimadaBs = totalVentaBs - totalManoObraEstimadaBs;
+    const gananciaRealBs = totalVentaBs - totalManoObraRealBs;
+
+    // Calcular porcentaje completado
+    let totalTareasAsignadas = 0;
+    corte.tareas.forEach(tarea => {
+      const tieneAsignaciones = tarea.asignaciones && tarea.asignaciones.length > 0;
+      if (tieneAsignaciones) totalTareasAsignadas++;
+    });
+
+    const porcentajeCompletado = corte.tareas.length > 0
+      ? Math.round((totalTareasAsignadas / corte.tareas.length) * 100)
+      : 0;
 
     const tallasHTML = corte.tallas && corte.tallas.length > 0 
-      ? `<div class="tallas-info">
-          <span class="tallas-label">Tallas:</span>
-          ${corte.tallas.map(t => `<span class="talla-badge">${t.talla}: ${t.cantidad}</span>`).join('')}
+      ? `<div class="tallas-resumen">
+          <h4>Tallas del corte:</h4>
+          <div class="tallas-grid">
+            ${corte.tallas.map(t => `<span class="talla-item-info">${t.talla}: ${t.cantidad}</span>`).join('')}
+          </div>
         </div>` 
       : '';
 
@@ -37,25 +55,29 @@ export async function cargarPestanaResumen(corteId) {
           <span>${corte.cantidadPrendas} unidades</span>
           <span>Creado: ${formatDate(corte.fechaCreacion)}</span>
         </div>
+        <div class="progress-bar">
+          <div class="progress-fill" style="width: ${porcentajeCompletado}%"></div>
+        </div>
+        <p class="progress-text">${porcentajeCompletado}% completado</p>
         ${tallasHTML}
       </div>
       
       <div class="summary-card">
         <div class="summary-row">
           <span>Costo por Prenda:</span>
-          <span>$${costoPorPrenda.toFixed(2)}</span>
+          <span>${costoPorPrendaBs.toFixed(2)}Bs</span>
         </div>
         <div class="summary-row">
           <span>Total Venta:</span>
-          <span>$${totalVenta.toFixed(2)}</span>
+          <span>${totalVentaBs.toFixed(2)}Bs</span>
         </div>
         <div class="summary-row highlight">
           <span>Mano de Obra REAL:</span>
-          <span class="real-value">$${totalManoObraReal.toFixed(2)}</span>
+          <span class="real-value">${totalManoObraRealBs.toFixed(2)}Bs</span>
         </div>
         <div class="summary-row ganancia">
           <span>Ganancia REAL:</span>
-          <span class="real-value">$${gananciaReal.toFixed(2)}</span>
+          <span class="real-value">${gananciaRealBs.toFixed(2)}Bs</span>
         </div>
       </div>
       

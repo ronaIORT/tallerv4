@@ -35,13 +35,13 @@ export function renderGestionTrabajadores() {
         </div>
       </div>
       
-      <!-- Botones flotantes contextuales -->
-      <div id="floating-actions-trabajador" class="floating-actions" style="display: none;">
-        <button id="btn-floating-edit-trabajador" class="floating-btn floating-btn-edit" onclick="editarTrabajadorSeleccionado()">
-          ✏️
+      <!-- Botones flotantes para trabajadores -->
+      <div id="floating-actions-trabajador" class="floating-action-btns" style="display: none;">
+        <button class="btn-edit-floating" onclick="editarTrabajadorSeleccionado()">
+          ✏️ Editar
         </button>
-        <button id="btn-floating-delete-trabajador" class="floating-btn floating-btn-delete" onclick="eliminarTrabajadorSeleccionado()">
-          🗑️
+        <button class="btn-danger-floating" onclick="eliminarTrabajadorSeleccionado()">
+          🗑️ Eliminar
         </button>
       </div>
     </div>
@@ -98,7 +98,7 @@ async function cargarTrabajadores() {
           </div>
           <div class="worker-earnings">
             <span class="earnings-label">Ganancias Activas</span>
-            <span class="earnings-value positive">$${trabajador.ganancias.toFixed(2)}</span>
+            <span class="earnings-value positive">${(trabajador.ganancias / 100).toFixed(2)}Bs</span>
           </div>
         </div>
       </div>
@@ -251,29 +251,95 @@ function mostrarModalEditarTrabajador(trabajadorId) {
             return;
         }
 
-        const modalHTML = `
-            <div class="modal-overlay" onclick="cerrarModal(event)">
-                <div class="modal-container">
-                    <h3 class="modal-title">✏️ Editar Trabajador</h3>
-                    
+        const overlay = document.createElement('div');
+        overlay.className = 'modal-overlay';
+        overlay.innerHTML = `
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>✏️ Editar Trabajador</h3>
+                </div>
+                <div class="modal-body">
                     <div class="form-group">
-                        <label for="modal-nombre-trabajador">Nombre del Trabajador</label>
-                        <input type="text" class="form-control" id="modal-nombre-trabajador" 
+                        <label for="edit-trabajador-nombre">Nombre del Trabajador</label>
+                        <input type="text" id="edit-trabajador-nombre" class="form-control" 
                                value="${trabajador.nombre}" placeholder="Ingrese nombre completo">
-                        <small class="error-message" id="modal-error-nombre"></small>
                     </div>
-                    
-                    <div class="modal-actions">
-                        <button class="btn-secondary" onclick="cerrarModal()">Cancelar</button>
-                        <button class="btn-primary" onclick="guardarTrabajadorEditado(${trabajadorId})">
-                            Guardar Cambios
-                        </button>
-                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn-secondary" id="modal-cancel-edit-trabajador">Cancelar</button>
+                    <button class="btn-primary" id="modal-save-edit-trabajador">Guardar Cambios</button>
                 </div>
             </div>
         `;
 
-        mostrarModal(modalHTML);
+        document.body.appendChild(overlay);
+        document.body.style.overflow = 'hidden';
+
+        // Focus en el input
+        setTimeout(() => {
+            document.getElementById('edit-trabajador-nombre').focus();
+        }, 100);
+
+        // Event listener para cancelar
+        document.getElementById('modal-cancel-edit-trabajador').addEventListener('click', () => {
+            overlay.remove();
+            document.body.style.overflow = 'auto';
+        });
+
+        // Event listener para guardar
+        document.getElementById('modal-save-edit-trabajador').addEventListener('click', async () => {
+            const nombreInput = document.getElementById('edit-trabajador-nombre');
+            const nombre = nombreInput.value.trim();
+
+            // Validaciones
+            if (!nombre) {
+                mostrarMensaje('❌ El nombre no puede estar vacío');
+                nombreInput.classList.add('error');
+                return;
+            }
+
+            if (nombre.length < 3) {
+                mostrarMensaje('❌ El nombre debe tener al menos 3 caracteres');
+                nombreInput.classList.add('error');
+                return;
+            }
+
+            try {
+                // Verificar si ya existe un trabajador con el nuevo nombre
+                const trabajadorExistente = await db.trabajadores
+                    .where('nombre')
+                    .equalsIgnoreCase(nombre)
+                    .first();
+
+                if (trabajadorExistente && trabajadorExistente.id !== trabajadorId) {
+                    mostrarMensaje('❌ Ya existe un trabajador con este nombre');
+                    nombreInput.classList.add('error');
+                    return;
+                }
+
+                // Actualizar trabajador
+                await db.trabajadores.update(trabajadorId, { nombre: nombre });
+
+                overlay.remove();
+                document.body.style.overflow = 'auto';
+
+                await cargarTrabajadores();
+                mostrarMensaje('✅ Nombre actualizado correctamente');
+
+            } catch (error) {
+                console.error("Error al guardar trabajador:", error);
+                mostrarMensaje('❌ Error al guardar. Intente nuevamente.');
+            }
+        });
+
+        // Cerrar al hacer clic fuera
+        overlay.addEventListener('click', (e) => {
+            if (e.target === overlay) {
+                overlay.remove();
+                document.body.style.overflow = 'auto';
+            }
+        });
+
     }).catch(error => {
         console.error("Error al cargar trabajador para edición:", error);
         mostrarMensaje('❌ Error al cargar los datos del trabajador');
@@ -288,136 +354,88 @@ function mostrarModalEliminarTrabajador(trabajadorId) {
             return;
         }
 
-        const modalHTML = `
-            <div class="modal-overlay" onclick="cerrarModal(event)">
-                <div class="modal-container">
-                    <h3 class="modal-title">⚠️ Confirmar Eliminación</h3>
-                    <p class="modal-message">
-                        ¿Está seguro de eliminar al trabajador <strong>"${trabajador.nombre}"</strong>?
-                    </p>
-                    <p class="warning-message">
-                        ⚠️ Esta acción no se puede deshacer.
-                    </p>
-                    <div class="modal-actions">
-                        <button class="btn-secondary" onclick="cerrarModal()">Cancelar</button>
-                        <button class="btn-danger" onclick="confirmarEliminarTrabajador(${trabajadorId})">Eliminar</button>
-                    </div>
+        const overlay = document.createElement('div');
+        overlay.className = 'modal-overlay';
+        overlay.innerHTML = `
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>⚠️ Confirmar Eliminación</h3>
+                </div>
+                <div class="modal-body">
+                    <p>¿Está seguro de eliminar al trabajador <strong>"${trabajador.nombre}"</strong>?</p>
+                    <p class="modal-info-text">⚠️ Esta acción no se puede deshacer.</p>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn-secondary" id="modal-cancel-eliminar-trabajador">Cancelar</button>
+                    <button class="btn-danger" id="modal-confirm-eliminar-trabajador">Eliminar</button>
                 </div>
             </div>
         `;
 
-        mostrarModal(modalHTML);
+        document.body.appendChild(overlay);
+        document.body.style.overflow = 'hidden';
+
+        // Event listener para cancelar
+        document.getElementById('modal-cancel-eliminar-trabajador').addEventListener('click', () => {
+            overlay.remove();
+            document.body.style.overflow = 'auto';
+        });
+
+        // Event listener para confirmar eliminación
+        document.getElementById('modal-confirm-eliminar-trabajador').addEventListener('click', async () => {
+            try {
+                // Verificar si tiene tareas asignadas en cortes activos
+                const tieneTareas = await db.cortes
+                    .where('estado')
+                    .equals('activo')
+                    .toArray()
+                    .then(cortes => {
+                        return cortes.some(corte =>
+                            corte.tareas.some(tarea =>
+                                tarea.asignaciones.some(asignacion => asignacion.trabajadorId === trabajadorId)
+                            )
+                        );
+                    });
+
+                if (tieneTareas) {
+                    overlay.remove();
+                    document.body.style.overflow = 'auto';
+                    mostrarMensaje('❌ No se puede eliminar: tiene tareas en cortes activos');
+                    return;
+                }
+
+                // Eliminar trabajador
+                await db.trabajadores.delete(trabajadorId);
+
+                overlay.remove();
+                document.body.style.overflow = 'auto';
+
+                mostrarMensaje('✅ Trabajador eliminado correctamente');
+                cargarTrabajadores();
+
+            } catch (error) {
+                console.error("Error al eliminar trabajador:", error);
+                mostrarMensaje('❌ Error al eliminar. Intente nuevamente.');
+                overlay.remove();
+                document.body.style.overflow = 'auto';
+            }
+        });
+
+        // Cerrar al hacer clic fuera
+        overlay.addEventListener('click', (e) => {
+            if (e.target === overlay) {
+                overlay.remove();
+                document.body.style.overflow = 'auto';
+            }
+        });
+
     }).catch(error => {
         console.error("Error al cargar trabajador para eliminación:", error);
         mostrarMensaje('❌ Error al cargar los datos del trabajador');
     });
 }
 
-// Guardar trabajador editado
-window.guardarTrabajadorEditado = async function (trabajadorId) {
-    const nombreInput = document.getElementById('modal-nombre-trabajador');
-    const nombre = nombreInput.value.trim();
-
-    // Validaciones
-    if (!nombre) {
-        document.getElementById('modal-error-nombre').textContent = 'El nombre no puede estar vacío';
-        return;
-    }
-
-    if (nombre.length < 3) {
-        document.getElementById('modal-error-nombre').textContent = 'El nombre debe tener al menos 3 caracteres';
-        return;
-    }
-
-    try {
-        // Verificar si ya existe un trabajador con el nuevo nombre
-        const trabajadorExistente = await db.trabajadores
-            .where('nombre')
-            .equalsIgnoreCase(nombre)
-            .first();
-
-        if (trabajadorExistente && trabajadorExistente.id !== trabajadorId) {
-            document.getElementById('modal-error-nombre').textContent = 'Ya existe un trabajador con este nombre';
-            return;
-        }
-
-        // Actualizar trabajador
-        await db.trabajadores.update(trabajadorId, { nombre: nombre });
-
-        // Cerrar modal y recargar
-        cerrarModal();
-        await cargarTrabajadores();
-        mostrarMensaje('✅ Nombre actualizado correctamente');
-
-    } catch (error) {
-        console.error("Error al guardar trabajador:", error);
-        mostrarMensaje(`❌ Error: ${error.message || 'No se pudo guardar el trabajador'}`);
-    }
-};
-
-// Confirmar eliminación de trabajador
-window.confirmarEliminarTrabajador = async function (id) {
-    try {
-        // Verificar si tiene tareas asignadas en cortes activos
-        const tieneTareas = await db.cortes
-            .where('estado')
-            .equals('activo')
-            .toArray()
-            .then(cortes => {
-                return cortes.some(corte =>
-                    corte.tareas.some(tarea =>
-                        tarea.asignaciones.some(asignacion => asignacion.trabajadorId === id)
-                    )
-                );
-            });
-
-        if (tieneTareas) {
-            mostrarMensaje('❌ No se puede eliminar: tiene tareas en cortes activos');
-            cerrarModal();
-            return;
-        }
-
-        // Eliminar trabajador
-        await db.trabajadores.delete(id);
-
-        cerrarModal();
-        mostrarMensaje('✅ Trabajador eliminado correctamente');
-
-        // Recargar lista
-        cargarTrabajadores();
-    } catch (error) {
-        console.error("Error al eliminar trabajador:", error);
-        mostrarMensaje('❌ Error al eliminar. Intente nuevamente.');
-        cerrarModal();
-    }
-};
-
 // ==================== FUNCIONES AUXILIARES ====================
-
-// Función auxiliar para mostrar modal
-function mostrarModal(contenidoHTML) {
-    const modalExistente = document.querySelector('.modal-overlay');
-    if (modalExistente) modalExistente.remove();
-
-    const modal = document.createElement('div');
-    modal.innerHTML = contenidoHTML;
-    document.body.appendChild(modal);
-    document.body.style.overflow = 'hidden';
-}
-
-// Función auxiliar para cerrar modal
-function cerrarModal(event) {
-    const overlay = document.querySelector('.modal-overlay');
-    if (!overlay) return;
-
-    if (event && event.target.classList.contains('modal-overlay')) {
-        document.body.style.overflow = 'auto';
-        overlay.remove();
-    } else if (!event) {
-        document.body.style.overflow = 'auto';
-        overlay.remove();
-    }
-}
 
 // Calcular ganancias de un trabajador en cortes activos
 async function calcularGananciasTrabajador(trabajadorId) {
@@ -453,4 +471,3 @@ function mostrarMensaje(mensaje) {
 
 // Exponer funciones globales
 window.cargarTrabajadores = cargarTrabajadores;
-window.cerrarModal = cerrarModal;

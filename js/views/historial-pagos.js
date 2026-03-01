@@ -106,14 +106,14 @@ async function cargarTabResumen() {
                 <div class="global-stat-card pendiente-card">
                     <div class="global-stat-icon">⏳</div>
                     <div class="global-stat-info">
-                        <span class="global-stat-value">$${totalPendienteGlobal.toFixed(2)}</span>
+                        <span class="global-stat-value">${(totalPendienteGlobal / 100).toFixed(2)}Bs</span>
                         <span class="global-stat-label">Total Pendiente</span>
                     </div>
                 </div>
                 <div class="global-stat-card pagado-card">
                     <div class="global-stat-icon">✅</div>
                     <div class="global-stat-info">
-                        <span class="global-stat-value">$${totalPagadoGlobal.toFixed(2)}</span>
+                        <span class="global-stat-value">${(totalPagadoGlobal / 100).toFixed(2)}Bs</span>
                         <span class="global-stat-label">Total Pagado</span>
                     </div>
                 </div>
@@ -138,16 +138,16 @@ async function cargarTabResumen() {
                         <div class="pago-worker-stats">
                             <div class="pago-stat">
                                 <span class="pago-stat-label">Total Ganado</span>
-                                <span class="pago-stat-value valor-ganado">$${t.ganado.toFixed(2)}</span>
+                                <span class="pago-stat-value valor-ganado">${(t.ganado / 100).toFixed(2)}Bs</span>
                             </div>
                             <div class="pago-stat">
                                 <span class="pago-stat-label">Total Pagado</span>
-                                <span class="pago-stat-value valor-pagado">$${t.pagado.toFixed(2)}</span>
+                                <span class="pago-stat-value valor-pagado">${(t.pagado / 100).toFixed(2)}Bs</span>
                             </div>
                             <div class="pago-stat destacado">
                                 <span class="pago-stat-label">Pendiente</span>
                                 <span class="pago-stat-value ${t.pendiente > 0 ? 'valor-pendiente' : 'valor-cero'}">
-                                    $${t.pendiente.toFixed(2)}
+                                    ${(t.pendiente / 100).toFixed(2)}Bs
                                 </span>
                             </div>
                         </div>
@@ -217,20 +217,20 @@ async function cargarTabRegistrar() {
                     <div id="info-trabajador-pago" class="info-trabajador-pago" style="display:none;">
                         <div class="info-pago-row">
                             <span>💰 Total Ganado:</span>
-                            <span id="info-ganado" class="info-value valor-ganado">$0.00</span>
+                            <span id="info-ganado" class="info-value valor-ganado">0.00Bs</span>
                         </div>
                         <div class="info-pago-row">
                             <span>✅ Total Pagado:</span>
-                            <span id="info-pagado" class="info-value valor-pagado">$0.00</span>
+                            <span id="info-pagado" class="info-value valor-pagado">0.00Bs</span>
                         </div>
                         <div class="info-pago-row info-pago-row-destacada">
                             <span>⏳ Saldo Pendiente:</span>
-                            <span id="info-pendiente" class="info-value valor-pendiente">$0.00</span>
+                            <span id="info-pendiente" class="info-value valor-pendiente">0.00Bs</span>
                         </div>
                     </div>
 
                     <div class="form-group">
-                        <label for="monto-pago">Monto a Pagar ($)</label>
+                        <label for="monto-pago">Monto a Pagar (Bs)</label>
                         <input type="number" id="monto-pago" class="form-control"
                                placeholder="0.00" min="0.01" step="0.01">
                         <small id="error-monto" class="error-message"></small>
@@ -265,14 +265,15 @@ async function cargarTabRegistrar() {
             const pagado    = await calcularTotalPagado(trabajadorId);
             const pendiente = Math.max(0, ganado - pagado);
 
-            document.getElementById('info-ganado').textContent    = `$${ganado.toFixed(2)}`;
-            document.getElementById('info-pagado').textContent    = `$${pagado.toFixed(2)}`;
-            document.getElementById('info-pendiente').textContent = `$${pendiente.toFixed(2)}`;
+            // Mostrar en Bolivianos (centavos / 100)
+            document.getElementById('info-ganado').textContent    = `${(ganado / 100).toFixed(2)}Bs`;
+            document.getElementById('info-pagado').textContent    = `${(pagado / 100).toFixed(2)}Bs`;
+            document.getElementById('info-pendiente').textContent = `${(pendiente / 100).toFixed(2)}Bs`;
             document.getElementById('info-pendiente').className   =
                 `info-value ${pendiente > 0 ? 'valor-pendiente' : 'valor-cero'}`;
 
-            // Pre-llenar con el saldo pendiente
-            document.getElementById('monto-pago').value = pendiente > 0 ? pendiente.toFixed(2) : '';
+            // Pre-llenar con el saldo pendiente en Bolivianos
+            document.getElementById('monto-pago').value = pendiente > 0 ? (pendiente / 100).toFixed(2) : '';
             infoDiv.style.display = 'flex';
         };
 
@@ -294,21 +295,24 @@ async function cargarTabRegistrar() {
                 return;
             }
 
-            // Validar monto
-            const monto = parseFloat(montoInput.value);
-            if (!monto || isNaN(monto) || monto <= 0) {
-                errorEl.textContent = 'Ingresa un monto válido mayor a $0';
+            // Validar monto (en Bolivianos)
+            const montoBs = parseFloat(montoInput.value);
+            if (!montoBs || isNaN(montoBs) || montoBs <= 0) {
+                errorEl.textContent = 'Ingresa un monto válido mayor a 0';
                 montoInput.classList.add('error');
                 return;
             }
+
+            // Convertir Bolivianos a centavos para comparar y guardar
+            const montoCentavos = Math.round(montoBs * 100);
 
             // Validar que no supere el pendiente
             const ganado    = await calcularGananciasTotal(trabajadorId);
             const pagado    = await calcularTotalPagado(trabajadorId);
             const pendiente = Math.max(0, ganado - pagado);
 
-            if (monto > pendiente + 0.001) {
-                errorEl.textContent = `El monto ($${monto.toFixed(2)}) supera el saldo pendiente ($${pendiente.toFixed(2)})`;
+            if (montoCentavos > pendiente) {
+                errorEl.textContent = `El monto (${montoBs.toFixed(2)}Bs) supera el saldo pendiente (${(pendiente / 100).toFixed(2)}Bs)`;
                 montoInput.classList.add('error');
                 return;
             }
@@ -323,7 +327,7 @@ async function cargarTabRegistrar() {
                     trabajadorId,
                     trabajadorNombre: trabajador.nombre,
                     fecha:  new Date().toISOString(),
-                    monto,
+                    monto: montoCentavos, // Guardar en centavos
                     notas: notas || ''
                 });
 
@@ -402,7 +406,7 @@ async function cargarTabHistorial(filtroTrabajadorId = null) {
                     <span class="historial-count">
                         ${pagos.length} pago${pagos.length !== 1 ? 's' : ''}
                     </span>
-                    <span class="historial-total">Total: $${totalFiltrado.toFixed(2)}</span>
+                    <span class="historial-total">Total: ${(totalFiltrado / 100).toFixed(2)}Bs</span>
                 </div>
 
                 ${pagos.length === 0 ? `
@@ -421,7 +425,7 @@ async function cargarTabHistorial(filtroTrabajadorId = null) {
                                         <span class="pago-item-fecha">📅 ${formatFecha(pago.fecha)}</span>
                                     </div>
                                     <div class="pago-item-right">
-                                        <span class="pago-item-monto">$${pago.monto.toFixed(2)}</span>
+                                        <span class="pago-item-monto">${(pago.monto / 100).toFixed(2)}Bs</span>
                                         <button class="btn-eliminar-pago"
                                                 onclick="confirmarEliminarPago(${pago.id})"
                                                 title="Eliminar pago">🗑️</button>

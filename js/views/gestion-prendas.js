@@ -43,6 +43,9 @@ export function renderGestionPrendas() {
         <button class="btn-edit-floating" onclick="editarPrendaSeleccionada()">
           ✏️ Editar
         </button>
+        <button class="btn-create-floating" onclick="crearPrendaDesdeSeleccionada()">
+          ➕ Crear
+        </button>
         <button class="btn-danger-floating" onclick="eliminarPrendaSeleccionada()">
           🗑️ Eliminar
         </button>
@@ -185,6 +188,20 @@ function inicializarEventosSeleccionPrendas() {
   window.eliminarPrendaSeleccionada = function () {
     if (prendaIdSeleccionada !== null && prendaNombreSeleccionada !== null) {
       mostrarModalEliminarPrenda(
+        prendaIdSeleccionada,
+        prendaNombreSeleccionada,
+      );
+      // Ocultar botones flotantes
+      document.getElementById("floating-actions-prenda").style.display = "none";
+      document.querySelectorAll(".selectable-row").forEach((r) => {
+        r.classList.remove("selected");
+      });
+    }
+  };
+
+  window.crearPrendaDesdeSeleccionada = function () {
+    if (prendaIdSeleccionada !== null && prendaNombreSeleccionada !== null) {
+      mostrarModalCrearPrendaDesdeExistente(
         prendaIdSeleccionada,
         prendaNombreSeleccionada,
       );
@@ -1016,6 +1033,123 @@ function mostrarModalAgregarTareaDebajoPrenda(prendaId, posicion) {
       } catch (error) {
         console.error("Error al agregar tarea:", error);
         mostrarMensaje("❌ Error al agregar tarea");
+      }
+    });
+
+  overlay.addEventListener("click", (e) => {
+    if (e.target === overlay) {
+      overlay.remove();
+      document.body.style.overflow = "auto";
+    }
+  });
+}
+
+// Modal: Crear Prenda desde Existente (duplicar con nuevo nombre)
+function mostrarModalCrearPrendaDesdeExistente(prendaIdOriginal, nombreOriginal) {
+  const overlay = document.createElement("div");
+  overlay.className = "modal-overlay";
+  overlay.innerHTML = `
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>➕ Crear Nueva Prenda</h3>
+      </div>
+      <div class="modal-body">
+        <p class="modal-info-text">Se creará una copia de <strong>"${nombreOriginal}"</strong> con todas sus tareas.</p>
+        <div class="form-group">
+          <label for="nuevo-nombre-prenda">Nombre de la nueva prenda</label>
+          <input type="text" id="nuevo-nombre-prenda" class="form-control" value="${nombreOriginal} (copia)" placeholder="Ej: Pantalón Especial">
+          <small id="error-nuevo-nombre-prenda" class="error-message"></small>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-secondary" id="modal-cancel-crear-prenda">Cancelar</button>
+        <button class="btn-primary" id="modal-confirm-crear-prenda">Crear</button>
+      </div>
+    </div>
+  `;
+
+  document.body.appendChild(overlay);
+  document.body.style.overflow = "hidden";
+
+  // Seleccionar el texto del input para facilitar edición
+  setTimeout(() => {
+    const input = document.getElementById("nuevo-nombre-prenda");
+    input.focus();
+    input.select();
+  }, 100);
+
+  document
+    .getElementById("modal-cancel-crear-prenda")
+    .addEventListener("click", () => {
+      overlay.remove();
+      document.body.style.overflow = "auto";
+    });
+
+  document
+    .getElementById("modal-confirm-crear-prenda")
+    .addEventListener("click", async () => {
+      const nuevoNombre = document
+        .getElementById("nuevo-nombre-prenda")
+        .value.trim();
+      const errorEl = document.getElementById("error-nuevo-nombre-prenda");
+
+      errorEl.textContent = "";
+
+      // Validaciones
+      if (!nuevoNombre) {
+        errorEl.textContent = "El nombre no puede estar vacío";
+        return;
+      }
+
+      if (nuevoNombre.length < 3) {
+        errorEl.textContent = "El nombre debe tener al menos 3 caracteres";
+        return;
+      }
+
+      try {
+        // Verificar si ya existe una prenda con ese nombre
+        const prendaExistente = await db.prendas
+          .where("nombre")
+          .equalsIgnoreCase(nuevoNombre)
+          .first();
+
+        if (prendaExistente) {
+          errorEl.textContent = "Ya existe una prenda con este nombre";
+          return;
+        }
+
+        // Obtener prenda original
+        const prendaOriginal = await db.prendas.get(prendaIdOriginal);
+        if (!prendaOriginal) {
+          errorEl.textContent = "No se encontró la prenda original";
+          return;
+        }
+
+        // Crear nueva prenda copiando las tareas
+        const nuevaPrenda = {
+          nombre: nuevoNombre,
+          tareas: JSON.parse(JSON.stringify(prendaOriginal.tareas)), // Copia profunda de tareas
+        };
+
+        await db.prendas.add(nuevaPrenda);
+
+        overlay.remove();
+        document.body.style.overflow = "auto";
+
+        mostrarMensaje("✅ Prenda creada correctamente");
+        cargarPrendas();
+      } catch (error) {
+        console.error("Error al crear prenda:", error);
+        errorEl.textContent = "Error al crear la prenda. Intente nuevamente.";
+      }
+    });
+
+  // Permitir crear con Enter
+  document
+    .getElementById("nuevo-nombre-prenda")
+    .addEventListener("keypress", (e) => {
+      if (e.key === "Enter") {
+        document.getElementById("modal-confirm-crear-prenda").click();
       }
     });
 

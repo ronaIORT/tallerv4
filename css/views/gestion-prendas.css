@@ -683,6 +683,34 @@
     transform: translateY(0);
 }
 
+/* Botón flotante de crear (verde/teal) */
+.gestion-prendas .btn-create-floating {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 14px 24px;
+    background: linear-gradient(135deg, #0d9488 0%, #0f766e 100%);
+    color: white;
+    border: none;
+    border-radius: var(--radius-md);
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    box-shadow: 0 4px 15px rgba(13, 148, 136, 0.4);
+    transition: all 0.2s;
+}
+
+.gestion-prendas .btn-create-floating:hover {
+    background: linear-gradient(135deg, #14b8a6 0%, #0d9488 100%);
+    box-shadow: 0 6px 20px rgba(13, 148, 136, 0.5);
+    transform: translateY(-2px);
+}
+
+.gestion-prendas .btn-create-floating:active {
+    transform: translateY(0);
+}
+
 /* Botón flotante de eliminar (rojo) */
 .gestion-prendas .btn-danger-floating {
     display: flex;
@@ -1064,6 +1092,7 @@
 
     .gestion-prendas .btn-view-floating,
     .gestion-prendas .btn-edit-floating,
+    .gestion-prendas .btn-create-floating,
     .gestion-prendas .btn-danger-floating,
     .gestion-prendas .btn-add-floating {
         padding: 16px 28px;

@@ -491,6 +491,43 @@
 }
 
 /* ==========================================================================
+   GRUPO DE BOTONES
+   ========================================================================== */
+
+.gestion-prendas .btn-group {
+    display: flex;
+    gap: 12px;
+    margin-top: 8px;
+}
+
+.gestion-prendas .btn-group .btn-primary {
+    flex: 2;
+}
+
+.gestion-prendas .btn-group .btn-secondary {
+    flex: 1;
+    background: rgba(255, 255, 255, 0.05);
+    color: #a0a0a0;
+    border: 1px solid #3a3a3a;
+    padding: 16px;
+    border-radius: 10px;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+}
+
+.gestion-prendas .btn-group .btn-secondary:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: #ffffff;
+    border-color: #4a4a4a;
+}
+
+/* ==========================================================================
    BOTONES PRINCIPALES
    ========================================================================== */
 
@@ -1117,5 +1154,139 @@
 
     .gestion-prendas .summary-value {
         font-size: 24px;
+    }
+}
+
+/* ==========================================================================
+   MODAL DE IMPORTACIÓN
+   ========================================================================== */
+
+.modal-import {
+    max-width: 500px;
+    max-height: 90vh;
+    overflow-y: auto;
+}
+
+.modal-import .modal-body {
+    padding: 20px;
+}
+
+.import-summary {
+    background: rgba(40, 40, 40, 0.6);
+    border-radius: var(--radius-md);
+    padding: 16px;
+    margin-bottom: 20px;
+    border: 1px solid #3a3a3a;
+}
+
+.import-summary-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 0;
+    border-bottom: 1px solid #2a2a2a;
+}
+
+.import-summary-row:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
+}
+
+.import-summary-row:first-child {
+    padding-top: 0;
+}
+
+.import-summary-row span:first-child {
+    color: #a0a0a0;
+    font-size: 13px;
+    font-weight: 500;
+}
+
+.import-summary-row span:last-child {
+    color: #ffffff;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.import-preview {
+    margin-top: 16px;
+}
+
+.import-preview h4 {
+    font-size: 13px;
+    font-weight: 600;
+    color: #a0a0a0;
+    margin: 0 0 12px 0;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.import-preview-table {
+    background: rgba(30, 30, 30, 0.6);
+    border-radius: var(--radius-md);
+    border: 1px solid #3a3a3a;
+    overflow: hidden;
+    max-height: 250px;
+    overflow-y: auto;
+}
+
+.import-preview-table .tasks-table {
+    margin: 0;
+}
+
+.import-preview-table .tasks-table th {
+    font-size: 11px;
+    padding: 12px 14px;
+    background: rgba(40, 40, 40, 0.8);
+}
+
+.import-preview-table .tasks-table td {
+    font-size: 13px;
+    padding: 10px 14px;
+}
+
+.import-preview-table .tasks-table td:first-child {
+    width: 40px;
+    text-align: center;
+    color: #707070;
+    font-weight: 600;
+}
+
+.import-preview-table .tasks-table td:last-child {
+    text-align: right;
+    font-family: 'SF Mono', 'Menlo', 'Monaco', 'Courier New', monospace;
+    color: #10b981;
+    font-weight: 600;
+}
+
+.import-preview-table .more-tasks {
+    text-align: center;
+    color: #707070;
+    font-style: italic;
+    font-size: 12px;
+    padding: 12px;
+    background: rgba(0, 0, 0, 0.2);
+}
+
+/* Responsive para modal de importación */
+@media (min-width: 768px) {
+    .modal-import {
+        max-width: 550px;
+    }
+
+    .import-summary-row span:first-child {
+        font-size: 14px;
+    }
+
+    .import-summary-row span:last-child {
+        font-size: 15px;
+    }
+
+    .import-preview-table .tasks-table th {
+        font-size: 12px;
+    }
+
+    .import-preview-table .tasks-table td {
+        font-size: 14px;
     }
 }

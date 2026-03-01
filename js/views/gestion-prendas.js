@@ -18,7 +18,11 @@ export function renderGestionPrendas() {
             <input type="text" id="nueva-prenda" class="form-control" placeholder="Ej: Pantalón Ajustado">
             <small id="error-nueva-prenda" class="error-message"></small>
           </div>
-          <button id="btn-crear-prenda" class="btn-primary">Crear Prenda</button>
+          <div class="btn-group">
+            <button id="btn-crear-prenda" class="btn-primary">Crear Prenda</button>
+            <button id="btn-importar-prenda" class="btn-secondary">📥 Importar</button>
+          </div>
+          <input type="file" id="input-importar-prenda" accept=".xlsx,.xls,.csv" style="display: none;">
         </div>
       </div>
 
@@ -63,6 +67,17 @@ export function renderGestionPrendas() {
   document.getElementById("nueva-prenda").addEventListener("keypress", (e) => {
     if (e.key === "Enter") crearPrenda();
   });
+
+  // Evento para importar prenda
+  document
+    .getElementById("btn-importar-prenda")
+    .addEventListener("click", () => {
+      document.getElementById("input-importar-prenda").click();
+    });
+
+  document
+    .getElementById("input-importar-prenda")
+    .addEventListener("change", manejarArchivoImportacion);
 }
 
 // Cargar prendas existentes
@@ -1153,6 +1168,291 @@ function mostrarModalCrearPrendaDesdeExistente(prendaIdOriginal, nombreOriginal)
       }
     });
 
+  overlay.addEventListener("click", (e) => {
+    if (e.target === overlay) {
+      overlay.remove();
+      document.body.style.overflow = "auto";
+    }
+  });
+}
+
+// ==================== IMPORTACIÓN DE PRENDAS ====================
+
+// Manejar archivo de importación (Excel/CSV)
+async function manejarArchivoImportacion(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+
+  // Limpiar el input para permitir seleccionar el mismo archivo nuevamente
+  event.target.value = "";
+
+  // Verificar que SheetJS esté disponible
+  if (typeof XLSX === "undefined") {
+    mostrarMensaje("❌ Error: No se cargó la librería de importación");
+    return;
+  }
+
+  try {
+    const data = await leerArchivo(file);
+    const tareas = parsearTareas(data);
+
+    if (tareas.length === 0) {
+      mostrarMensaje("❌ No se encontraron tareas válidas en el archivo");
+      return;
+    }
+
+    // Mostrar modal de importación
+    mostrarModalImportarPrenda(tareas, file.name);
+  } catch (error) {
+    console.error("Error al leer archivo:", error);
+    mostrarMensaje("❌ Error al leer el archivo. Verifique el formato.");
+  }
+}
+
+// Leer archivo Excel/CSV y convertir a JSON
+function leerArchivo(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+
+    reader.onload = (e) => {
+      try {
+        const data = new Uint8Array(e.target.result);
+        const workbook = XLSX.read(data, { type: "array" });
+
+        // Obtener la primera hoja
+        const firstSheetName = workbook.SheetNames[0];
+        const worksheet = workbook.Sheets[firstSheetName];
+
+        // Convertir a JSON
+        const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+        resolve(jsonData);
+      } catch (error) {
+        reject(error);
+      }
+    };
+
+    reader.onerror = () => reject(new Error("Error al leer el archivo"));
+    reader.readAsArrayBuffer(file);
+  });
+}
+
+// Parsear datos del archivo a formato de tareas
+function parsearTareas(data) {
+  const tareas = [];
+
+  if (!data || data.length < 2) {
+    return tareas;
+  }
+
+  // Buscar el índice de las columnas
+  const headerRow = data[0];
+  let tareaColIndex = -1;
+  let precioColIndex = -1;
+
+  // Buscar columnas por nombre (case insensitive)
+  headerRow.forEach((cell, index) => {
+    const cellStr = String(cell || "").toLowerCase().trim();
+    if (cellStr === "tarea" || cellStr === "tareas" || cellStr === "nombre") {
+      tareaColIndex = index;
+    }
+    if (
+      cellStr === "precio" ||
+      cellStr === "preciounitario" ||
+      cellStr === "precio unitario" ||
+      cellStr === "precioUnitario"
+    ) {
+      precioColIndex = index;
+    }
+  });
+
+  // Si no se encontraron las columnas por nombre, asumir que están en orden
+  if (tareaColIndex === -1) tareaColIndex = 0;
+  if (precioColIndex === -1) precioColIndex = 1;
+
+  // Procesar filas de datos (saltando el encabezado)
+  for (let i = 1; i < data.length; i++) {
+    const row = data[i];
+    if (!row || row.length === 0) continue;
+
+    const nombreTarea = String(row[tareaColIndex] || "").trim();
+    const precio = parseFloat(row[precioColIndex]);
+
+    // Validar que tenga nombre y precio válido
+    if (nombreTarea && !isNaN(precio) && precio >= 0) {
+      tareas.push({
+        nombre: nombreTarea,
+        precioUnitario: Math.round(precio), // Asegurar que sea entero (centavos)
+      });
+    }
+  }
+
+  return tareas;
+}
+
+// Modal: Importar Prenda
+function mostrarModalImportarPrenda(tareas, nombreArchivo) {
+  const overlay = document.createElement("div");
+  overlay.className = "modal-overlay";
+
+  // Generar nombre sugerido desde el nombre del archivo
+  const nombreSugerido = nombreArchivo
+    .replace(/\.(xlsx|xls|csv)$/i, "")
+    .replace(/[-_]/g, " ")
+    .trim();
+
+  const costoTotal = tareas.reduce((sum, t) => sum + t.precioUnitario, 0);
+
+  overlay.innerHTML = `
+    <div class="modal-content modal-import">
+      <div class="modal-header">
+        <h3>📥 Importar Prenda</h3>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label for="import-nombre-prenda">Nombre de la Prenda</label>
+          <input type="text" id="import-nombre-prenda" class="form-control" value="${nombreSugerido}" placeholder="Ej: Pantalón Especial">
+          <small id="error-import-nombre" class="error-message"></small>
+        </div>
+        
+        <div class="import-summary">
+          <div class="import-summary-row">
+            <span>📁 Archivo:</span>
+            <span>${nombreArchivo}</span>
+          </div>
+          <div class="import-summary-row">
+            <span>📋 Tareas encontradas:</span>
+            <span>${tareas.length}</span>
+          </div>
+          <div class="import-summary-row">
+            <span>💰 Costo total:</span>
+            <span>${(costoTotal / 100).toFixed(2)}Bs</span>
+          </div>
+        </div>
+
+        <div class="import-preview">
+          <h4>Vista previa de tareas</h4>
+          <div class="import-preview-table">
+            <table class="tasks-table">
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Tarea</th>
+                  <th>Precio (¢)</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${tareas
+                  .slice(0, 10)
+                  .map(
+                    (t, i) => `
+                  <tr>
+                    <td>${i + 1}</td>
+                    <td>${t.nombre}</td>
+                    <td>${t.precioUnitario}</td>
+                  </tr>
+                `,
+                  )
+                  .join("")}
+                ${
+                  tareas.length > 10
+                    ? `
+                  <tr>
+                    <td colspan="3" class="more-tasks">... y ${tareas.length - 10} tareas más</td>
+                  </tr>
+                `
+                    : ""
+                }
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-secondary" id="modal-cancel-import">Cancelar</button>
+        <button class="btn-primary" id="modal-confirm-import">Importar Prenda</button>
+      </div>
+    </div>
+  `;
+
+  document.body.appendChild(overlay);
+  document.body.style.overflow = "hidden";
+
+  // Focus en el input de nombre
+  setTimeout(() => {
+    const input = document.getElementById("import-nombre-prenda");
+    input.focus();
+    input.select();
+  }, 100);
+
+  // Evento cancelar
+  document.getElementById("modal-cancel-import").addEventListener("click", () => {
+    overlay.remove();
+    document.body.style.overflow = "auto";
+  });
+
+  // Evento confirmar
+  document
+    .getElementById("modal-confirm-import")
+    .addEventListener("click", async () => {
+      const nombrePrenda = document
+        .getElementById("import-nombre-prenda")
+        .value.trim();
+      const errorEl = document.getElementById("error-import-nombre");
+
+      errorEl.textContent = "";
+
+      // Validaciones
+      if (!nombrePrenda) {
+        errorEl.textContent = "El nombre no puede estar vacío";
+        return;
+      }
+
+      if (nombrePrenda.length < 3) {
+        errorEl.textContent = "El nombre debe tener al menos 3 caracteres";
+        return;
+      }
+
+      try {
+        // Verificar si ya existe una prenda con ese nombre
+        const prendaExistente = await db.prendas
+          .where("nombre")
+          .equalsIgnoreCase(nombrePrenda)
+          .first();
+
+        if (prendaExistente) {
+          errorEl.textContent = "Ya existe una prenda con este nombre";
+          return;
+        }
+
+        // Crear nueva prenda
+        const nuevaPrenda = {
+          nombre: nombrePrenda,
+          tareas: tareas,
+        };
+
+        await db.prendas.add(nuevaPrenda);
+
+        overlay.remove();
+        document.body.style.overflow = "auto";
+
+        mostrarMensaje("✅ Prenda importada correctamente");
+        cargarPrendas();
+      } catch (error) {
+        console.error("Error al importar prenda:", error);
+        errorEl.textContent = "Error al guardar. Intente nuevamente.";
+      }
+    });
+
+  // Permitir importar con Enter
+  document
+    .getElementById("import-nombre-prenda")
+    .addEventListener("keypress", (e) => {
+      if (e.key === "Enter") {
+        document.getElementById("modal-confirm-import").click();
+      }
+    });
+
+  // Cerrar al hacer clic fuera
   overlay.addEventListener("click", (e) => {
     if (e.target === overlay) {
       overlay.remove();

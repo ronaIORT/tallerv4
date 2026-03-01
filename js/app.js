@@ -88,11 +88,11 @@ async function cargarVista(ruta) {
                                 <div class="stat-label">Trabajadores</div>
                             </div>
                         </div>
-                        <div class="stat-card stat-eficiencia">
-                            <div class="stat-icon">⚡</div>
+                        <div class="stat-card stat-por-pagar">
+                            <div class="stat-icon">💳</div>
                             <div class="stat-content">
-                                <div class="stat-value">-%</div>
-                                <div class="stat-label">Eficiencia</div>
+                                <div class="stat-value">Bs -</div>
+                                <div class="stat-label">Por Pagar</div>
                             </div>
                         </div>
                     </div>
@@ -243,26 +243,23 @@ async function cargarEstadisticas() {
     // Calcular cantidad de trabajadores
     const trabajadoresCount = await db.trabajadores.count();
 
-    // Calcular eficiencia promedio (tareas asignadas / tareas totales)
-    let tareasAsignadasTotal = 0;
-    let tareasTotalesTotal = 0;
-
+    // Calcular monto por pagar (solo cortes activos)
     const cortesActivosArray = await db.cortes
       .where("estado")
       .equals("activo")
       .toArray();
-    cortesActivosArray.forEach((corte) => {
-      const tareasAsignadas = corte.tareas.reduce((total, tarea) => {
-        return total + (tarea.asignaciones ? tarea.asignaciones.length : 0);
-      }, 0);
-      tareasAsignadasTotal += tareasAsignadas;
-      tareasTotalesTotal += corte.tareas.length;
-    });
 
-    const eficienciaPromedio =
-      tareasTotalesTotal > 0
-        ? Math.round((tareasAsignadasTotal / tareasTotalesTotal) * 100)
-        : 0;
+    const totalPorPagarCentavos = cortesActivosArray.reduce((total, corte) => {
+      const montoCorte = corte.tareas.reduce((sumTarea, tarea) => {
+        const montoTarea = tarea.asignaciones.reduce((sumAsig, asig) => {
+          return sumAsig + (asig.cantidad * tarea.precioUnitario);
+        }, 0);
+        return sumTarea + montoTarea;
+      }, 0);
+      return total + montoCorte;
+    }, 0);
+
+    const totalPorPagarBs = totalPorPagarCentavos / 100;
 
     // Actualizar tarjetas de estadísticas
     const statsContainer = document.getElementById("estadisticas");
@@ -289,11 +286,11 @@ async function cargarEstadisticas() {
                         <div class="stat-label">Trabajadores</div>
                     </div>
                 </div>
-                <div class="stat-card stat-eficiencia">
-                    <div class="stat-icon">⚡</div>
+                <div class="stat-card stat-por-pagar">
+                    <div class="stat-icon">💳</div>
                     <div class="stat-content">
-                        <div class="stat-value">${eficienciaPromedio}%</div>
-                        <div class="stat-label">Eficiencia</div>
+                        <div class="stat-value">Bs ${totalPorPagarBs.toFixed(2)}</div>
+                        <div class="stat-label">Por Pagar</div>
                     </div>
                 </div>
             `;

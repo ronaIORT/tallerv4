@@ -6,6 +6,37 @@ La aplicación utiliza **IndexedDB** como sistema de persistencia, accedido a tr
 
 ---
 
+## ⚠️ Sistema de Monedas
+
+### IMPORTANTE: Centavos vs Bolivianos
+
+El proyecto utiliza un **sistema dual de monedas** que debe ser respetado:
+
+| Campo                 | Unidad         | Tipo    | Ejemplo         |
+| --------------------- | -------------- | ------- | --------------- |
+| `precioUnitario`      | **Centavos**   | Integer | `5` = 0.05 Bs   |
+| `precioVentaUnitario` | **Bolivianos** | Decimal | `15.00` = 15 Bs |
+
+### Razón del Diseño
+
+- **Centavos para tareas**: Evita errores de punto flotante en cálculos frecuentes
+- **Bolivianos para ventas**: Más intuitivo para el usuario al ingresar precios de venta
+
+### Conversión
+
+```javascript
+// Siempre usar las funciones de utils.js
+import { centavosABolivianos, formatBs } from "./administrar-tareas/utils.js";
+
+// Convertir para cálculos
+const precioBs = centavosABolivianos(precioUnitario);
+
+// Formatear para mostrar
+const texto = formatBs(precioUnitario); // "0.05Bs"
+```
+
+---
+
 ## Diagrama Entidad-Relación
 
 ```
@@ -26,14 +57,15 @@ La aplicación utiliza **IndexedDB** como sistema de persistencia, accedido a tr
 │ id (PK)                                      │
 │ estado (INDEX)                               │
 │ fechaCreacion (INDEX)                        │
+│ fechaFinalizacion                            │
 │ nombreCorte                                  │
 │ nombrePrenda                                 │
 │ cantidadPrendas                              │
-│ precioVentaUnitario                          │
+│ precioVentaUnitario (BOLIVIANOS)             │
 │ prendaId (FK → Prenda)                       │
 │ tareas[]                                     │
 │   ├── nombre                                 │
-│   ├── precioUnitario                         │
+│   ├── precioUnitario (CENTAVOS)              │
 │   └── asignaciones[]                         │
 │        ├── trabajadorId (FK → Trabajador)    │
 │        ├── trabajadorNombre                  │
@@ -49,13 +81,35 @@ La aplicación utiliza **IndexedDB** como sistema de persistencia, accedido a tr
           │ trabajadorId(FK)│
           │ fecha (INDEX)   │
           │ monto           │
-          │ corteId (FK)    │
+          │ corteId (INDEX) │
           └─────────────────┘
 ```
 
 ---
 
 ## Definición de Tablas
+
+### Versión de Base de Datos: 4
+
+```javascript
+db.version(4).stores({
+  prendas: "++id, &nombre",
+  trabajadores: "++id, &nombre",
+  cortes: "++id, estado, fechaCreacion",
+  pagos: "++id, trabajadorId, fecha, corteId",
+});
+```
+
+### Historial de Versiones
+
+| Versión | Cambios                                         |
+| ------- | ----------------------------------------------- |
+| v1      | Tablas iniciales: prendas, trabajadores, cortes |
+| v2      | Agrega tabla pagos                              |
+| v3      | Agrega índice fechaFinalizacion (implícito)     |
+| v4      | Agrega índice corteId en pagos                  |
+
+---
 
 ### Tabla: prendas
 
@@ -78,7 +132,7 @@ prendas: "++id, &nombre"
 ```javascript
 {
   nombre: String,           // Nombre descriptivo de la tarea
-  precioUnitario: Number    // Precio en dólares (ej: 0.05, 0.30)
+  precioUnitario: Number    // Precio en CENTAVOS (ej: 5 = 0.05 Bs)
 }
 ```
 
@@ -89,12 +143,12 @@ prendas: "++id, &nombre"
   id: 1,
   nombre: "Pantalón",
   tareas: [
-    { nombre: "over aleta simple", precioUnitario: 0.05 },
-    { nombre: "over aleta doble", precioUnitario: 0.05 },
-    { nombre: "over bolsillo", precioUnitario: 0.05 },
-    { nombre: "armado de relojero completo", precioUnitario: 0.30 },
-    { nombre: "cierre a aleta", precioUnitario: 0.05 },
-    { nombre: "baston", precioUnitario: 0.15 },
+    { nombre: "over aleta simple", precioUnitario: 5 },      // 0.05 Bs
+    { nombre: "over aleta doble", precioUnitario: 5 },       // 0.05 Bs
+    { nombre: "over bolsillo", precioUnitario: 5 },          // 0.05 Bs
+    { nombre: "armado de relojero completo", precioUnitario: 30 }, // 0.30 Bs
+    { nombre: "cierre a aleta", precioUnitario: 5 },         // 0.05 Bs
+    { nombre: "baston", precioUnitario: 15 },                // 0.15 Bs
     // ... más tareas
   ]
 }
@@ -155,11 +209,12 @@ cortes: "++id, estado, fechaCreacion"
   id: Number,                  // Auto-incrementado (primary key)
   estado: String,              // "activo" | "terminado" (indexed)
   fechaCreacion: Date,         // Timestamp de creación (indexed)
+  fechaFinalizacion: Date,     // Timestamp de finalización (opcional)
   nombreCorte: String,         // Nombre personalizado (opcional)
   nombrePrenda: String,        // Nombre de la prenda base
   nombrePrendaOriginal: String, // Backup del nombre original
   cantidadPrendas: Number,     // Cantidad de unidades
-  precioVentaUnitario: Number, // Precio de venta por unidad
+  precioVentaUnitario: Number, // Precio de venta por unidad en BOLIVIANOS
   prendaId: Number,            // FK a prenda (no enforced)
   tareas: Array                // Tareas heredadas + asignaciones
 }
@@ -170,7 +225,8 @@ cortes: "++id, estado, fechaCreacion"
 ```javascript
 {
   nombre: String,              // Nombre de la tarea
-  precioUnitario: Number,      // Precio unitario heredado
+  precioUnitario: Number,      // Precio unitario en CENTAVOS
+  unidadesTotales: Number,     // Total de unidades para esta tarea (opcional)
   asignaciones: Array          // Trabajadores asignados
 }
 ```
@@ -192,16 +248,17 @@ cortes: "++id, estado, fechaCreacion"
   id: 5,
   estado: "activo",
   fechaCreacion: "2026-02-23T04:30:00.000Z",
+  fechaFinalizacion: null,
   nombreCorte: "Pantalones Primavera",
   nombrePrenda: "Pantalón",
   nombrePrendaOriginal: "Pantalón",
   cantidadPrendas: 100,
-  precioVentaUnitario: 15.00,
+  precioVentaUnitario: 15.00,  // 15 Bolivianos por unidad
   prendaId: 1,
   tareas: [
     {
       nombre: "over aleta simple",
-      precioUnitario: 0.05,
+      precioUnitario: 5,  // 0.05 Bs (CENTAVOS)
       asignaciones: [
         { trabajadorId: 1, trabajadorNombre: "María García", cantidad: 50 },
         { trabajadorId: 2, trabajadorNombre: "Juan Pérez", cantidad: 50 }
@@ -209,7 +266,7 @@ cortes: "++id, estado, fechaCreacion"
     },
     {
       nombre: "baston",
-      precioUnitario: 0.15,
+      precioUnitario: 15,  // 0.15 Bs (CENTAVOS)
       asignaciones: [
         { trabajadorId: 1, trabajadorNombre: "María García", cantidad: 100 }
       ]
@@ -235,7 +292,7 @@ Almacena el historial de pagos realizados a trabajadores.
 
 ```javascript
 // Definición en Dexie
-pagos: "++id, trabajadorId, fecha"
+pagos: "++id, trabajadorId, fecha, corteId"
 
 // Esquema de documento
 {
@@ -243,7 +300,7 @@ pagos: "++id, trabajadorId, fecha"
   trabajadorId: Number,    // FK a trabajador (indexed)
   fecha: Date,             // Fecha del pago (indexed)
   monto: Number,           // Monto pagado
-  corteId: Number,         // FK al corte relacionado
+  corteId: Number,         // FK al corte relacionado (indexed)
   notas: String            // Notas adicionales (opcional)
 }
 ```
@@ -263,11 +320,12 @@ pagos: "++id, trabajadorId, fecha"
 
 #### Índices
 
-| Campo          | Tipo        | Descripción                  |
+| Campo          | Type        | Description                  |
 | -------------- | ----------- | ---------------------------- |
 | `id`           | Primary Key | Auto-incrementado            |
 | `trabajadorId` | Index       | Filtrar pagos por trabajador |
 | `fecha`        | Index       | Ordenar/filtrar por fecha    |
+| `corteId`      | Index       | Filtrar pagos por corte      |
 
 ---
 
@@ -280,8 +338,7 @@ Una prenda puede ser base de múltiples cortes. La relación se mantiene mediant
 ```javascript
 // Obtener todos los cortes de una prenda
 const cortesDePrenda = await db.cortes
-  .where("prendaId")
-  .equals(prendaId)
+  .filter((corte) => corte.prendaId === prendaId)
   .toArray();
 ```
 
@@ -301,8 +358,8 @@ const asignaciones = cortes.flatMap((corte) =>
         corteNombre: corte.nombreCorte,
         tarea: tarea.nombre,
         cantidad: a.cantidad,
-        precioUnitario: tarea.precioUnitario,
-        total: a.cantidad * tarea.precioUnitario,
+        precioUnitario: tarea.precioUnitario, // En CENTAVOS
+        total: a.cantidad * tarea.precioUnitario, // En CENTAVOS
       })),
   ),
 );
@@ -345,7 +402,7 @@ const cortesOrdenados = await db.cortes
 const prenda = await db.prendas.where("nombre").equals("Pantalón").first();
 ```
 
-### Calcular total a pagar por corte
+### Calcular total a pagar por corte (en Bolivianos)
 
 ```javascript
 async function calcularTotalPagar(corteId) {
@@ -355,14 +412,17 @@ async function calcularTotalPagar(corteId) {
 
   corte.tareas.forEach((tarea) => {
     tarea.asignaciones.forEach((asig) => {
-      const monto = asig.cantidad * tarea.precioUnitario;
+      // precioUnitario está en CENTAVOS
+      const montoCentavos = asig.cantidad * tarea.precioUnitario;
+      const montoBs = montoCentavos / 100;
+
       if (!totalPorTrabajador[asig.trabajadorId]) {
         totalPorTrabajador[asig.trabajadorId] = {
           nombre: asig.trabajadorNombre,
           total: 0,
         };
       }
-      totalPorTrabajador[asig.trabajadorId].total += monto;
+      totalPorTrabajador[asig.trabajadorId].total += montoBs;
     });
   });
 
@@ -374,14 +434,16 @@ async function calcularTotalPagar(corteId) {
 
 ```javascript
 function calcularGananciaNeta(corte) {
-  // Ingreso total
+  // Ingreso total en Bolivianos
   const ingresoTotal = corte.cantidadPrendas * corte.precioVentaUnitario;
 
-  // Costo de mano de obra
-  const costoManoObra = corte.tareas.reduce((total, tarea) => {
+  // Costo de mano de obra en centavos → Bolivianos
+  const costoManoObraCentavos = corte.tareas.reduce((total, tarea) => {
     const asignado = tarea.asignaciones.reduce((sum, a) => sum + a.cantidad, 0);
     return total + asignado * tarea.precioUnitario;
   }, 0);
+
+  const costoManoObra = costoManoObraCentavos / 100;
 
   return {
     ingresoTotal,
@@ -405,6 +467,19 @@ async function historialPagosTrabajador(trabajadorId) {
 }
 ```
 
+### Eliminar corte con pagos relacionados
+
+```javascript
+async function eliminarCorteCompleto(corteId) {
+  await db.transaction("rw", [db.cortes, db.pagos], async () => {
+    // Eliminar pagos relacionados
+    await db.pagos.where("corteId").equals(corteId).delete();
+    // Eliminar el corte
+    await db.cortes.delete(corteId);
+  });
+}
+```
+
 ---
 
 ## Migraciones
@@ -414,7 +489,6 @@ async function historialPagosTrabajador(trabajadorId) {
 Se agregó la tabla `pagos`:
 
 ```javascript
-// db.js
 db.version(1).stores({
   prendas: "++id, &nombre",
   trabajadores: "++id, &nombre",
@@ -429,11 +503,37 @@ db.version(2).stores({
 });
 ```
 
+### Versión 2 → Versión 3
+
+Sin cambios en schema (preparación para fechaFinalizacion):
+
+```javascript
+db.version(3).stores({
+  prendas: "++id, &nombre",
+  trabajadores: "++id, &nombre",
+  cortes: "++id, estado, fechaCreacion",
+  pagos: "++id, trabajadorId, fecha",
+});
+```
+
+### Versión 3 → Versión 4
+
+Se agregó índice `corteId` en pagos:
+
+```javascript
+db.version(4).stores({
+  prendas: "++id, &nombre",
+  trabajadores: "++id, &nombre",
+  cortes: "++id, estado, fechaCreacion",
+  pagos: "++id, trabajadorId, fecha, corteId", // corteId indexado
+});
+```
+
 ### Agregar una Nueva Tabla (Futuro)
 
 ```javascript
 // Incrementar versión y agregar tabla
-db.version(3).stores({
+db.version(5).stores({
   // ... tablas existentes
   configuracion: "id, clave", // Nueva tabla para settings
 });
@@ -443,7 +543,7 @@ db.version(3).stores({
 
 ## Seed Data
 
-La base de datos se pobla automáticamente al crearla:
+La base de datos se pobla automáticamente al crearla con precios en **CENTAVOS**:
 
 ```javascript
 db.on("populate", async () => {
@@ -451,21 +551,24 @@ db.on("populate", async () => {
     {
       nombre: "Pantalón",
       tareas: [
-        { nombre: "over aleta simple", precioUnitario: 0.05 },
-        { nombre: "over aleta doble", precioUnitario: 0.05 },
+        { nombre: "over aleta simple", precioUnitario: 5 }, // 0.05 Bs
+        { nombre: "over aleta doble", precioUnitario: 5 }, // 0.05 Bs
+        { nombre: "armado de relojero completo", precioUnitario: 30 }, // 0.30 Bs
         // ... más tareas
       ],
     },
     {
       nombre: "Short",
       tareas: [
-        /* ... */
+        { nombre: "over aleta simple", precioUnitario: 5 },
+        // ... más tareas
       ],
     },
     {
       nombre: "Falda",
       tareas: [
-        /* ... */
+        { nombre: "over aleta simple", precioUnitario: 5 },
+        // ... más tareas
       ],
     },
   ];
@@ -490,7 +593,7 @@ async function crearCorte(datos) {
     throw new Error("La prenda no existe");
   }
 
-  // Crear corte con tareas heredadas
+  // Crear corte con tareas heredadas (precios en centavos)
   const corte = {
     ...datos,
     tareas: prenda.tareas.map((t) => ({
@@ -525,6 +628,15 @@ function validarCorte(corte) {
     errores.push("Estado inválido");
   }
 
+  // Validar que los precios de tareas estén en centavos (enteros)
+  corte.tareas?.forEach((tarea, i) => {
+    if (!Number.isInteger(tarea.precioUnitario)) {
+      errores.push(
+        `Tarea ${i + 1}: precioUnitario debe ser un entero (centavos)`,
+      );
+    }
+  });
+
   return errores;
 }
 ```
@@ -538,8 +650,12 @@ function validarCorte(corte) {
 ```javascript
 async function exportarDB() {
   const data = {
-    version: 2,
+    version: 4,
     fecha: new Date().toISOString(),
+    moneda: {
+      precioUnitario: "centavos",
+      precioVentaUnitario: "bolivianos",
+    },
     prendas: await db.prendas.toArray(),
     trabajadores: await db.trabajadores.toArray(),
     cortes: await db.cortes.toArray(),

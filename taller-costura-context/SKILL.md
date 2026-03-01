@@ -4,7 +4,7 @@ description: Proporciona contexto completo del proyecto PWA Taller de Costura pa
 license: MIT
 compatibility: Proyecto JavaScript ES6+ con Dexie.js para IndexedDB. Requiere navegador con soporte PWA.
 metadata:
-  version: "1.0.0"
+  version: "2.0.0"
   author: "Equipo Taller de Costura"
   project: "tallerv4"
   repository: "https://github.com/ronaIORT/tallerv4.git"
@@ -24,6 +24,7 @@ allowed-tools: read_file write_to_file execute_command
 - **Cálculo de Pagos**: Automatizar el cálculo de mano de obra
 - **Modo Offline**: Funciona sin conexión a internet
 - **Diseño Mobile-First**: Optimizado para dispositivos móviles
+- **Tema Oscuro**: Interfaz con tema oscuro compacto
 
 ---
 
@@ -37,6 +38,80 @@ allowed-tools: read_file write_to_file execute_command
 | Dexie.js v4.0.8 | Wrapper de IndexedDB             |
 | Service Worker  | Cache y funcionalidad offline    |
 | PWA Manifest    | Instalación como app nativa      |
+
+---
+
+## ⚠️ Sistema de Monedas (IMPORTANTE)
+
+### Precios en Centavos vs Bolivianos
+
+El proyecto utiliza un **sistema dual de monedas**:
+
+| Campo                 | Unidad         | Descripción                                    |
+| --------------------- | -------------- | ---------------------------------------------- |
+| `precioUnitario`      | **Centavos**   | Precio de tareas (enteros, ej: 5 = 0.05 Bs)    |
+| `precioVentaUnitario` | **Bolivianos** | Precio de venta del corte (decimal, ej: 15.00) |
+
+### Conversión
+
+```javascript
+// De centavos a Bolivianos
+function centavosABolivianos(centavos) {
+  return centavos / 100;
+}
+
+// Formatear como Bolivianos
+function formatBs(centavos) {
+  return `${(centavos / 100).toFixed(2)}Bs`;
+}
+
+// Ejemplo: 50 centavos = 0.50 Bs
+formatBs(50); // "0.50Bs"
+```
+
+### Ejemplo de Datos
+
+```javascript
+// Prenda con tareas en centavos
+{
+  nombre: "Pantalón",
+  tareas: [
+    { nombre: "over aleta simple", precioUnitario: 5 },    // 0.05 Bs
+    { nombre: "baston", precioUnitario: 15 },              // 0.15 Bs
+    { nombre: "armado de relojero completo", precioUnitario: 30 } // 0.30 Bs
+  ]
+}
+
+// Corte con precio de venta en Bolivianos
+{
+  cantidadPrendas: 100,
+  precioVentaUnitario: 15.00,  // 15 Bolivianos por unidad
+  tareas: [...] // precios en centavos
+}
+```
+
+### Cálculo de Ganancias
+
+```javascript
+function calcularGananciaCorte(corte) {
+  // Ingreso total en Bolivianos
+  const totalVentaBs = corte.cantidadPrendas * corte.precioVentaUnitario;
+
+  // Mano de obra en centavos (convertir a Bs)
+  const totalManoObraCentavos = corte.tareas.reduce((sum, tarea) => {
+    const cantidadAsignada = tarea.asignaciones.reduce(
+      (t, a) => t + a.cantidad,
+      0,
+    );
+    return sum + tarea.precioUnitario * cantidadAsignada;
+  }, 0);
+
+  // Convertir centavos a Bolivianos
+  const totalManoObraBs = totalManoObraCentavos / 100;
+
+  return totalVentaBs - totalManoObraBs;
+}
+```
 
 ---
 
@@ -108,6 +183,7 @@ El enrutador en `js/app.js` maneja las siguientes rutas:
 | `#nuevo-corte`          | renderNuevoCorte()          | Crear nuevo corte de producción  |
 | `#gestion-trabajadores` | renderGestionTrabajadores() | CRUD de trabajadores             |
 | `#gestion-prendas`      | renderGestionPrendas()      | CRUD de prendas                  |
+| `#gestion-cortes`       | renderGestionCortes()       | Gestión de cortes con filtros    |
 | `#historial-pagos`      | renderHistorialPagos()      | Historial de pagos               |
 
 ### Rutas Dinámicas
@@ -122,14 +198,14 @@ El enrutador en `js/app.js` maneja las siguientes rutas:
 
 ## Modelo de Datos (IndexedDB)
 
-### Tablas
+### Tablas (Versión 4)
 
 ```javascript
-db.version(2).stores({
+db.version(4).stores({
   prendas: "++id, &nombre",
   trabajadores: "++id, &nombre",
   cortes: "++id, estado, fechaCreacion",
-  pagos: "++id, trabajadorId, fecha",
+  pagos: "++id, trabajadorId, fecha, corteId",
 });
 ```
 
@@ -144,7 +220,7 @@ db.version(2).stores({
   tareas: [             // Array de tareas
     {
       nombre: String,       // Nombre de la tarea
-      precioUnitario: Number // Precio en dólares
+      precioUnitario: Number // Precio en CENTAVOS (ej: 5 = 0.05 Bs)
     }
   ]
 }
@@ -166,15 +242,17 @@ db.version(2).stores({
   id: Number,           // Auto-incrementado
   estado: String,       // "activo" | "terminado"
   fechaCreacion: Date,  // Timestamp de creación
+  fechaFinalizacion: Date, // Timestamp de finalización (opcional)
   nombreCorte: String,  // Nombre personalizado (opcional)
   nombrePrenda: String, // Nombre de la prenda base
+  nombrePrendaOriginal: String, // Backup del nombre original
   cantidadPrendas: Number, // Cantidad de unidades
-  precioVentaUnitario: Number, // Precio de venta por unidad
+  precioVentaUnitario: Number, // Precio de venta por unidad en BOLIVIANOS
   prendaId: Number,     // FK a prenda
   tareas: [             // Tareas heredadas de la prenda
     {
       nombre: String,
-      precioUnitario: Number,
+      precioUnitario: Number,  // En CENTAVOS
       asignaciones: [   // Trabajadores asignados
         {
           trabajadorId: Number,
@@ -232,13 +310,13 @@ db.version(2).stores({
 
 1. Usuario navega a `#nuevo-corte`
 2. Selecciona prenda base (carga tareas automáticamente)
-3. Ingresa cantidad y precio de venta
+3. Ingresa cantidad y precio de venta (en Bolivianos)
 4. Opcionalmente asigna un nombre personalizado
 5. Guarda el corte en IndexedDB
 
 ### Administrar Tareas de un Corte
 
-1. Desde dashboard, clic en "Administrar" de un corte
+1. Desde dashboard o gestión de cortes, clic en "Administrar"
 2. Navega a `#administrar-tareas/:id`
 3. Pestañas disponibles:
    - **Info**: Resumen del corte
@@ -250,8 +328,26 @@ db.version(2).stores({
 ### Calcular Pagos
 
 1. Al asignar tareas, se calcula automáticamente el pago por trabajador
-2. Fórmula: `cantidad × precioUnitario`
-3. Los pagos se registran en la tabla `pagos`
+2. Fórmula: `cantidad × precioUnitario` (resultado en centavos)
+3. Para mostrar en Bolivianos: dividir entre 100
+4. Los pagos se registran en la tabla `pagos`
+
+---
+
+## Funciones Principales de app.js
+
+| Función                       | Descripción                            |
+| ----------------------------- | -------------------------------------- |
+| `cargarVista(ruta)`           | Carga la vista correspondiente al hash |
+| `cargarEstadisticas()`        | Actualiza métricas del dashboard       |
+| `cargarCortesRecientes()`     | Renderiza lista de cortes              |
+| `filtrarCortes(termino)`      | Filtra cortes por texto                |
+| `aplicarFiltro(tipo)`         | Aplica filtro por estado               |
+| `calcularProgresoReal(corte)` | Calcula progreso real del corte        |
+| `confirmarEliminarCorte(id)`  | Modal de confirmación para eliminar    |
+| `eliminarCorte(id)`           | Elimina corte y pagos relacionados     |
+| `confirmarSalida()`           | Modal de confirmación para salir       |
+| `mostrarMensaje(texto)`       | Muestra toast temporal                 |
 
 ---
 
@@ -281,7 +377,7 @@ case '#mi-vista':
 
 ```javascript
 // En db.js, incrementar versión y agregar tabla
-db.version(3).stores({
+db.version(5).stores({
   // ...tablas existentes
   nuevaTabla: "++id, campo1, campo2",
 });

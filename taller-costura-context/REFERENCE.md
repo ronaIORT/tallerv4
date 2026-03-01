@@ -2,15 +2,103 @@
 
 ## Índice
 
-1. [API de Base de Datos](#api-de-base-de-datos)
-2. [Funciones Principales](#funciones-principales)
-3. [Componentes UI](#componentes-ui)
-4. [Utilidades](#utilidades)
-5. [Solución de Problemas](#solución-de-problemas)
+1. [Sistema de Monedas](#sistema-de-monedas)
+2. [API de Base de Datos](#api-de-base-de-datos)
+3. [Funciones Principales](#funciones-principales)
+4. [Componentes UI](#componentes-ui)
+5. [Utilidades](#utilidades)
+6. [Solución de Problemas](#solución-de-problemas)
+
+---
+
+## Sistema de Monedas
+
+### ⚠️ IMPORTANTE: Centavos vs Bolivianos
+
+El proyecto utiliza un **sistema dual de monedas**:
+
+| Campo                 | Unidad         | Ejemplo         |
+| --------------------- | -------------- | --------------- |
+| `precioUnitario`      | **Centavos**   | `5` = 0.05 Bs   |
+| `precioVentaUnitario` | **Bolivianos** | `15.00` = 15 Bs |
+
+### Funciones de Conversión
+
+```javascript
+import {
+  centavosABolivianos,
+  formatBs,
+  formatCentavos,
+} from "./administrar-tareas/utils.js";
+
+// Convertir centavos a Bolivianos
+centavosABolivianos(50); // 0.5
+
+// Formatear como Bolivianos
+formatBs(50); // "0.50Bs"
+
+// Formatear como centavos
+formatCentavos(50); // "50¢"
+```
+
+### Ejemplo de Uso
+
+```javascript
+// Crear prenda con tareas en CENTAVOS
+await db.prendas.add({
+  nombre: "Pantalón",
+  tareas: [
+    { nombre: "over aleta simple", precioUnitario: 5 },     // 0.05 Bs
+    { nombre: "baston", precioUnitario: 15 },               // 0.15 Bs
+    { nombre: "armado de relojero", precioUnitario: 30 }    // 0.30 Bs
+  ]
+});
+
+// Crear corte con precio de venta en BOLIVIANOS
+await db.cortes.add({
+  nombrePrenda: "Pantalón",
+  cantidadPrendas: 100,
+  precioVentaUnitario: 15.00,  // 15 Bolivianos por unidad
+  tareas: [...]
+});
+```
+
+### Cálculo de Ganancias
+
+```javascript
+function calcularGananciaCorte(corte) {
+  // Ingreso total en Bolivianos
+  const totalVentaBs = corte.cantidadPrendas * corte.precioVentaUnitario;
+
+  // Mano de obra en centavos → convertir a Bs
+  const totalManoObraCentavos = corte.tareas.reduce((sum, tarea) => {
+    const cantidadAsignada = tarea.asignaciones.reduce(
+      (t, a) => t + a.cantidad,
+      0,
+    );
+    return sum + tarea.precioUnitario * cantidadAsignada;
+  }, 0);
+
+  const totalManoObraBs = totalManoObraCentavos / 100;
+
+  return totalVentaBs - totalManoObraBs;
+}
+```
 
 ---
 
 ## API de Base de Datos
+
+### Versión Actual: 4
+
+```javascript
+db.version(4).stores({
+  prendas: "++id, &nombre",
+  trabajadores: "++id, &nombre",
+  cortes: "++id, estado, fechaCreacion",
+  pagos: "++id, trabajadorId, fecha, corteId", // corteId indexado
+});
+```
 
 ### Inicialización
 
@@ -26,12 +114,12 @@ import { db } from "./db.js";
 #### Crear (Create)
 
 ```javascript
-// Agregar un registro
+// Agregar una prenda con tareas en CENTAVOS
 const id = await db.prendas.add({
   nombre: "Camisa",
   tareas: [
-    { nombre: "cortar", precioUnitario: 0.5 },
-    { nombre: "coser", precioUnitario: 1.0 }
+    { nombre: "cortar", precioUnitario: 10 },    // 0.10 Bs
+    { nombre: "coser", precioUnitario: 25 }      // 0.25 Bs
   ]
 });
 
@@ -74,7 +162,10 @@ const total = await db.trabajadores.count();
 
 ```javascript
 // Actualizar por ID
-await db.cortes.update(1, { estado: "terminado" });
+await db.cortes.update(1, {
+  estado: "terminado",
+  fechaFinalizacion: new Date(),
+});
 
 // Actualizar con modificación
 const corte = await db.cortes.get(1);
@@ -94,6 +185,12 @@ await db.prendas.delete(1);
 
 // Eliminar múltiples
 await db.trabajadores.where("nombre").equals("Juan").delete();
+
+// Eliminar cortes con pagos relacionados
+async function eliminarCorteCompleto(corteId) {
+  await db.pagos.where("corteId").equals(corteId).delete();
+  await db.cortes.delete(corteId);
+}
 
 // Limpiar tabla completa
 await db.pagos.clear();
@@ -116,14 +213,18 @@ await db.transaction('rw', [db.cortes, db.pagos], async () => {
 
 ### app.js - Enrutador
 
-| Función                   | Descripción                            |
-| ------------------------- | -------------------------------------- |
-| `cargarVista(ruta)`       | Carga la vista correspondiente al hash |
-| `cargarEstadisticas()`    | Actualiza métricas del dashboard       |
-| `cargarCortesRecientes()` | Renderiza lista de cortes              |
-| `filtrarCortes(termino)`  | Filtra cortes por texto                |
-| `aplicarFiltro(tipo)`     | Aplica filtro por estado               |
-| `mostrarMensaje(texto)`   | Muestra toast temporal                 |
+| Función                       | Descripción                                                         |
+| ----------------------------- | ------------------------------------------------------------------- |
+| `cargarVista(ruta)`           | Carga la vista correspondiente al hash                              |
+| `cargarEstadisticas()`        | Actualiza métricas del dashboard                                    |
+| `cargarCortesRecientes()`     | Renderiza lista de cortes                                           |
+| `filtrarCortes(termino)`      | Filtra cortes por texto                                             |
+| `aplicarFiltro(tipo)`         | Aplica filtro por estado ('all', 'activo', 'terminado', 'reciente') |
+| `calcularProgresoReal(corte)` | Calcula progreso real basado en unidades                            |
+| `confirmarEliminarCorte(id)`  | Muestra modal de confirmación para eliminar                         |
+| `eliminarCorte(id)`           | Elimina corte y pagos relacionados                                  |
+| `confirmarSalida()`           | Muestra modal de confirmación para salir                            |
+| `mostrarMensaje(texto)`       | Muestra toast temporal                                              |
 
 ### db.js - Base de Datos
 
@@ -134,15 +235,16 @@ await db.transaction('rw', [db.cortes, db.pagos], async () => {
 
 ### Vistas
 
-| Archivo                       | Función Exportada             | Descripción               |
-| ----------------------------- | ----------------------------- | ------------------------- |
-| `nuevo-corte.js`              | `renderNuevoCorte()`          | Formulario de nuevo corte |
-| `gestion-trabajadores.js`     | `renderGestionTrabajadores()` | CRUD trabajadores         |
-| `gestion-prendas.js`          | `renderGestionPrendas()`      | CRUD prendas              |
-| `gestion-prendas.js`          | `renderVerPrenda(id)`         | Ver detalle prenda        |
-| `gestion-prendas.js`          | `renderEditarPrenda(id)`      | Editar prenda             |
-| `historial-pagos.js`          | `renderHistorialPagos()`      | Lista de pagos            |
-| `administrar-tareas/index.js` | `renderAdministrarTareas(id)` | Vista con tabs            |
+| Archivo                       | Función Exportada             | Descripción                   |
+| ----------------------------- | ----------------------------- | ----------------------------- |
+| `nuevo-corte.js`              | `renderNuevoCorte()`          | Formulario de nuevo corte     |
+| `gestion-trabajadores.js`     | `renderGestionTrabajadores()` | CRUD trabajadores             |
+| `gestion-prendas.js`          | `renderGestionPrendas()`      | CRUD prendas                  |
+| `gestion-prendas.js`          | `renderVerPrenda(id)`         | Ver detalle prenda            |
+| `gestion-prendas.js`          | `renderEditarPrenda(id)`      | Editar prenda                 |
+| `gestion-cortes` (en app.js)  | `renderGestionCortes()`       | Gestión de cortes con filtros |
+| `historial-pagos.js`          | `renderHistorialPagos()`      | Lista de pagos                |
+| `administrar-tareas/index.js` | `renderAdministrarTareas(id)` | Vista con tabs                |
 
 ### Administrar Tareas (Tabs)
 
@@ -155,6 +257,20 @@ await db.transaction('rw', [db.cortes, db.pagos], async () => {
 | `tab-asignar.js`    | `cargarPestanaAsignar(id)`    | Asignar tareas         |
 | `utils.js`          | Varias                        | Funciones auxiliares   |
 
+### utils.js - Funciones de Utilidad
+
+| Función                          | Descripción                              |
+| -------------------------------- | ---------------------------------------- |
+| `centavosABolivianos(centavos)`  | Convierte centavos a Bolivianos          |
+| `formatBs(centavos)`             | Formatea centavos como "X.XXBs"          |
+| `formatCentavos(centavos)`       | Formatea como "X¢"                       |
+| `calcularManoObraTotal(corte)`   | Calcula mano de obra total (centavos)    |
+| `calcularManoObraReal(corte)`    | Calcula mano de obra asignada (centavos) |
+| `calcularCostoPorPrenda(tareas)` | Suma precios de tareas (centavos)        |
+| `formatDate(date)`               | Formatea fecha a DD/MM/YYYY              |
+| `mostrarMensaje(texto)`          | Muestra toast temporal                   |
+| `cambiarPestana(nombre)`         | Cambia a pestaña específica              |
+
 ---
 
 ## Componentes UI
@@ -166,6 +282,9 @@ await db.transaction('rw', [db.cortes, db.pagos], async () => {
   <div class="header">
     <button class="back-btn" onclick="location.hash='#dashboard'">←</button>
     <h1 class="small-title">Título</h1>
+    <button class="header-btn logout-btn" onclick="confirmarSalida()">
+      🚪
+    </button>
   </div>
 
   <div class="content">
@@ -184,14 +303,18 @@ await db.transaction('rw', [db.cortes, db.pagos], async () => {
 | `.small-title`        | Título de página                |
 | `.action-btn`         | Botón de acción                 |
 | `.action-btn.primary` | Botón principal (destacado)     |
+| `.action-btn.danger`  | Botón de acción peligrosa       |
 | `.stat-card`          | Tarjeta de estadística          |
 | `.corte-card`         | Tarjeta de corte en lista       |
+| `.progreso-bar`       | Barra de progreso visual        |
+| `.progreso-fill`      | Relleno de barra de progreso    |
 | `.tab-menu`           | Contenedor de pestañas          |
 | `.tab-item`           | Botón de pestaña                |
 | `.tab-item.active`    | Pestaña activa                  |
 | `.tab-content`        | Contenido de pestaña            |
 | `.search-input`       | Campo de búsqueda               |
 | `.filter-btn`         | Botón de filtro                 |
+| `.filter-btn.active`  | Filtro activo                   |
 | `.toast-message`      | Mensaje temporal                |
 | `.empty-state`        | Estado vacío                    |
 | `.error-state`        | Estado de error                 |
@@ -201,20 +324,55 @@ await db.transaction('rw', [db.cortes, db.pagos], async () => {
 
 ```html
 <div class="modal-overlay" id="mi-modal">
-  <div class="modal">
-    <div class="modal-header">
-      <h3>Título Modal</h3>
-      <button class="modal-close" onclick="cerrarModal()">×</button>
-    </div>
-    <div class="modal-body">
-      <!-- Contenido -->
-    </div>
-    <div class="modal-footer">
+  <div class="modal-content confirm-modal">
+    <div class="modal-icon">🗑️</div>
+    <h3 class="modal-title">Título Modal</h3>
+    <p class="modal-text">Descripción del modal.</p>
+    <div class="modal-actions">
       <button class="action-btn" onclick="cerrarModal()">Cancelar</button>
       <button class="action-btn primary" onclick="confirmar()">
         Confirmar
       </button>
     </div>
+  </div>
+</div>
+```
+
+### Tarjeta de Corte con Progreso
+
+```html
+<div class="corte-card" data-id="1">
+  <div class="corte-card-header">
+    <h3 class="corte-nombre">Pantalones Primavera</h3>
+    <span class="corte-estado estado-activo">Activo</span>
+  </div>
+
+  <div class="corte-card-body">
+    <div class="corte-progreso">
+      <div class="progreso-header">
+        <span class="progreso-label">Progreso</span>
+        <span class="progreso-text">75%</span>
+      </div>
+      <div class="progreso-bar">
+        <div class="progreso-fill" style="width: 75%"></div>
+      </div>
+    </div>
+
+    <div class="corte-detalles">
+      <div class="detalle-item">
+        <span class="detalle-icon">📦</span>
+        <span class="detalle-value">100 und</span>
+      </div>
+      <div class="detalle-item">
+        <span class="detalle-icon">📅</span>
+        <span class="detalle-value">23/02/2026</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="corte-card-actions">
+    <button class="action-btn small primary">⚙️ Administrar</button>
+    <button class="action-btn small danger">🗑️ Eliminar</button>
   </div>
 </div>
 ```
@@ -233,13 +391,45 @@ function formatDate(date) {
 // Resultado: "23/02/2026"
 ```
 
+### Cálculo de Progreso Real
+
+```javascript
+function calcularProgresoReal(corte) {
+  // Total de unidades esperadas = cantidadPrendas × número de tareas
+  const totalTareas = corte.tareas.length;
+  const totalUnidadesEsperadas = corte.cantidadPrendas * totalTareas;
+
+  // Total de unidades asignadas
+  const unidadesAsignadas = corte.tareas.reduce((total, tarea) => {
+    const cantidadTarea = tarea.asignaciones.reduce(
+      (sum, a) => sum + a.cantidad,
+      0,
+    );
+    return total + cantidadTarea;
+  }, 0);
+
+  const progreso =
+    totalUnidadesEsperadas > 0
+      ? Math.round((unidadesAsignadas / totalUnidadesEsperadas) * 100)
+      : 0;
+
+  return {
+    progreso: Math.min(progreso, 100),
+    unidadesAsignadas,
+    totalUnidades: totalUnidadesEsperadas,
+  };
+}
+```
+
 ### Cálculo de Ganancias
 
 ```javascript
 function calcularGananciaCorte(corte) {
-  const totalVenta = corte.cantidadPrendas * corte.precioVentaUnitario;
+  // Ingreso total en Bolivianos
+  const totalVentaBs = corte.cantidadPrendas * corte.precioVentaUnitario;
 
-  const totalManoObra = corte.tareas.reduce((sum, tarea) => {
+  // Mano de obra en centavos (convertir a Bs)
+  const totalManoObraCentavos = corte.tareas.reduce((sum, tarea) => {
     const cantidadAsignada = tarea.asignaciones.reduce(
       (t, a) => t + a.cantidad,
       0,
@@ -247,23 +437,9 @@ function calcularGananciaCorte(corte) {
     return sum + tarea.precioUnitario * cantidadAsignada;
   }, 0);
 
-  return totalVenta - totalManoObra;
-}
-```
+  const totalManoObraBs = totalManoObraCentavos / 100;
 
-### Cálculo de Progreso
-
-```javascript
-function calcularProgreso(corte) {
-  const tareasAsignadas = corte.tareas.reduce((total, tarea) => {
-    return total + (tarea.asignaciones ? tarea.asignaciones.length : 0);
-  }, 0);
-
-  const totalTareas = corte.tareas.length;
-
-  return totalTareas > 0
-    ? Math.round((tareasAsignadas / totalTareas) * 100)
-    : 0;
+  return totalVentaBs - totalManoObraBs;
 }
 ```
 
@@ -285,7 +461,7 @@ await db.open();
 
 ### El Service Worker no se actualiza
 
-1. En desarrollo, el SW está deshabilitado
+1. En desarrollo, el SW puede estar habilitado para pruebas offline
 2. En producción, forzar actualización con `registration.update()`
 3. Limpiar cache del navegador
 
@@ -315,6 +491,23 @@ const pagina = await db.cortes
   .offset(0)
   .limit(20)
   .toArray();
+```
+
+### Errores con precios/monedas
+
+1. Verificar que `precioUnitario` esté en **centavos** (enteros)
+2. Verificar que `precioVentaUnitario` esté en **Bolivianos** (decimales)
+3. Al mostrar precios de tareas, dividir entre 100
+4. Usar las funciones de `utils.js` para conversión
+
+```javascript
+// ❌ Incorrecto - mezclar unidades
+const total = tarea.precioUnitario * cantidad; // Resultado en centavos
+console.log(total + " Bs"); // Error: muestra centavos como Bolivianos
+
+// ✅ Correcto - convertir antes de mostrar
+const totalCentavos = tarea.precioUnitario * cantidad;
+console.log(formatBs(totalCentavos)); // "X.XXBs"
 ```
 
 ---
@@ -348,4 +541,16 @@ navigator.serviceWorker.getRegistrations().then((regs) => {
 window.addEventListener("beforeinstallprompt", (e) => {
   console.log("PWA instalable");
 });
+```
+
+### Probar conversión de monedas
+
+```javascript
+// En consola, después de cargar la app
+const { formatBs, centavosABolivianos } = window;
+
+// Probar conversión
+console.log(formatBs(50)); // "0.50Bs"
+console.log(formatBs(100)); // "1.00Bs"
+console.log(centavosABolivianos(5)); // 0.05
 ```

@@ -84,14 +84,14 @@
     background: linear-gradient(90deg, #f59e0b, #fbbf24);
 }
 
-.stat-card.stat-eficiencia::before {
+.stat-card.stat-por-pagar::before {
     content: '';
     position: absolute;
     top: 0;
     left: 0;
     right: 0;
     height: 4px;
-    background: linear-gradient(90deg, #8b5cf6, #a78bfa);
+    background: linear-gradient(90deg, #f97316, #fb923c);
 }
 
 .stat-card:hover {
@@ -114,9 +114,9 @@
     box-shadow: 0 16px 32px rgba(245, 158, 11, 0.2);
 }
 
-.stat-card.stat-eficiencia:hover {
-    border-color: #8b5cf6;
-    box-shadow: 0 16px 32px rgba(139, 92, 246, 0.2);
+.stat-card.stat-por-pagar:hover {
+    border-color: #f97316;
+    box-shadow: 0 16px 32px rgba(249, 115, 22, 0.2);
 }
 
 .stat-card.loading {

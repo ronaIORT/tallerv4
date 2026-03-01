@@ -43,6 +43,51 @@ El proyecto implementa una arquitectura **SPA (Single Page Application)** sin fr
 
 ---
 
+## Sistema de Monedas
+
+### Arquitectura de Precios
+
+El proyecto implementa un **sistema dual de monedas** para optimizar precisión y usabilidad:
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                    SISTEMA DE MONEDAS                        │
+├─────────────────────────────────────────────────────────────┤
+│                                                              │
+│  ┌─────────────────────┐    ┌─────────────────────┐        │
+│  │   precioUnitario    │    │ precioVentaUnitario │        │
+│  │     (CENTAVOS)      │    │    (BOLIVIANOS)     │        │
+│  ├─────────────────────┤    ├─────────────────────┤        │
+│  │ • Tipo: Integer     │    │ • Tipo: Decimal     │        │
+│  │ • Uso: Tareas       │    │ • Uso: Venta        │        │
+│  │ • Sin decimales     │    │ • Input directo     │        │
+│  │ • Ej: 5 = 0.05 Bs   │    │ • Ej: 15.00 Bs      │        │
+│  └──────────┬──────────┘    └──────────┬──────────┘        │
+│             │                          │                    │
+│             │    ┌──────────────┐      │                    │
+│             └───▶│  Conversión  │◀─────┘                    │
+│                  │  centavos/100 │                           │
+│                  └──────────────┘                            │
+│                                                              │
+└─────────────────────────────────────────────────────────────┘
+```
+
+### Funciones de Conversión (utils.js)
+
+```javascript
+// Conversión de centavos a Bolivianos
+export function centavosABolivianos(centavos) {
+  return centavos / 100;
+}
+
+// Formateo para mostrar
+export function formatBs(centavos) {
+  return `${(centavos / 100).toFixed(2)}Bs`;
+}
+```
+
+---
+
 ## Flujo de Navegación
 
 ```
@@ -51,23 +96,23 @@ El proyecto implementa una arquitectura **SPA (Single Page Application)** sin fr
                     │  #dashboard │
                     └──────┬──────┘
                            │
-        ┌──────────────────┼──────────────────┐
-        │                  │                  │
-        ▼                  ▼                  ▼
-┌───────────────┐  ┌───────────────┐  ┌───────────────┐
-│  Nuevo Corte  │  │   Trabajadores│  │    Prendas    │
-│  #nuevo-corte │  │ #gestion-...  │  │ #gestion-...  │
-└───────────────┘  └───────────────┘  └───────┬───────┘
-        │                                      │
-        │                                      ▼
-        │                            ┌─────────────────┐
-        │                            │   Ver Prenda    │
-        │                            │ #ver-prenda/:id │
-        │                            └─────────────────┘
-        │
-        ▼
-┌───────────────────┐
-│ Administrar Tareas│
+        ┌──────────────────┼──────────────────┬──────────────┐
+        │                  │                  │              │
+        ▼                  ▼                  ▼              ▼
+┌───────────────┐  ┌───────────────┐  ┌───────────────┐  ┌───────────────┐
+│  Nuevo Corte  │  │   Trabajadores│  │    Prendas    │  │    Cortes     │
+│  #nuevo-corte │  │ #gestion-...  │  │ #gestion-...  │  │#gestion-cortes│
+└───────────────┘  └───────────────┘  └───────┬───────┘  └───────────────┘
+        │                                      │                 │
+        │                                      ▼                 │
+        │                            ┌─────────────────┐        │
+        │                            │   Ver Prenda    │        │
+        │                            │ #ver-prenda/:id │        │
+        │                            └─────────────────┘        │
+        │                                                       │
+        ▼                                                       │
+┌───────────────────┐                                           │
+│ Administrar Tareas│◀──────────────────────────────────────────┘
 │ #administrar-...  │
 │     /:corteId     │
 └─────────┬─────────┘
@@ -93,7 +138,7 @@ El proyecto implementa una arquitectura **SPA (Single Page Application)** sin fr
 css/
 ├── style.css        # Importa todos los demás
 ├── base.css         # Reset, tipografía base
-├── variables.css    # Colores, espaciados, fuentes
+├── variables.css    # Colores, espaciados, fuentes (Tema Oscuro)
 ├── components.css   # Botones, cards, inputs
 ├── layout.css       # Grid, contenedores
 ├── modals.css       # Ventanas modales
@@ -109,7 +154,7 @@ css/
 **Patrones utilizados**:
 
 - Mobile-first responsive design
-- CSS Variables para theming
+- CSS Variables para theming (Tema Oscuro)
 - BEM-like naming convention
 - Modularización por funcionalidad
 
@@ -133,7 +178,7 @@ js/
         ├── tab-trabajador.js
         ├── tab-editar.js
         ├── tab-asignar.js
-        └── utils.js      # Funciones compartidas
+        └── utils.js      # Funciones compartidas (conversión monedas)
 ```
 
 **Patrones utilizados**:
@@ -149,7 +194,7 @@ js/
 
 ```
 IndexedDB (via Dexie.js)
-├── TallerCosturaDB
+├── TallerCosturaDB (v4)
 │   ├── prendas       # Catálogo de prendas
 │   ├── trabajadores  # Personal del taller
 │   ├── cortes        # Órdenes de producción
@@ -176,6 +221,7 @@ El enrutador en `app.js` implementa navegación basada en hash:
 function cargarVista(ruta) {
   // Rutas estáticas
   if (ruta === "#dashboard") { ... }
+  if (ruta === "#gestion-cortes") { renderGestionCortes(); return; }
 
   // Rutas dinámicas con parámetros
   if (ruta.startsWith("#administrar-tareas/")) {
@@ -258,10 +304,11 @@ Usuario                    Vista                    DB
    │                        │◀───Lista tareas───────│
    │                        │                       │
    │──Ingresa cantidad─────▶│                       │
-   │──Ingresa precio───────▶│                       │
+   │──Ingresa precio (Bs)──▶│                       │
    │                        │                       │
    │──Clic "Guardar"───────▶│                       │
    │                        │──Crea objeto corte───▶│
+   │                        │  (tareas en centavos) │
    │                        │──Persiste en DB──────▶│
    │                        │◀──Confirmación────────│
    │                        │                       │
@@ -291,6 +338,8 @@ Usuario                 Tab-Asignar                 DB
    │                        │◀──Confirmación────────│
    │                        │                       │
    │◀──Actualiza UI────────│                       │
+   │  (monto en centavos    │                       │
+   │   mostrar en Bs)       │                       │
 ```
 
 ---
@@ -402,6 +451,7 @@ self.addEventListener("fetch", (event) => {
 3. **IndexedDB**: Acceso asíncrono no bloqueante
 4. **Service Worker**: Cache de recursos estáticos
 5. **Debounce en Búsqueda**: Evita consultas excesivas
+6. **Precios en Centavos**: Operaciones con enteros son más rápidas
 
 ### Métricas Objetivo
 
@@ -436,3 +486,28 @@ self.addEventListener("fetch", (event) => {
 3. Importar en `index.js`
 4. Agregar botón en template
 5. Agregar caso en switch de navegación
+
+---
+
+## Tema Oscuro
+
+La aplicación implementa un tema oscuro compacto:
+
+```css
+/* variables.css */
+:root {
+  --color-background: #1a202c;
+  --color-surface: #2d3748;
+  --color-primary: #4a5568;
+  --color-text: #e2e8f0;
+  --color-text-secondary: #a0aec0;
+}
+```
+
+### Características del Tema
+
+- Fondo oscuro (#1a202c)
+- Superficies ligeramente más claras (#2d3748)
+- Texto claro con buen contraste
+- Acentos de color para acciones importantes
+- Modales con overlay oscuro

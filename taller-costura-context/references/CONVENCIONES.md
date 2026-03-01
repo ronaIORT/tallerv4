@@ -6,6 +6,101 @@ Este proyecto sigue principios de **código limpio** y **simplicidad**, prioriza
 
 ---
 
+## ⚠️ Sistema de Monedas
+
+### Regla Fundamental
+
+El proyecto utiliza un **sistema dual de monedas** que debe respetarse en todo el código:
+
+| Campo                 | Unidad          | Tipo    | Uso              |
+| --------------------- | --------------- | ------- | ---------------- |
+| `precioUnitario`      | **Centavos**    | Integer | Precio de tareas |
+| `precioVentaUnitario` | \*\*Bolivianos` | Decimal | Precio de venta  |
+
+### Convenciones de Moneda
+
+```javascript
+// ✅ CORRECTO: precioUnitario en centavos (entero)
+const tarea = {
+  nombre: "over aleta simple",
+  precioUnitario: 5, // 5 centavos = 0.05 Bs
+};
+
+// ✅ CORRECTO: precioVentaUnitario en Bolivianos (decimal)
+const corte = {
+  cantidadPrendas: 100,
+  precioVentaUnitario: 15.0, // 15 Bolivianos
+};
+
+// ❌ INCORRECTO: mezclar unidades
+const tarea = {
+  nombre: "over aleta simple",
+  precioUnitario: 0.05, // ❌ NO usar decimales para tareas
+};
+```
+
+### Funciones de Conversión
+
+Siempre usar las funciones de `utils.js`:
+
+```javascript
+import {
+  centavosABolivianos,
+  formatBs,
+  formatCentavos,
+} from "./administrar-tareas/utils.js";
+
+// ✅ CORRECTO: usar funciones de conversión
+const precioMostrar = formatBs(tarea.precioUnitario); // "0.05Bs"
+const precioCalculo = centavosABolivianos(tarea.precioUnitario); // 0.05
+
+// ❌ INCORRECTO: conversión manual propensa a errores
+const precioMostrar = tarea.precioUnitario / 100 + " Bs"; // Inconsistente
+```
+
+### Cálculos con Monedas
+
+```javascript
+// ✅ CORRECTO: calcular en centavos, mostrar en Bs
+function calcularTotalTarea(tarea, cantidad) {
+  // Resultado en centavos
+  const totalCentavos = tarea.precioUnitario * cantidad;
+
+  // Convertir para mostrar
+  return {
+    centavos: totalCentavos,
+    bolivianos: totalCentavos / 100,
+    formato: formatBs(totalCentavos),
+  };
+}
+
+// ✅ CORRECTO: ganancia con conversión apropiada
+function calcularGanancia(corte) {
+  // Venta en Bolivianos
+  const ingresoBs = corte.cantidadPrendas * corte.precioVentaUnitario;
+
+  // Mano de obra en centavos → Bolivianos
+  const manoObraCentavos = corte.tareas.reduce((sum, t) => {
+    const asignado = t.asignaciones.reduce((s, a) => s + a.cantidad, 0);
+    return sum + t.precioUnitario * asignado;
+  }, 0);
+  const manoObraBs = manoObraCentavos / 100;
+
+  return ingresoBs - manoObraBs;
+}
+
+// ❌ INCORRECTO: no convertir unidades
+function calcularGanancia(corte) {
+  const ingreso = corte.cantidadPrendas * corte.precioVentaUnitario;
+  const manoObra = corte.tareas.reduce((sum, t) => {
+    return sum + t.precioUnitario; // ❌ Mezclando centavos con Bs
+  }, 0);
+  return ingreso - manoObra; // ❌ Resultado incorrecto
+}
+```
+
+---
+
 ## JavaScript
 
 ### Formato General
@@ -19,9 +114,6 @@ function miFuncion(parametro) {
 
 // ❌ Evitar
 var miVariable = "valor"; // Usar const/let
-function miFuncion(parametro) {
-  return parametro;
-} // Sin punto y coma inconsistente
 ```
 
 ### Declaración de Variables
@@ -80,6 +172,7 @@ function obtenerDatos(cb) {
 // ✅ Importaciones nombradas
 import { db } from "./db.js";
 import { renderVista } from "./views/vista.js";
+import { formatBs, centavosABolivianos } from "./administrar-tareas/utils.js";
 
 // ✅ Exportaciones nombradas al final
 function helper1() {}
@@ -140,6 +233,7 @@ function procesarCorte(corte) {
   <header class="header">
     <button class="back-btn">←</button>
     <h1 class="small-title">Título</h1>
+    <button class="header-btn logout-btn">🚪</button>
   </header>
 
   <main class="content">
@@ -182,6 +276,7 @@ app.innerHTML = `
   <div class="container">
     <h1>${titulo}</h1>
     <p>${descripcion}</p>
+    <span class="precio">${formatBs(precio)}</span>
   </div>
 `;
 
@@ -192,6 +287,7 @@ function renderLista(items) {
       (item) => `
     <li class="item" data-id="${item.id}">
       ${item.nombre}
+      <span class="precio">${formatBs(item.precioUnitario)}</span>
     </li>
   `,
     )
@@ -210,7 +306,7 @@ function renderLista(items) {
 ```
 css/
 ├── style.css        # Solo imports, sin reglas directas
-├── variables.css    # Variables CSS globales
+├── variables.css    # Variables CSS globales (incluye tema oscuro)
 ├── base.css         # Reset y estilos base
 ├── components.css   # Componentes reutilizables
 ├── layout.css       # Estructura de página
@@ -224,14 +320,15 @@ css/
 ```css
 /* ✅ Definir en variables.css */
 :root {
-  /* Colores */
+  /* Colores - Tema Oscuro */
+  --color-background: #1a202c;
+  --color-surface: #2d3748;
   --color-primary: #4a5568;
   --color-secondary: #718096;
   --color-success: #48bb78;
   --color-danger: #f56565;
-  --color-background: #1a202c;
-  --color-surface: #2d3748;
   --color-text: #e2e8f0;
+  --color-text-secondary: #a0aec0;
 
   /* Espaciado */
   --spacing-xs: 0.25rem;
@@ -281,6 +378,14 @@ css/
 .is-hidden {
 }
 .has-error {
+}
+
+/* ✅ Clases para estados de corte */
+.estado-activo {
+  color: var(--color-success);
+}
+.estado-terminado {
+  color: var(--color-secondary);
 }
 
 /* ❌ Evitar IDs para estilos */
@@ -394,11 +499,15 @@ setTimeout(() => inicializarEventos(), 100);
 /**
  * Calcula el total a pagar a cada trabajador en un corte
  * @param {number} corteId - ID del corte
- * @returns {Object} Objeto con totales por trabajador
+ * @returns {Object} Objeto con totales por trabajador en Bolivianos
  */
 async function calcularTotalPagar(corteId) {
   // ...
 }
+
+// ✅ Documentar decisiones de moneda
+// precioUnitario está en centavos, convertir a Bs para mostrar
+const precioBs = centavosABolivianos(tarea.precioUnitario);
 
 // ❌ Evitar comentarios obvios
 // Incrementa el contador
@@ -433,9 +542,9 @@ Tipos:
 - chore: Tareas de mantenimiento
 
 Ejemplos:
-feat(cortes): agregar función de duplicar corte
-fix(db): corregir error al guardar tareas vacías
-docs(skill): actualizar documentación de arquitectura
+feat(cortes): agregar función de eliminar corte con pagos
+fix(db): corregir precios en centavos para tareas
+docs(skill): actualizar documentación de sistema de monedas
 style(css): mejorar espaciado en tarjetas
 refactor(app): simplificar lógica del router
 ```
@@ -473,6 +582,10 @@ searchInput.addEventListener(
   "input",
   debounce((e) => buscar(e.target.value), 300),
 );
+
+// ✅ Usar enteros para cálculos (centavos)
+const totalCentavos = precioUnitario * cantidad; // Rápido y preciso
+const totalBs = totalCentavos / 100; // Convertir solo al final
 ```
 
 ### Accesibilidad
@@ -504,3 +617,18 @@ function sanitizar(texto) {
 // ✅ Nunca evaluar código dinámico
 eval(usuarioInput); // ❌ PELIGROSO
 ```
+
+---
+
+## Checklist para Nuevo Código
+
+Antes de commit, verificar:
+
+- [ ] ¿Los precios de tareas están en **centavos** (enteros)?
+- [ ] ¿Los precios de venta están en **Bolivianos** (decimales)?
+- [ ] ¿Se usan las funciones de conversión de `utils.js`?
+- [ ] ¿Las funciones async tienen try/catch?
+- [ ] ¿Los nombres siguen las convenciones (camelCase, kebab-case)?
+- [ ] ¿El HTML es semántico?
+- [ ] ¿Se usan variables CSS en lugar de valores hardcodeados?
+- [ ] ¿El código funciona en móvil (responsive)?

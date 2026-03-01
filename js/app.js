@@ -11,19 +11,23 @@ import { renderAdministrarTareas } from "./views/administrar-tareas/index.js";
 import { renderHistorialPagos } from "./views/historial-pagos.js";
 
 // ===========================================================================
-// 🔧 DESHABILITAR SERVICE WORKER DURANTE DESARROLLO
+// 🔧 SERVICE WORKER - MODO DESARROLLO
 // ===========================================================================
+// El Service Worker ahora está habilitado también en desarrollo para pruebas offline
+// Si necesitas deshabilitarlo temporalmente, cambia esta variable a true:
+const DISABLE_SW_IN_DEV = false;
+
 if (
-  window.location.hostname === "localhost" ||
-  window.location.hostname === "127.0.0.1" ||
-  window.location.port === "5500" || // Live Server port
-  window.location.port === "8080" || // Otros puertos comunes
-  window.location.port === "3000"
+  DISABLE_SW_IN_DEV &&
+  (window.location.hostname === "localhost" ||
+    window.location.hostname === "127.0.0.1" ||
+    window.location.port === "5500" ||
+    window.location.port === "8080" ||
+    window.location.port === "3000")
 ) {
-  console.log("🔧 MODO DESARROLLO: Deshabilitando Service Worker...");
+  console.log("🔧 MODO DESARROLLO: Service Worker deshabilitado manualmente");
 
   if ("serviceWorker" in navigator) {
-    // Desregistrar cualquier Service Worker existente
     navigator.serviceWorker.getRegistrations().then((registrations) => {
       registrations.forEach((registration) => {
         registration.unregister();
@@ -31,7 +35,6 @@ if (
       });
     });
 
-    // Prevenir nuevos registros durante la sesión
     const originalRegister = navigator.serviceWorker.register;
     navigator.serviceWorker.register = function () {
       console.warn("⚠️ Service Worker bloqueado en modo desarrollo");
@@ -40,6 +43,8 @@ if (
       );
     };
   }
+} else {
+  console.log("🔧 Service Worker habilitado para pruebas offline");
 }
 
 // ===========================================================================

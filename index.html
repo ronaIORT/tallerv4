@@ -38,12 +38,11 @@
     <script type="module" src="js/app.js"></script>
 
     <!-- Service Worker Registration -->
-    <!-- Service Worker Registration -->
     <script>
-        // Solo registrar Service Worker en producción (no en localhost)
-        if ('serviceWorker' in navigator &&
-            !window.location.hostname.includes('localhost') &&
-            !window.location.hostname.includes('127.0.0.1')) {
+        // Registrar Service Worker tanto en desarrollo como en producción
+        if ('serviceWorker' in navigator) {
+            const isDev = window.location.hostname.includes('localhost') || 
+                          window.location.hostname.includes('127.0.0.1');
 
             window.addEventListener('load', async () => {
                 try {
@@ -52,7 +51,11 @@
 
                     const registration = await navigator.serviceWorker.register('service-worker.js');
 
-                    console.log('✅ ServiceWorker registrado con éxito:', registration.scope);
+                    if (isDev) {
+                        console.log('🔧 Modo desarrollo: ServiceWorker registrado para pruebas offline');
+                    } else {
+                        console.log('✅ ServiceWorker registrado con éxito:', registration.scope);
+                    }
 
                     // Forzar actualización si hay nueva versión
                     registration.onupdatefound = () => {
@@ -75,8 +78,6 @@
                     console.warn('⚠️ La app funcionará pero sin modo offline');
                 }
             });
-        } else if ('serviceWorker' in navigator) {
-            console.log('🔧 Modo desarrollo: Service Worker no se registrará');
         } else {
             console.warn('⚠️ ServiceWorker no soportado en este navegador');
         }

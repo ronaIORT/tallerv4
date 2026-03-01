@@ -64,6 +64,10 @@ export async function cargarPestanaResumen(corteId) {
       
       <div class="summary-card">
         <div class="summary-row">
+          <span>Precio Venta/Unidad:</span>
+          <span>${corte.precioVentaUnitario.toFixed(2)}Bs</span>
+        </div>
+        <div class="summary-row">
           <span>Costo por Prenda:</span>
           <span>${costoPorPrendaBs.toFixed(2)}Bs</span>
         </div>
@@ -140,16 +144,17 @@ async function exportarCortePDF(corteId) {
     doc.text(`Fecha de Creación: ${fechaCreacion}`, 14, 30);
     doc.text(`Fecha de Fin: ${fechaFin}`, 14, 36);
     doc.text(`Unidades: ${corte.cantidadPrendas}`, 14, 42);
+    doc.text(`Precio Venta/Unidad: ${corte.precioVentaUnitario.toFixed(2)}Bs`, 14, 48);
 
     // Tallas
     if (corte.tallas && corte.tallas.length > 0) {
       const tallasStr = corte.tallas.map(t => `${t.talla}: ${t.cantidad}`).join('  |  ');
-      doc.text(`Tallas: ${tallasStr}`, 14, 48);
+      doc.text(`Tallas: ${tallasStr}`, 14, 54);
     }
 
     // Estado
     doc.setTextColor(corte.estado === 'activo' ? '#2563eb' : '#16a34a');
-    doc.text(`Estado: ${corte.estado === 'activo' ? 'En progreso' : 'Finalizado'}`, 14, 54);
+    doc.text(`Estado: ${corte.estado === 'activo' ? 'En progreso' : 'Finalizado'}`, 14, 60);
     doc.setTextColor(0, 0, 0);
 
     // ==================== TABLA DE TAREAS ====================
@@ -243,13 +248,14 @@ async function exportarCortePDF(corteId) {
 
     doc.setFontSize(10);
     doc.setFont('helvetica', 'normal');
-    doc.text(`Costo por Prenda: ${costoPorPrendaBs.toFixed(2)}Bs`, 14, finalY + 8);
-    doc.text(`Total Venta: ${totalVentaBs.toFixed(2)}Bs`, 14, finalY + 16);
-    doc.text(`Mano de Obra REAL: ${totalManoObraRealBs.toFixed(2)}Bs`, 14, finalY + 24);
+    doc.text(`Precio Venta/Unidad: ${corte.precioVentaUnitario.toFixed(2)}Bs`, 14, finalY + 8);
+    doc.text(`Costo por Prenda: ${costoPorPrendaBs.toFixed(2)}Bs`, 14, finalY + 16);
+    doc.text(`Total Venta: ${totalVentaBs.toFixed(2)}Bs`, 14, finalY + 24);
+    doc.text(`Mano de Obra REAL: ${totalManoObraRealBs.toFixed(2)}Bs`, 14, finalY + 32);
     
     doc.setFont('helvetica', 'bold');
     doc.setTextColor(16, 185, 129); // Verde
-    doc.text(`Ganancia REAL: ${gananciaRealBs.toFixed(2)}Bs`, 14, finalY + 32);
+    doc.text(`Ganancia REAL: ${gananciaRealBs.toFixed(2)}Bs`, 14, finalY + 40);
     doc.setTextColor(0, 0, 0);
 
     // ==================== GUARDAR PDF ====================

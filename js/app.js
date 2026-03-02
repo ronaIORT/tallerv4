@@ -845,7 +845,7 @@ function renderGestionCortes() {
         </div>
 
         <!-- Lista de cortes -->
-        <div id="lista-cortes" class="cortes-list">
+        <div id="lista-cortes">
           <div class="loading-item">
             <div class="loading-line"></div>
             <div class="loading-line short"></div>

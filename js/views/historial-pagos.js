@@ -4,6 +4,9 @@ import { db } from '../db.js';
 // Estado del módulo: trabajador preseleccionado desde el resumen
 let trabajadorPreseleccionado = null;
 
+// Orden de las pestañas para navegación por swipe
+const ORDEN_PESTANAS_PAGOS = ['resumen', 'registrar', 'historial'];
+
 // ==========================================================================
 // RENDER PRINCIPAL
 // ==========================================================================
@@ -36,6 +39,7 @@ export function renderHistorialPagos() {
     `;
 
     inicializarTabsPagos();
+    inicializarSwipeNavigationPagos();
     cargarTabResumen();
 }
 
@@ -512,6 +516,59 @@ function mostrarModalEliminar(pagoId) {
             mostrarToast('❌ Error al eliminar el pago');
         }
     };
+}
+
+// ==========================================================================
+// NAVEGACIÓN POR SWIPE
+// ==========================================================================
+
+// Inicializar navegación por swipe (deslizar) en móvil
+function inicializarSwipeNavigationPagos() {
+    const tabContent = document.getElementById('tab-content-pagos');
+    if (!tabContent) return;
+
+    let startX = 0;
+    let startY = 0;
+    const threshold = 50; // Mínimo 50px para activar el swipe
+
+    tabContent.addEventListener('touchstart', (e) => {
+        startX = e.touches[0].clientX;
+        startY = e.touches[0].clientY;
+    }, { passive: true });
+
+    tabContent.addEventListener('touchend', async (e) => {
+        const endX = e.changedTouches[0].clientX;
+        const endY = e.changedTouches[0].clientY;
+        const diffX = endX - startX;
+        const diffY = endY - startY;
+
+        // Solo activar si el swipe es más horizontal que vertical y supera el umbral
+        if (Math.abs(diffX) > Math.abs(diffY) && Math.abs(diffX) > threshold) {
+            const currentTabBtn = document.querySelector('.tab-item.active');
+            if (!currentTabBtn) return;
+            
+            const currentTab = currentTabBtn.dataset.tab;
+            const currentIndex = ORDEN_PESTANAS_PAGOS.indexOf(currentTab);
+
+            let newIndex;
+            if (diffX < 0) {
+                // Swipe izquierda → siguiente pestaña
+                newIndex = currentIndex + 1;
+            } else {
+                // Swipe derecha → pestaña anterior
+                newIndex = currentIndex - 1;
+            }
+
+            // Verificar límites
+            if (newIndex >= 0 && newIndex < ORDEN_PESTANAS_PAGOS.length) {
+                const nextTab = ORDEN_PESTANAS_PAGOS[newIndex];
+                const nextBtn = document.querySelector(`.tab-item[data-tab="${nextTab}"]`);
+                if (nextBtn) {
+                    nextBtn.click(); // Simular clic para activar la pestaña
+                }
+            }
+        }
+    }, { passive: true });
 }
 
 // ==========================================================================

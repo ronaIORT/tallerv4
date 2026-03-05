@@ -243,22 +243,21 @@ async function cargarEstadisticas() {
     // Calcular cantidad de trabajadores
     const trabajadoresCount = await db.trabajadores.count();
 
-    // Calcular monto por pagar (solo cortes activos)
-    const cortesActivosArray = await db.cortes
-      .where("estado")
-      .equals("activo")
-      .toArray();
+    // Calcular monto por pagar (coincide con historial-pagos.js)
+    const todosLosCortes = await db.cortes.toArray();
 
-    const totalPorPagarCentavos = cortesActivosArray.reduce((total, corte) => {
-      const montoCorte = corte.tareas.reduce((sumTarea, tarea) => {
-        const montoTarea = tarea.asignaciones.reduce((sumAsig, asig) => {
+    const totalGanadoCentavos = todosLosCortes.reduce((total, corte) => {
+      return total + corte.tareas.reduce((sumTarea, tarea) => {
+        return sumTarea + tarea.asignaciones.reduce((sumAsig, asig) => {
           return sumAsig + (asig.cantidad * tarea.precioUnitario);
         }, 0);
-        return sumTarea + montoTarea;
       }, 0);
-      return total + montoCorte;
     }, 0);
 
+    const pagosRealizados = await db.pagos.toArray();
+    const totalPagadoCentavos = pagosRealizados.reduce((sum, pago) => sum + pago.monto, 0);
+
+    const totalPorPagarCentavos = Math.max(0, totalGanadoCentavos - totalPagadoCentavos);
     const totalPorPagarBs = totalPorPagarCentavos / 100;
 
     // Actualizar tarjetas de estadísticas

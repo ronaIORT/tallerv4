@@ -1,9 +1,9 @@
 // ===========================================================================
 // Service Worker - Taller de Costura PWA
-// Versión: 4.0 (Soporte completo offline incluyendo Dexie.js)
+// Versión: 6.0 (Botones toggle en tallas, indicador de versión en UI)
 // ===========================================================================
 
-const CACHE_NAME = "taller-costura-v5";
+const CACHE_NAME = "taller-costura-v6";
 
 // 🔹 Archivos locales a cachear
 const localUrlsToCache = [

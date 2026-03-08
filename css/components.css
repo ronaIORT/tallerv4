@@ -21,7 +21,8 @@
 }
 
 .form-group {
-    margin-bottom: 20px;
+    /*margin-bottom: 20px;*/
+    margin-bottom: 10px;
 }
 
 .form-group:last-child {
@@ -30,7 +31,8 @@
 
 .form-group label {
     display: block;
-    margin-bottom: 8px;
+    /*margin-bottom: 8px;*/
+    margin-bottom: 5px;
     font-weight: 500;
     color: var(--text-primary);
     font-size: 14px;
@@ -48,7 +50,8 @@
 
 .form-control {
     width: 100%;
-    padding: 16px 14px;
+    /*padding: 16px 14px;*/
+    padding: 6px 10px;
     background: var(--bg-card);
     border: 1px solid var(--border-color);
     border-radius: var(--radius-md);
@@ -140,7 +143,11 @@ select.form-control {
 }
 
 .btn-primary:hover:not(:disabled) {
-    background: linear-gradient(135deg, var(--primary-hover) 0%, var(--primary) 100%);
+    background: linear-gradient(
+        135deg,
+        var(--primary-hover) 0%,
+        var(--primary) 100%
+    );
     transform: translateY(-2px);
     box-shadow: 0 6px 20px rgba(88, 166, 255, 0.4);
 }
@@ -206,13 +213,21 @@ select.form-control {
 }
 
 .action-btn.primary {
-    background: linear-gradient(135deg, rgba(37, 99, 235, 0.2) 0%, rgba(37, 99, 235, 0.1) 100%);
+    background: linear-gradient(
+        135deg,
+        rgba(37, 99, 235, 0.2) 0%,
+        rgba(37, 99, 235, 0.1) 100%
+    );
     color: #60a5fa;
     border: 1px solid rgba(37, 99, 235, 0.3);
 }
 
 .action-btn.primary:hover {
-    background: linear-gradient(135deg, rgba(37, 99, 235, 0.3) 0%, rgba(37, 99, 235, 0.2) 100%);
+    background: linear-gradient(
+        135deg,
+        rgba(37, 99, 235, 0.3) 0%,
+        rgba(37, 99, 235, 0.2) 100%
+    );
     transform: translateY(-1px);
 }
 
@@ -420,7 +435,7 @@ select.form-control {
 
 .task-price,
 .money {
-    font-family: 'SF Mono', 'Menlo', 'Monaco', 'Courier New', monospace;
+    font-family: "SF Mono", "Menlo", "Monaco", "Courier New", monospace;
     font-weight: 600;
 }
 
@@ -433,7 +448,7 @@ select.form-control {
 }
 
 .task-total {
-    font-family: 'SF Mono', 'Menlo', 'Monaco', 'Courier New', monospace;
+    font-family: "SF Mono", "Menlo", "Monaco", "Courier New", monospace;
     text-align: right;
     color: var(--primary);
     font-weight: 600;
@@ -450,7 +465,7 @@ select.form-control {
     font-weight: 600;
     color: var(--text-primary);
     min-width: 60px;
-    font-family: 'SF Mono', 'Menlo', 'Monaco', monospace;
+    font-family: "SF Mono", "Menlo", "Monaco", monospace;
 }
 
 .no-asignado {
@@ -559,7 +574,7 @@ select.form-control {
     background: rgba(255, 255, 255, 0.05);
     padding: 4px 8px;
     border-radius: var(--radius-sm);
-    font-family: 'Menlo', 'Monaco', 'Courier New', monospace;
+    font-family: "Menlo", "Monaco", "Courier New", monospace;
     letter-spacing: -0.3px;
 }
 
@@ -599,7 +614,7 @@ select.form-control {
 .summary-value {
     font-size: 18px;
     font-weight: 800;
-    font-family: 'SF Mono', 'Menlo', 'Monaco', 'Courier New', monospace;
+    font-family: "SF Mono", "Menlo", "Monaco", "Courier New", monospace;
     color: var(--success);
     text-shadow: 0 2px 4px rgba(16, 185, 129, 0.2);
 }
@@ -646,13 +661,18 @@ select.form-control {
 }
 
 .loading-line::after {
-    content: '';
+    content: "";
     position: absolute;
     top: 0;
     left: 0;
     right: 0;
     bottom: 0;
-    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+    background: linear-gradient(
+        90deg,
+        transparent,
+        rgba(255, 255, 255, 0.1),
+        transparent
+    );
     animation: loadingShimmer 1.5s infinite;
 }
 
@@ -728,7 +748,7 @@ select.form-control {
 }
 
 .selectable-row.selected::after {
-    content: '';
+    content: "";
     position: absolute;
     right: 8px;
     top: 50%;
@@ -806,7 +826,7 @@ select.form-control {
 }
 
 .floating-btn-share {
-    background-color: #25D366;
+    background-color: #25d366;
     color: white;
     width: 50px;
     height: 50px;
@@ -850,13 +870,18 @@ select.form-control {
 }
 
 .progress-fill::after {
-    content: '';
+    content: "";
     position: absolute;
     top: 0;
     left: 0;
     right: 0;
     bottom: 0;
-    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+    background: linear-gradient(
+        90deg,
+        transparent,
+        rgba(255, 255, 255, 0.3),
+        transparent
+    );
     animation: shimmer 2s infinite;
 }
 
@@ -923,7 +948,7 @@ select.form-control {
     color: var(--text-primary);
     font-size: 16px;
     font-weight: 700;
-    font-family: 'SF Mono', 'Menlo', 'Monaco', 'Courier New', monospace;
+    font-family: "SF Mono", "Menlo", "Monaco", "Courier New", monospace;
 }
 
 .summary-row.ganancia {

@@ -34,12 +34,7 @@ export async function cargarPestanaAsignar(corteId) {
     // Info de tallas del corte
     const tallasInfoHTML = tieneTallas
       ? `
-      <div class="tallas-disponibles-info">
-        <h4>📏 Tallas del corte:</h4>
-        <div class="tallas-grid">
-          ${corte.tallas.map((t) => `<span class="talla-badge-info">${t.talla}: ${t.cantidad}</span>`).join("")}
-        </div>
-      </div>
+
     `
       : "";
 
@@ -306,6 +301,7 @@ async function inicializarEventosAsignacion(corteId, corte, tieneTallas) {
                    min="0"
                    max="${t.disponible}">
             <span class="talla-max">/ ${t.disponible}</span>
+            <button type="button" class="btn-talla-toggle" data-talla="${t.talla}" title="Alternar entre máximo y 0">⏻</button>
           </div>
         `,
           )
@@ -314,6 +310,23 @@ async function inicializarEventosAsignacion(corteId, corte, tieneTallas) {
         // Agregar eventos a los inputs de talla
         document.querySelectorAll(".talla-cantidad-input").forEach((input) => {
           input.addEventListener("input", validarInputsTallas);
+        });
+
+        // Agregar eventos a los botones toggle de talla
+        document.querySelectorAll(".btn-talla-toggle").forEach((btn) => {
+          btn.addEventListener("click", function () {
+            const talla = this.dataset.talla;
+            const input = document.querySelector(
+              `.talla-cantidad-input[data-talla="${talla}"]`,
+            );
+            if (!input) return;
+
+            const max = parseInt(input.dataset.disponible) || 0;
+            const current = parseInt(input.value) || 0;
+
+            input.value = current === 0 ? max : 0;
+            input.dispatchEvent(new Event("input"));
+          });
         });
 
         btnAsignar.disabled = false;

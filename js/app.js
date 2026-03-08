@@ -58,7 +58,7 @@ async function cargarVista(ruta) {
     app.innerHTML = `
             <div class="mobile-container">
                 <div class="header">
-                    <h1 class="header-title">🏠 Dashboard Taller</h1>
+                    <h1 class="header-title">🏠 Dashboard Taller <span class="version-badge" id="app-version">v4.0</span></h1>
                     <button class="header-btn logout-btn" onclick="confirmarSalida()" title="Salir de la aplicación">
                         <span class="btn-icon">🚪</span>
                     </button>
@@ -129,6 +129,7 @@ async function cargarVista(ruta) {
 
     // Cargar estadísticas reales
     await cargarEstadisticas();
+    actualizarVersionBadge();
     return;
   }
 
@@ -640,7 +641,30 @@ window.addEventListener("hashchange", () => {
 // Cargar la vista inicial
 document.addEventListener("DOMContentLoaded", () => {
   cargarVista(location.hash || "#dashboard");
+  actualizarVersionBadge();
 });
+
+async function actualizarVersionBadge() {
+  const versionBadge = document.getElementById("app-version");
+  if (!versionBadge) return;
+
+  try {
+    if ("serviceWorker" in navigator && navigator.serviceWorker.controller) {
+      const mc = new MessageChannel();
+      mc.port1.onmessage = (e) => {
+        if (e.data && e.data.version) {
+          const version = e.data.version.replace("taller-costura-", "v");
+          versionBadge.textContent = version;
+        }
+      };
+      navigator.serviceWorker.controller.postMessage({ type: "GET_VERSION" }, [
+        mc.port2,
+      ]);
+    }
+  } catch (error) {
+    console.log("No se pudo obtener versión del SW");
+  }
+}
 
 // Exponer funciones globales para botones
 window.cargarCortesRecientes = cargarCortesRecientes;
@@ -1116,3 +1140,4 @@ window.renderGestionCortes = renderGestionCortes;
 window.cargarCortesGestion = cargarCortesGestion;
 window.limpiarBusquedaCortes = limpiarBusquedaCortes;
 window.confirmarEliminarCorteGestion = confirmarEliminarCorteGestion;
+window.actualizarVersionBadge = actualizarVersionBadge;

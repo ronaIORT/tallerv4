@@ -324,10 +324,11 @@
 .tallas-inputs-container .tallas-label {
     display: block;
     /*font-size: 13px;*/
-    font-size: 5px;
+    font-size: 14px;
     font-weight: 600;
     color: var(--text-primary);
-    margin-bottom: 12px;
+    /*margin-bottom: 12px;*/
+    margin-bottom: 5px;
 }
 
 .tallas-inputs-list {

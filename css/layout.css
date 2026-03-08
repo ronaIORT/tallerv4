@@ -60,7 +60,7 @@
     padding: 3px 8px;
     border-radius: 10px;
     border: 1px solid var(--border-color);
-    font-family: 'SF Mono', 'Menlo', 'Monaco', 'Courier New', monospace;
+    font-family: "SF Mono", "Menlo", "Monaco", "Courier New", monospace;
     margin-left: 10px;
     vertical-align: middle;
 }
@@ -138,7 +138,7 @@
     font-size: 18px;
     font-weight: 700;
     color: var(--text-primary);
-    margin-bottom: 16px;
+    margin-bottom: 10px;
     line-height: 1.3;
 }
 

@@ -62,7 +62,6 @@ export async function cargarPestanaAsignar(corteId) {
           <div class="form-group" id="precio-group" style="display: none;">
             <label>Precio unitario (Centavos)</label>
             <input type="number" id="precio-tarea" class="form-control" min="0" step="1" placeholder="Ej: 5, 10">
-            <small class="info-message">Precio por unidad para esta tarea</small>
           </div>
 
           <div id="tallas-inputs-container" class="tallas-inputs-container" style="display: none;">

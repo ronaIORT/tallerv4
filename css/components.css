@@ -103,6 +103,7 @@ select.form-control {
     display: block;
 }
 
+/*borre el mensaje en asignar tareas*/
 .info-message {
     color: var(--primary);
     font-size: 12px;

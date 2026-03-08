@@ -3,7 +3,7 @@
 // Versión: 6.0 (Botones toggle en tallas, indicador de versión en UI)
 // ===========================================================================
 
-const CACHE_NAME = "taller-costura-v6";
+const CACHE_NAME = "taller-costura-v6.1";
 
 // 🔹 Archivos locales a cachear
 const localUrlsToCache = [

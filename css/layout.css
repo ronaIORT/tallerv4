@@ -10,16 +10,13 @@
     padding: 16px;
     background: var(--bg-card);
     border-bottom: 1px solid var(--border-color);
-    position: sticky;
-    top: 0;
-    z-index: var(--z-header);
     box-shadow: var(--shadow-sm);
     padding-top: max(16px, env(safe-area-inset-top, 16px));
 }
 
 .back-btn {
-    width: 44px;
-    height: 44px;
+    width: 34px;
+    height: 34px;
     border-radius: var(--radius-sm);
     background: var(--bg-hover);
     border: 1px solid var(--border-color);
@@ -70,9 +67,10 @@
     background: var(--bg-card);
     border-bottom: 1px solid var(--border-color);
     position: sticky;
-    top: 76px;
+    top: 0;
     z-index: var(--z-tabs);
     box-shadow: var(--shadow-sm);
+    padding-top: max(0px, env(safe-area-inset-top, 0px));
 }
 
 .tab-container {
@@ -91,7 +89,7 @@
 
 .tab-item {
     flex: 1;
-    padding: 14px 8px;
+    padding: 10px 8px;
     border: none;
     background: transparent;
     color: var(--text-secondary);

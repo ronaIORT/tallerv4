@@ -109,7 +109,7 @@
 
 @media (min-width: 320px) and (max-width: 359px) {
     .header {
-        padding: 12px 10px;
+        padding: 8px 8px;
     }
 
     .small-title {
@@ -1321,7 +1321,8 @@
 
     /* Aumentar áreas táctiles */
     .tab-item {
-        min-height: 50px;
+        /*min-height: 50px;*/
+        min-height: 40px;
     }
 
     .form-control {

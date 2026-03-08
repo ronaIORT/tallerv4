@@ -1,9 +1,9 @@
 // ===========================================================================
 // Service Worker - Taller de Costura PWA
-// Versión: 6.0 (Botones toggle en tallas, indicador de versión en UI)
+// Versión: 7.0 (Tab-menu sticky, header sin sticky)
 // ===========================================================================
 
-const CACHE_NAME = "taller-costura-v6.1";
+const CACHE_NAME = "taller-costura-v7";
 
 // 🔹 Archivos locales a cachear
 const localUrlsToCache = [

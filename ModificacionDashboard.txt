@@ -1,0 +1,24 @@
+vamos a hacer unas modificaciones al dashboard(pagina principal).
+Se mostrara solo 6 botones o metricas, que a su vez si haces click en uno de 
+ellos a su pagina correspondiente:
+
+1. Cortes.- aqui mostrara la cantidad de cortes activos por ejemplo: 
+	(1 activo)
+	CORTES.
+	Al hacer click llevara a su pagina correspondiente(gestion de cortes).
+
+2. Ganancias.- mostrara las ganancias de cortes terminados por ejemplo. 
+Al hacer click llevara a una nueva pagina donde mostrara un grafico con las ganancias
+(aun no escribas codigo para esta pagina, solo crea un archivo diciendo 'pag. en construcccion').
+
+3. Trabajadores.- mostrara la cantidad de trabajadores registrados, al 
+hacer click llevara a su pagina correspondiente de gestion de trabajadores.
+
+4. Por Pagar.- mostrara el monto que aun falta pagar a los trabajadores, click 
+y a su pag. correspondiente 'historial pagos'.
+
+5. Nuevo Corte.- al hacer click llevara directamente a la pagina de crear corte nuevo(pag correspondiente).
+
+6. Prendas.- mostrara la cantidad de prendas registrados, al hacer click te llevara
+a su pagina correspondiente de gestion de prendas.
+

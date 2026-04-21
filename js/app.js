@@ -60,7 +60,7 @@ async function cargarVista(ruta) {
     app.innerHTML = `
             <div class="mobile-container">
                 <div class="header">
-                    <h1 class="header-title">🏠 Dashboard Taller <span class="version-badge" id="app-version">v4.0</span></h1>
+                    <h1 class="header-title">🏠 Dashboard Taller <span class="version-badge" id="app-version">v8.1</span></h1>
                     <button class="header-btn logout-btn" onclick="confirmarSalida()" title="Salir de la aplicación">
                         <span class="btn-icon">🚪</span>
                     </button>
@@ -229,7 +229,7 @@ async function cargarEstadisticas() {
         }, 0);
         return sum + tarea.precioUnitario * cantidadAsignada;
       }, 0);
-      
+
       // Convertir centavos a Bolivianos
       const totalManoObraBs = totalManoObraCentavos / 100;
 
@@ -246,17 +246,29 @@ async function cargarEstadisticas() {
     const todosLosCortes = await db.cortes.toArray();
 
     const totalGanadoCentavos = todosLosCortes.reduce((total, corte) => {
-      return total + corte.tareas.reduce((sumTarea, tarea) => {
-        return sumTarea + tarea.asignaciones.reduce((sumAsig, asig) => {
-          return sumAsig + (asig.cantidad * tarea.precioUnitario);
-        }, 0);
-      }, 0);
+      return (
+        total +
+        corte.tareas.reduce((sumTarea, tarea) => {
+          return (
+            sumTarea +
+            tarea.asignaciones.reduce((sumAsig, asig) => {
+              return sumAsig + asig.cantidad * tarea.precioUnitario;
+            }, 0)
+          );
+        }, 0)
+      );
     }, 0);
 
     const pagosRealizados = await db.pagos.toArray();
-    const totalPagadoCentavos = pagosRealizados.reduce((sum, pago) => sum + pago.monto, 0);
+    const totalPagadoCentavos = pagosRealizados.reduce(
+      (sum, pago) => sum + pago.monto,
+      0,
+    );
 
-    const totalPorPagarCentavos = Math.max(0, totalGanadoCentavos - totalPagadoCentavos);
+    const totalPorPagarCentavos = Math.max(
+      0,
+      totalGanadoCentavos - totalPagadoCentavos,
+    );
     const totalPorPagarBs = totalPorPagarCentavos / 100;
 
     // Actualizar tarjetas de estadísticas
@@ -324,18 +336,9 @@ async function cargarEstadisticas() {
   }
 }
 
-
-
-
-
 // ===========================================================================
 // 📊 CALCULAR PROGRESO REAL DE UN CORTE
 // ===========================================================================
-
-
-
-
-
 
 // Mostrar mensaje temporal
 function mostrarMensaje(mensaje) {
@@ -391,16 +394,13 @@ window.mostrarMensaje = mostrarMensaje;
 // 🔧 NUEVAS FUNCIONES GLOBALES A EXPONER
 // ===========================================================================
 
-
-
-
 // ===========================================================================
 // 🚪 FUNCIÓN DE SALIDA DE LA APLICACIÓN
 // ===========================================================================
 function confirmarSalida() {
   // Crear modal de confirmación
-  const modal = document.createElement('div');
-  modal.className = 'modal-overlay';
+  const modal = document.createElement("div");
+  modal.className = "modal-overlay";
   modal.innerHTML = `
     <div class="modal-content confirm-modal">
       <div class="modal-icon">🚪</div>
@@ -413,9 +413,9 @@ function confirmarSalida() {
     </div>
   `;
   document.body.appendChild(modal);
-  
+
   // Cerrar modal al hacer clic fuera
-  modal.addEventListener('click', (e) => {
+  modal.addEventListener("click", (e) => {
     if (e.target === modal) {
       cerrarModalSalida();
     }
@@ -423,7 +423,7 @@ function confirmarSalida() {
 }
 
 function cerrarModalSalida() {
-  const modal = document.querySelector('.modal-overlay');
+  const modal = document.querySelector(".modal-overlay");
   if (modal) {
     modal.remove();
   }
@@ -431,10 +431,10 @@ function cerrarModalSalida() {
 
 function salirAplicacion() {
   cerrarModalSalida();
-  
+
   // Mostrar mensaje de despedida
-  mostrarMensaje('👋 ¡Hasta pronto!');
-  
+  mostrarMensaje("👋 ¡Hasta pronto!");
+
   // Cerrar la pestaña/ventana si es posible
   setTimeout(() => {
     // Intentar cerrar la ventana
@@ -461,26 +461,6 @@ window.salirAplicacion = salirAplicacion;
 // 🗑️ FUNCIONES PARA ELIMINAR CORTE
 // ===========================================================================
 
-
-
-
 // ===========================================================================
 // 📋 FUNCIÓN PARA RENDERIZAR VISTA DE GESTIÓN DE CORTES
 // ===========================================================================
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

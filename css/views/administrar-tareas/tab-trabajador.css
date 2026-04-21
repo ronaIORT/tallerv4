@@ -1,0 +1,218 @@
+/* ==========================================================================
+   TAB TRABAJADOR CSS - Estilos para la pestaña Trabajador de Administrar Tareas
+   ========================================================================== */
+
+/* ==========================================================================
+   PESTAÑA TRABAJADOR
+   ========================================================================== */
+
+.administrar-tareas .workers-summary {
+    padding: 16px 0;
+}
+
+.administrar-tareas .summary-header {
+    background: var(--bg-card);
+    border-radius: var(--radius-md);
+    padding: 16px;
+    margin-bottom: 16px;
+    border: 1px solid var(--border-color);
+}
+
+.administrar-tareas .worker-section {
+    background: var(--bg-card);
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border-color);
+    margin-bottom: 16px;
+    overflow: hidden;
+    padding: 0;
+}
+
+.administrar-tareas .worker-title {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text-primary);
+    padding: 16px;
+    margin: 0;
+    border-bottom: 1px solid var(--border-color);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.administrar-tareas .worker-title::before {
+    content: "👤";
+    font-size: 14px;
+    opacity: 0.8;
+}
+
+/* Contenedor de tabla dentro de worker-section */
+.administrar-tareas .worker-section .table-container {
+    margin: 0;
+    border-radius: 0;
+    border: none;
+    box-shadow: none;
+    background: transparent;
+    overflow-x: auto;
+}
+
+.administrar-tareas .worker-section .worker-table {
+    width: 100%;
+    margin: 0;
+}
+
+.administrar-tareas .worker-table th,
+.administrar-tareas .worker-table td {
+    padding: 12px 16px;
+    font-size: 14px;
+    border-bottom: 1px solid var(--border-color);
+    vertical-align: middle;
+}
+
+.administrar-tareas .worker-table .task-name {
+    min-width: 120px;
+    max-width: none;
+    white-space: normal;
+    word-break: break-word;
+}
+
+.administrar-tareas .worker-table .task-quantity {
+    text-align: center;
+    font-weight: 600;
+    color: var(--text-primary);
+    min-width: 60px;
+    font-family: "SF Mono", "Menlo", "Monaco", monospace;
+}
+
+.administrar-tareas .worker-table .task-total {
+    min-width: 90px;
+    font-weight: 600;
+    color: var(--primary);
+    text-align: right;
+    font-family: "SF Mono", "Menlo", "Monaco", monospace;
+}
+
+.administrar-tareas .worker-table tfoot td {
+    background: rgba(0, 0, 0, 0.1);
+    font-weight: 600;
+    padding: 14px 16px;
+}
+
+.administrar-tareas .worker-table tfoot tr:last-child td {
+    border-bottom: none;
+}
+
+/* ==========================================================================
+   PESTAÑA TRABAJADOR - NUEVOS ESTILOS
+   ========================================================================== */
+
+.worker-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px;
+    border-bottom: 1px solid var(--border-color);
+    background: rgba(0, 0, 0, 0.1);
+}
+
+.worker-title {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+/* Contenedor de botones de acción */
+.worker-actions-btns {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.btn-copy {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 14px;
+    background: rgba(16, 185, 129, 0.2);
+    border: 1px solid rgba(16, 185, 129, 0.3);
+    border-radius: var(--radius-sm);
+    color: #10b981;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-copy:hover {
+    background: rgba(16, 185, 129, 0.3);
+    border-color: rgba(16, 185, 129, 0.5);
+}
+
+.btn-copy:active {
+    transform: scale(0.98);
+}
+
+.btn-share {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 14px;
+    background: rgba(37, 99, 235, 0.2);
+    border: 1px solid rgba(37, 99, 235, 0.3);
+    border-radius: var(--radius-sm);
+    color: #60a5fa;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-share:hover {
+    background: rgba(37, 99, 235, 0.3);
+    border-color: rgba(37, 99, 235, 0.5);
+}
+
+.btn-share:active {
+    transform: scale(0.98);
+}
+
+/* Tabla de trabajador con nuevo formato */
+.administrar-tareas .worker-table .task-name-cell {
+    min-width: 120px;
+    max-width: 150px;
+    word-break: break-word;
+    font-weight: 500;
+    color: var(--text-primary);
+}
+
+.administrar-tareas .worker-table .tallas-cell {
+    min-width: 100px;
+    font-size: 12px;
+    color: #60a5fa;
+    font-weight: 500;
+}
+
+.administrar-tareas .worker-table .total-cell {
+    min-width: 70px;
+    text-align: right;
+    font-weight: 600;
+    color: var(--success);
+    font-family: "SF Mono", "Menlo", "Monaco", monospace;
+}
+
+/* ==========================================================================
+   BOTONES FLOTANTES PARA TRABAJADOR
+   ========================================================================== */
+
+#floating-actions-trabajador {
+    position: fixed;
+    bottom: 100px;
+    right: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    z-index: 1000;
+}

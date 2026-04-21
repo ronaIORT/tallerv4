@@ -1,0 +1,116 @@
+/* ==========================================================================
+   TAB ASIGNAR CSS - Estilos para la pestaña Asignar de Administrar Tareas
+   ========================================================================== */
+
+/* ==========================================================================
+   PESTAÑA ASIGNAR
+   ========================================================================== */
+
+.administrar-tareas .assignment-section {
+    padding: 20px 0;
+}
+
+.administrar-tareas .assignment-form {
+    padding: 20px;
+    margin-bottom: 24px;
+}
+
+.administrar-tareas .history-table .task-quantity {
+    text-align: center;
+    font-weight: 500;
+    color: var(--text-primary);
+    min-width: 60px;
+}
+
+/* Inputs de tallas en columna */
+.tallas-inputs-container {
+    background: rgba(37, 99, 235, 0.08);
+    border-radius: var(--radius-md);
+    /*padding: 16px;*/
+    padding: 4px;
+    /*margin-bottom: 16px;*/
+    margin-bottom: 8px;
+    border: 1px solid rgba(37, 99, 235, 0.2);
+}
+
+.tallas-inputs-container .tallas-label {
+    display: block;
+    /*font-size: 13px;*/
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-primary);
+    /*margin-bottom: 12px;*/
+    margin-bottom: 5px;
+}
+
+.tallas-inputs-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.talla-input-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 4px 12px;
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border-color);
+}
+
+.talla-input-row .talla-name {
+    font-size: 14px;
+    font-weight: 700;
+    color: #60a5fa;
+    min-width: 30px;
+    text-transform: uppercase;
+}
+
+.talla-input-row .form-control {
+    flex: 1;
+    max-width: 80px;
+    padding: 8px 12px;
+    text-align: center;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.talla-input-row .talla-max {
+    font-size: 12px;
+    color: var(--text-muted);
+    min-width: 50px;
+}
+
+.talla-input-row .btn-talla-toggle {
+    width: 32px;
+    height: 32px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border-color);
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--text-muted);
+    font-size: 14px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+    margin-left: 4px;
+}
+
+.talla-input-row .btn-talla-toggle:hover {
+    background: rgba(37, 99, 235, 0.2);
+    border-color: var(--primary);
+    color: var(--primary);
+}
+
+.talla-input-row .btn-talla-toggle:active {
+    transform: scale(0.95);
+}
+
+/* Celda de tallas en historial */
+.tallas-cell {
+    font-size: 12px;
+    color: var(--text-primary);
+    word-break: break-word;
+}

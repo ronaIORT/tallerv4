@@ -1,0 +1,49 @@
+/* ==========================================================================
+   TAB RESUMEN CSS - Estilos para la pestaña Resumen de Administrar Tareas
+   ========================================================================== */
+
+/* ==========================================================================
+   PESTAÑA RESUMEN
+   ========================================================================== */
+
+.administrar-tareas .corte-header {
+    padding: 16px;
+    /* margin-bottom: 16px; */
+    margin-bottom: 16px;
+}
+
+.administrar-tareas .corte-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    align-items: center;
+    font-size: 13px;
+    color: var(--text-secondary);
+}
+
+.administrar-tareas .summary-card {
+    padding: 16px;
+    margin-bottom: 20px;
+}
+
+.administrar-tareas .summary-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 0;
+    font-size: 14px;
+    color: var(--text-secondary);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.administrar-tareas .summary-row:last-child {
+    border-bottom: none;
+}
+
+.administrar-tareas .summary-row.ganancia {
+    font-weight: 600;
+    color: var(--text-primary);
+    font-size: 15px;
+    padding-top: 14px;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+}

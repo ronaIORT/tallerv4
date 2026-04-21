@@ -1,0 +1,16 @@
+/* ==========================================================================
+   ADMINISTRAR TAREAS CSS - Estilos modularizados para administración de tareas de corte
+   ========================================================================== */
+
+/* Importar componentes compartidos primero */
+@import url("./shared.css");
+
+/* Importar estilos específicos de cada pestaña */
+@import url("./tab-resumen.css");
+@import url("./tab-corte.css");
+@import url("./tab-trabajador.css");
+@import url("./tab-editar.css");
+@import url("./tab-asignar.css");
+
+/* Importar estilos responsive al final */
+@import url("./responsive.css");

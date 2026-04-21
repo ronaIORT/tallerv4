@@ -19,7 +19,7 @@
  *     ├── gestion-trabajadores.css - Administración de trabajadores
  *     ├── gestion-prendas.css     - Administración de prendas
  *     ├── gestion-cortes.css      - Gestión de cortes
- *     ├── administrar-tareas.css  - Administración de tareas de corte
+ *     ├── administrar-tareas/     - Administración de tareas de corte (modular)
  *     └── historial-pagos.css     - Historial de pagos
  */
 
@@ -47,7 +47,7 @@
 @import url("./views/nuevo-corte.css");
 @import url("./views/gestion-trabajadores.css");
 @import url("./views/gestion-prendas.css");
-@import url("./views/administrar-tareas.css");
+@import url("./views/administrar-tareas/index.css");
 @import url("./views/historial-pagos.css");
 @import url("./views/gestion-cortes.css");
 

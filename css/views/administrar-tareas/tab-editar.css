@@ -1,0 +1,74 @@
+/* ==========================================================================
+   TAB EDITAR CSS - Estilos para la pestaña Editar de Administrar Tareas
+   ========================================================================== */
+
+/* ==========================================================================
+   PESTAÑA EDITAR
+   ========================================================================== */
+
+.administrar-tareas .editar-corte-section {
+    padding: 20px 0;
+}
+
+.administrar-tareas .add-task-section {
+    background: var(--bg-card);
+    border-radius: var(--radius-md);
+    padding: 20px;
+    margin-top: 24px;
+    border: 1px solid var(--border-color);
+}
+
+.administrar-tareas .add-task-form {
+    background: transparent;
+    border: none;
+    padding: 0;
+    margin: 0;
+    box-shadow: none;
+}
+
+.administrar-tareas .add-task-form:hover {
+    border: none;
+    box-shadow: none;
+}
+
+.administrar-tareas .editar-table .task-name {
+    min-width: 120px;
+}
+
+.administrar-tareas .editar-table .task-price {
+    font-family: "SF Mono", "Menlo", "Monaco", "Courier New", monospace;
+    color: var(--primary);
+    font-weight: 500;
+    min-width: 70px;
+}
+
+.administrar-tareas .editar-table .task-assigned {
+    min-width: 70px;
+}
+
+.administrar-tareas .editar-table .task-actions {
+    min-width: 120px;
+    white-space: nowrap;
+}
+
+/* Ajustes para la tabla sin columna de acciones */
+.administrar-tareas .editar-table .task-actions {
+    display: none;
+}
+
+.administrar-tareas .editar-table th:nth-child(4),
+.administrar-tareas .editar-table td:nth-child(4) {
+    display: none;
+}
+
+.administrar-tareas .editar-table .task-name {
+    width: 60%;
+}
+
+.administrar-tareas .editar-table .task-price {
+    width: 20%;
+}
+
+.administrar-tareas .editar-table .task-assigned {
+    width: 20%;
+}

@@ -1,0 +1,666 @@
+/* ==========================================================================
+   RESPONSIVE CSS - Media queries para Administrar Tareas
+   ========================================================================== */
+
+/* Tablets */
+@media (min-width: 768px) {
+    .administrar-tareas .mobile-container {
+        max-width: 100%;
+    }
+
+    .administrar-tareas .header {
+        padding: 16px 24px;
+    }
+
+    .administrar-tareas .small-title {
+        font-size: 20px;
+    }
+
+    /* Tab menu */
+    .administrar-tareas .tab-menu {
+        padding: 0 16px;
+    }
+
+    .administrar-tareas .tab-container {
+        max-width: 100%;
+    }
+
+    .administrar-tareas .tab-item {
+        font-size: 14px;
+        padding: 16px 20px;
+    }
+
+    .administrar-tareas .tab-content {
+        padding: 16px;
+    }
+
+    /* Corte header */
+    .administrar-tareas .corte-header {
+        padding: 20px;
+    }
+
+    .administrar-tareas .corte-nombre {
+        font-size: 18px;
+    }
+
+    .administrar-tareas .corte-meta {
+        font-size: 14px;
+        gap: 20px;
+    }
+
+    /* Summary card */
+    .administrar-tareas .summary-card {
+        padding: 20px;
+    }
+
+    .administrar-tareas .summary-row {
+        padding: 14px 0;
+        font-size: 15px;
+    }
+
+    .administrar-tareas .summary-row.ganancia {
+        font-size: 17px;
+        padding-top: 18px;
+    }
+
+    /* Tablas */
+    .administrar-tareas .table-container {
+        border-radius: var(--radius-lg);
+    }
+
+    .administrar-tareas .tasks-table th,
+    .administrar-tareas .tasks-table td {
+        padding: 16px 20px;
+    }
+
+    .administrar-tareas .task-name {
+        font-size: 15px;
+        min-width: 150px;
+        max-width: 220px;
+    }
+
+    .administrar-tareas .task-total {
+        font-size: 15px;
+    }
+
+    .administrar-tareas .task-workers {
+        font-size: 14px;
+        min-width: 110px;
+    }
+
+    /* Worker section */
+    .administrar-tareas .worker-section {
+        border-radius: var(--radius-lg);
+    }
+
+    .administrar-tareas .worker-title {
+        font-size: 16px;
+        padding: 18px 20px;
+    }
+
+    .administrar-tareas .worker-table th,
+    .administrar-tareas .worker-table td {
+        padding: 14px 20px;
+        font-size: 15px;
+    }
+
+    .administrar-tareas .worker-header {
+        padding: 18px 20px;
+    }
+
+    /* Tallas */
+    .tallas-info {
+        gap: 12px;
+        margin-top: 16px;
+        padding-top: 16px;
+    }
+
+    .talla-badge {
+        padding: 6px 14px;
+        font-size: 12px;
+    }
+
+    .tallas-resumen {
+        padding: 16px 20px;
+    }
+
+    .tallas-resumen h4 {
+        font-size: 13px;
+        margin-bottom: 12px;
+    }
+
+    .tallas-grid {
+        gap: 10px;
+    }
+
+    .talla-item-info {
+        padding: 8px 14px;
+        font-size: 13px;
+    }
+
+    .tallas-inputs-container {
+        padding: 20px;
+    }
+
+    .tallas-inputs-list {
+        gap: 12px;
+    }
+
+    .talla-input-row {
+        padding: 10px 16px;
+    }
+
+    .talla-input-row .talla-name {
+        font-size: 15px;
+        min-width: 40px;
+    }
+
+    .talla-input-row .form-control {
+        max-width: 100px;
+        padding: 10px 14px;
+        font-size: 15px;
+    }
+
+    /* Progress bar */
+    .progreso-bar {
+        height: 10px;
+    }
+
+    .progreso-text {
+        font-size: 14px;
+    }
+
+    /* General total */
+    .general-total {
+        padding: 20px;
+    }
+
+    .general-total h3 {
+        font-size: 15px;
+        margin-bottom: 14px;
+    }
+
+    .general-total .total-amount {
+        font-size: 28px;
+    }
+
+    /* Costo prenda */
+    .costo-prenda-section {
+        padding: 20px 24px;
+    }
+
+    .costo-prenda-row span:first-child {
+        font-size: 15px;
+    }
+
+    .costo-prenda-value {
+        font-size: 20px;
+    }
+
+    /* Botones flotantes */
+    .floating-action-btn,
+    .floating-action-btns {
+        bottom: 110px;
+        right: 24px;
+    }
+
+    .btn-danger-floating,
+    .btn-edit-floating,
+    .btn-add-floating {
+        padding: 16px 28px;
+        font-size: 15px;
+    }
+
+    /* Modales */
+    .modal-content {
+        max-width: 420px;
+    }
+
+    .modal-header h3 {
+        font-size: 20px;
+    }
+
+    .modal-body .form-control {
+        padding: 14px 16px;
+        font-size: 15px;
+    }
+
+    .modal-footer .btn-secondary,
+    .modal-footer .btn-primary,
+    .modal-footer .btn-danger {
+        padding: 14px 24px;
+        font-size: 15px;
+    }
+}
+
+/* Desktop */
+@media (min-width: 1024px) {
+    .administrar-tareas .header {
+        padding: 20px 32px;
+    }
+
+    .administrar-tareas .small-title {
+        font-size: 22px;
+    }
+
+    /* Tab menu */
+    .administrar-tareas .tab-menu {
+        padding: 0 24px;
+    }
+
+    .administrar-tareas .tab-item {
+        font-size: 15px;
+        padding: 18px 28px;
+    }
+
+    .administrar-tareas .tab-content {
+        padding: 20px;
+    }
+
+    /* Corte header */
+    .administrar-tareas .corte-header {
+        padding: 24px;
+    }
+
+    .administrar-tareas .corte-nombre {
+        font-size: 20px;
+    }
+
+    .administrar-tareas .corte-meta {
+        font-size: 15px;
+        gap: 24px;
+    }
+
+    .administrar-tareas .corte-estado {
+        padding: 8px 18px;
+        font-size: 13px;
+    }
+
+    /* Summary card */
+    .administrar-tareas .summary-card {
+        padding: 24px;
+        border-radius: var(--radius-lg);
+    }
+
+    .administrar-tareas .summary-row {
+        padding: 16px 0;
+        font-size: 16px;
+    }
+
+    .administrar-tareas .summary-row.ganancia {
+        font-size: 18px;
+        padding-top: 20px;
+    }
+
+    /* Tablas */
+    .administrar-tareas .tasks-table th {
+        font-size: 13px;
+        padding: 18px 24px;
+    }
+
+    .administrar-tareas .tasks-table td {
+        padding: 18px 24px;
+    }
+
+    .administrar-tareas .task-name {
+        font-size: 16px;
+        min-width: 180px;
+        max-width: 300px;
+    }
+
+    .administrar-tareas .task-name .task-price-small {
+        font-size: 12px;
+        margin-top: 6px;
+    }
+
+    .administrar-tareas .task-total {
+        font-size: 16px;
+        min-width: 100px;
+    }
+
+    .administrar-tareas .task-workers {
+        font-size: 15px;
+        min-width: 120px;
+    }
+
+    /* Worker section */
+    .administrar-tareas .worker-section {
+        margin-bottom: 20px;
+    }
+
+    .administrar-tareas .worker-title {
+        font-size: 17px;
+        padding: 20px 24px;
+    }
+
+    .administrar-tareas .worker-header {
+        padding: 20px 24px;
+    }
+
+    .administrar-tareas .worker-table th {
+        font-size: 13px;
+        padding: 16px 24px;
+    }
+
+    .administrar-tareas .worker-table td {
+        padding: 16px 24px;
+        font-size: 15px;
+    }
+
+    .administrar-tareas .worker-table tfoot td {
+        padding: 18px 24px;
+    }
+
+    /* Botones de acción */
+    .btn-copy,
+    .btn-share {
+        padding: 10px 18px;
+        font-size: 13px;
+    }
+
+    /* Tallas */
+    .tallas-info {
+        gap: 14px;
+    }
+
+    .tallas-label {
+        font-size: 13px;
+    }
+
+    .talla-badge {
+        padding: 8px 16px;
+        font-size: 13px;
+    }
+
+    .tallas-resumen {
+        padding: 18px 24px;
+    }
+
+    .tallas-resumen h4 {
+        font-size: 14px;
+        margin-bottom: 14px;
+    }
+
+    .tallas-grid {
+        gap: 12px;
+    }
+
+    .talla-item-info {
+        padding: 10px 16px;
+        font-size: 14px;
+    }
+
+    .tallas-disponibles-info {
+        padding: 18px 24px;
+    }
+
+    .tallas-disponibles-info h4 {
+        font-size: 14px;
+        margin-bottom: 12px;
+    }
+
+    .talla-badge-info {
+        padding: 8px 16px;
+        font-size: 13px;
+    }
+
+    .tallas-inputs-container {
+        padding: 24px;
+    }
+
+    .tallas-inputs-container .tallas-label {
+        font-size: 14px;
+        margin-bottom: 16px;
+    }
+
+    .tallas-inputs-list {
+        gap: 14px;
+    }
+
+    .talla-input-row {
+        padding: 12px 20px;
+    }
+
+    .talla-input-row .talla-name {
+        font-size: 16px;
+        min-width: 50px;
+    }
+
+    .talla-input-row .form-control {
+        max-width: 120px;
+        padding: 12px 16px;
+        font-size: 16px;
+    }
+
+    .talla-input-row .talla-max {
+        font-size: 13px;
+        min-width: 60px;
+    }
+
+    /* Progress bar */
+    .corte-progreso {
+        gap: 8px;
+    }
+
+    .progreso-info {
+        font-size: 12px;
+    }
+
+    .progreso-bar {
+        height: 12px;
+    }
+
+    .progreso-text {
+        font-size: 15px;
+    }
+
+    /* General total */
+    .general-total {
+        padding: 24px;
+        border-radius: var(--radius-lg);
+    }
+
+    .general-total h3 {
+        font-size: 16px;
+        margin-bottom: 16px;
+    }
+
+    .general-total .total-amount {
+        font-size: 32px;
+    }
+
+    /* Costo prenda */
+    .costo-prenda-section {
+        padding: 24px 28px;
+        border-radius: var(--radius-lg);
+    }
+
+    .costo-prenda-row span:first-child {
+        font-size: 16px;
+    }
+
+    .costo-prenda-value {
+        font-size: 22px;
+    }
+
+    /* Editar section */
+    .administrar-tareas .editar-corte-section {
+        padding: 24px 0;
+    }
+
+    .administrar-tareas .add-task-section {
+        padding: 24px;
+        border-radius: var(--radius-lg);
+    }
+
+    /* Assignment section */
+    .administrar-tareas .assignment-section {
+        padding: 24px 0;
+    }
+
+    .administrar-tareas .assignment-form {
+        padding: 24px;
+        border-radius: var(--radius-lg);
+    }
+
+    /* Botones flotantes */
+    .floating-action-btn,
+    .floating-action-btns {
+        bottom: 120px;
+        right: 32px;
+        flex-direction: row;
+    }
+
+    .btn-danger-floating,
+    .btn-edit-floating,
+    .btn-add-floating {
+        padding: 18px 32px;
+        font-size: 16px;
+    }
+
+    /* Modales */
+    .modal-content {
+        max-width: 480px;
+    }
+
+    .modal-header {
+        padding: 24px 24px 0;
+    }
+
+    .modal-header h3 {
+        font-size: 22px;
+    }
+
+    .modal-body {
+        padding: 24px;
+    }
+
+    .modal-body p {
+        font-size: 15px;
+    }
+
+    .modal-body .form-group {
+        margin-bottom: 20px;
+    }
+
+    .modal-body .form-group label {
+        font-size: 14px;
+        margin-bottom: 8px;
+    }
+
+    .modal-body .form-control {
+        padding: 16px 18px;
+        font-size: 16px;
+    }
+
+    .modal-footer {
+        padding: 0 24px 24px;
+        gap: 16px;
+    }
+
+    .modal-footer .btn-secondary,
+    .modal-footer .btn-primary,
+    .modal-footer .btn-danger {
+        padding: 16px 28px;
+        font-size: 16px;
+    }
+
+    /* Filas seleccionables */
+    .history-row.clickable:hover,
+    .tarea-row.clickable:hover,
+    .tarea-row-clickable:hover {
+        background: rgba(37, 99, 235, 0.15);
+    }
+
+    .history-row.clickable.selected,
+    .tarea-row.clickable.selected,
+    .tarea-row-clickable.selected {
+        background: rgba(37, 99, 235, 0.25);
+        border-left-width: 4px;
+    }
+}
+
+/* Pantallas muy grandes */
+@media (min-width: 1440px) {
+    .administrar-tareas .corte-header {
+        padding: 28px;
+    }
+
+    .administrar-tareas .corte-nombre {
+        font-size: 22px;
+    }
+
+    .administrar-tareas .summary-card {
+        padding: 28px;
+    }
+
+    .administrar-tareas .summary-row {
+        padding: 18px 0;
+        font-size: 17px;
+    }
+
+    .administrar-tareas .summary-row.ganancia {
+        font-size: 20px;
+    }
+
+    .administrar-tareas .tasks-table th,
+    .administrar-tareas .tasks-table td {
+        padding: 20px 32px;
+    }
+
+    .administrar-tareas .task-name {
+        font-size: 17px;
+        min-width: 220px;
+        max-width: 400px;
+    }
+
+    .administrar-tareas .worker-section {
+        margin-bottom: 24px;
+    }
+
+    .administrar-tareas .worker-title {
+        font-size: 18px;
+        padding: 22px 28px;
+    }
+
+    .administrar-tareas .worker-table th,
+    .administrar-tareas .worker-table td {
+        padding: 18px 28px;
+        font-size: 16px;
+    }
+
+    .administrar-tareas .general-total {
+        padding: 28px;
+    }
+
+    .administrar-tareas .general-total .total-amount {
+        font-size: 36px;
+    }
+
+    .tallas-inputs-container {
+        padding: 28px;
+    }
+
+    .tallas-inputs-list {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        gap: 16px;
+    }
+
+    .talla-input-row {
+        padding: 14px 20px;
+    }
+
+    .floating-action-btn,
+    .floating-action-btns {
+        bottom: 140px;
+        right: 40px;
+    }
+
+    .btn-danger-floating,
+    .btn-edit-floating,
+    .btn-add-floating {
+        padding: 20px 36px;
+        font-size: 17px;
+    }
+}

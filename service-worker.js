@@ -1,9 +1,9 @@
 // ===========================================================================
 // Service Worker - Taller de Costura PWA
-// Versión: 7.0 (Tab-menu sticky, header sin sticky)
+// Versión: 8.0 (Dashboard 6 métricas, gestión de cortes, ganancias)
 // ===========================================================================
 
-const CACHE_NAME = "taller-costura-v7";
+const CACHE_NAME = "taller-costura-v8";
 
 // 🔹 Archivos locales a cachear
 const localUrlsToCache = [
@@ -32,6 +32,7 @@ const localUrlsToCache = [
   "./css/views/gestion-trabajadores.css",
   "./css/views/historial-pagos.css",
   "./css/views/nuevo-corte.css",
+  "./css/views/gestion-cortes.css",
 
   // JavaScript principal
   "./js/app.js",
@@ -42,6 +43,8 @@ const localUrlsToCache = [
   "./js/views/gestion-trabajadores.js",
   "./js/views/historial-pagos.js",
   "./js/views/nuevo-corte.js",
+  "./js/views/gestion-cortes.js",
+  "./js/views/ganancias.js",
 
   // JavaScript de administrar-tareas (módulos)
   "./js/views/administrar-tareas/index.js",
@@ -54,7 +57,12 @@ const localUrlsToCache = [
 ];
 
 // 🔹 Recursos externos a cachear (CDN)
-const externalUrlsToCache = ["https://unpkg.com/dexie@4.0.8/dist/dexie.js"];
+const externalUrlsToCache = [
+  "https://unpkg.com/dexie@4.0.8/dist/dexie.js",
+  "https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js",
+  "https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js",
+  "https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"
+];
 
 // ===========================================================================
 // INSTALACIÓN - Cachear todos los recursos

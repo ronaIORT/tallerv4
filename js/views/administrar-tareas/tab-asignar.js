@@ -52,12 +52,17 @@ export async function cargarPestanaAsignar(corteId) {
             </select>
           </div>
 
-          <div class="form-group">
-            <label>Tarea</label>
-            <select id="select-tarea" class="form-control" disabled>
-              <option value="">Seleccione trabajador</option>
-            </select>
-          </div>
+           <div class="form-group">
+             <label>Tarea</label>
+             <select id="select-tarea" class="form-control" disabled>
+               <option value="">Seleccione trabajador</option>
+             </select>
+           </div>
+           
+           <div class="form-group" id="nueva-tarea-nombre-group" style="display: none;">
+             <label>Nombre de la nueva tarea</label>
+             <input type="text" id="nueva-tarea-nombre" class="form-control" placeholder="Ej: Costura especial">
+           </div>
 
           <div class="form-group" id="precio-group" style="display: none;">
             <label>Precio unitario (Centavos)</label>
@@ -176,6 +181,8 @@ async function inicializarEventosAsignacion(corteId, corte, tieneTallas) {
   const cantidadInput = document.getElementById("cantidad-asignar");
   const precioGroup = document.getElementById("precio-group");
   const precioInput = document.getElementById("precio-tarea");
+  const nuevaTareaNombreGroup = document.getElementById("nueva-tarea-nombre-group");
+  const nuevaTareaNombreInput = document.getElementById("nueva-tarea-nombre");
   const floatingDeleteBtn = document.getElementById("floating-delete-btn");
 
   let tareaSeleccionada = null;
@@ -252,7 +259,8 @@ async function inicializarEventosAsignacion(corteId, corte, tieneTallas) {
       `<option value="">Seleccionar...</option>` +
       tareasDisponibles
         .map((t, i) => `<option value="${i}">${t.nombre}</option>`)
-        .join("");
+        .join("") +
+      `<option value="crear">＋ Crear nueva tarea</option>`;
 
     tallasInputsContainer.style.display = "none";
     cantidadGroup.style.display = "none";
@@ -266,11 +274,92 @@ async function inicializarEventosAsignacion(corteId, corte, tieneTallas) {
     if (!tareaIdx) {
       tallasInputsContainer.style.display = "none";
       cantidadGroup.style.display = "none";
+      precioGroup.style.display = "none";
+      if (nuevaTareaNombreGroup) nuevaTareaNombreGroup.style.display = "none";
       btnAsignar.disabled = true;
       return;
     }
 
     const corteActual = await db.cortes.get(corteId);
+    
+    if (tareaIdx === "crear") {
+      // Modo creación de nueva tarea
+      tareaSeleccionada = null;
+      // Mostrar inputs para nueva tarea
+      precioGroup.style.display = "block";
+      precioInput.value = "";
+      if (nuevaTareaNombreGroup) nuevaTareaNombreGroup.style.display = "block";
+      if (nuevaTareaNombreInput) nuevaTareaNombreInput.value = "";
+      
+      if (tieneTallas && tallasInputsContainer) {
+        // Mostrar inputs por talla (todas disponibles)
+        tallasInputsContainer.style.display = "block";
+        const tallasDisponibles = corteActual.tallas.map(t => ({
+          talla: t.talla,
+          disponible: t.cantidad,
+          total: t.cantidad
+        }));
+        
+        tallasInputsList.innerHTML = tallasDisponibles
+          .map(
+            (t) => `
+          <div class="talla-input-row">
+            <span class="talla-name">${t.talla}</span>
+            <input type="number"
+                   class="form-control talla-cantidad-input"
+                   data-talla="${t.talla}"
+                   data-disponible="${t.disponible}"
+                   value="${t.disponible}"
+                   min="0"
+                   max="${t.disponible}">
+            <span class="talla-max">/ ${t.disponible}</span>
+            <button type="button" class="btn-talla-toggle" data-talla="${t.talla}" title="Alternar entre máximo y 0">⏻</button>
+          </div>
+        `,
+          )
+          .join("");
+
+        // Agregar eventos a los inputs de talla
+        document.querySelectorAll(".talla-cantidad-input").forEach((input) => {
+          input.addEventListener("input", validarInputsTallas);
+        });
+
+        // Agregar eventos a los botones toggle de talla
+        document.querySelectorAll(".btn-talla-toggle").forEach((btn) => {
+          btn.addEventListener("click", function () {
+            const talla = this.dataset.talla;
+            const input = document.querySelector(
+              `.talla-cantidad-input[data-talla="${talla}"]`,
+            );
+            if (!input) return;
+
+            const max = parseInt(input.dataset.disponible) || 0;
+            const current = parseInt(input.value) || 0;
+
+            input.value = current === 0 ? max : 0;
+            input.dispatchEvent(new Event("input"));
+          });
+        });
+
+        cantidadGroup.style.display = "none";
+        btnAsignar.disabled = false; // Se validará con validarInputsTallas
+      } else {
+        // Sin tallas: mostrar cantidad total
+        tallasInputsContainer.style.display = "none";
+        cantidadGroup.style.display = "block";
+        const totalDisponible = corteActual.cantidadPrendas;
+        cantidadInput.disabled = false;
+        cantidadInput.max = totalDisponible;
+        cantidadInput.value = totalDisponible;
+        document.getElementById("info-cantidad").textContent =
+          `${totalDisponible} disponibles`;
+        btnAsignar.disabled = false;
+      }
+      return;
+    }
+
+    // Si es una tarea existente
+    if (nuevaTareaNombreGroup) nuevaTareaNombreGroup.style.display = "none";
     const tareasDisponibles = getTareasDisponibles(corteActual);
     tareaSeleccionada = tareasDisponibles[parseInt(tareaIdx)];
 
@@ -378,16 +467,58 @@ async function inicializarEventosAsignacion(corteId, corte, tieneTallas) {
   btnAsignar.addEventListener("click", async function () {
     const trabajadorId = parseInt(selectTrabajador.value);
 
-    if (!trabajadorId || !tareaSeleccionada) {
+    const estaCreandoTarea = selectTarea.value === "crear";
+    
+    if (!trabajadorId || (!tareaSeleccionada && !estaCreandoTarea)) {
       mostrarMensaje("❌ Complete todos los campos");
       return;
     }
 
     try {
       const corteActual = await db.cortes.get(corteId);
-      const tarea = corteActual.tareas.find(
-        (t) => t.id === tareaSeleccionada.id,
-      );
+      let tarea;
+      
+      if (estaCreandoTarea) {
+        // Validar nombre y precio para nueva tarea
+        const nombreTarea = nuevaTareaNombreInput ? nuevaTareaNombreInput.value.trim() : "";
+        const precioTarea = parseInt(precioInput.value) || 0;
+        
+        if (!nombreTarea) {
+          mostrarMensaje("❌ Ingrese el nombre de la tarea");
+          return;
+        }
+        if (precioTarea <= 0) {
+          mostrarMensaje("❌ Ingrese un precio válido (mayor a 0)");
+          return;
+        }
+        
+        // Crear nueva tarea
+        const nuevaTarea = {
+          id: `task-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+          nombre: nombreTarea,
+          precioUnitario: precioTarea,
+          unidadesTotales: corteActual.cantidadPrendas,
+          asignaciones: []
+        };
+        
+        // Agregar al array de tareas del corte
+        if (!corteActual.tareas) corteActual.tareas = [];
+        corteActual.tareas.push(nuevaTarea);
+        tarea = nuevaTarea;
+        
+        // Actualizar la tarea seleccionada para el resto del proceso
+        tareaSeleccionada = nuevaTarea;
+      } else {
+        // Tarea existente
+        tarea = corteActual.tareas.find(
+          (t) => t.id === tareaSeleccionada.id,
+        );
+      }
+      
+      if (!tarea) {
+        mostrarMensaje("❌ Tarea no encontrada");
+        return;
+      }
 
       // Actualizar el precio de la tarea si fue modificado
       const nuevoPrecio = parseInt(precioInput.value) || 0;

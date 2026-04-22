@@ -146,7 +146,7 @@ export function renderNuevoCorte() {
 
   // Eventos para recalcular TODO cuando cambian los inputs clave
   document.getElementById('nombre-corte').addEventListener('input', validarNombreCorte);
-  document.getElementById('prenda').addEventListener('change', cargarTareas);
+  document.getElementById('prenda').addEventListener('change', manejarCambioPrenda);
   document.getElementById('precio-venta').addEventListener('input', recalcularTotales);
 
   // Validación en tiempo real
@@ -260,7 +260,6 @@ async function cargarPrendas() {
 
   if (prendas.length === 0) {
     select.innerHTML += '<option value="" disabled>No hay prendas registradas</option>';
-    return;
   }
 
   prendas.forEach(prenda => {
@@ -269,6 +268,31 @@ async function cargarPrendas() {
     option.textContent = prenda.nombre;
     select.appendChild(option);
   });
+
+  // Agregar opción para crear nueva prenda
+  const crearOption = document.createElement('option');
+  crearOption.value = 'crear';
+  crearOption.textContent = '＋ Crear prenda nueva';
+  select.appendChild(crearOption);
+}
+
+// Manejar cambio en el selector de prendas
+async function manejarCambioPrenda() {
+  const select = document.getElementById('prenda');
+  const prendaId = select.value;
+  const errorPrenda = document.getElementById('error-prenda');
+
+  if (prendaId === 'crear') {
+    // Mostrar modal para crear nueva prenda
+    mostrarModalCrearPrenda();
+    // Restablecer selección a vacío
+    select.value = '';
+    errorPrenda.textContent = '';
+    return;
+  }
+
+  // Si es una prenda existente, cargar sus tareas
+  cargarTareas();
 }
 
 // Cargar tareas según la prenda seleccionada
@@ -486,14 +510,10 @@ async function guardarCorte() {
   const cantidad = parseInt(document.getElementById('cantidad').value);
   const precioVenta = parseFloat(document.getElementById('precio-venta').value);
 
-  // Verificar que hay tareas
+  // Obtener inputs de tareas (puede estar vacío si la prenda no tiene tareas)
   const inputs = document.querySelectorAll('.task-price');
-  if (inputs.length === 0) {
-    mostrarMensaje('❌ Esta prenda no tiene tareas definidas');
-    return;
-  }
 
-  // Validar precios de tareas
+  // Validar precios de tareas solo si hay inputs
   let tareasInvalidas = false;
   inputs.forEach(input => {
     const precio = parseFloat(input.value);
@@ -901,6 +921,119 @@ function mostrarModalAgregarNuevoCorte(posicion, onSave) {
     overlay.remove();
     document.body.style.overflow = 'auto';
     if (onSave) onSave(nombre, precio);
+  });
+
+  overlay.addEventListener('click', (e) => {
+    if (e.target === overlay) {
+      overlay.remove();
+      document.body.style.overflow = 'auto';
+    }
+  });
+}
+
+// Modal para crear nueva prenda vacía
+function mostrarModalCrearPrenda() {
+  const overlay = document.createElement('div');
+  overlay.className = 'modal-overlay';
+  overlay.innerHTML = `
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>➕ Crear Nueva Prenda</h3>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label for="crear-prenda-nombre">Nombre de la Prenda</label>
+          <input type="text" id="crear-prenda-nombre" class="form-control" placeholder="Ej: Camisa Básica">
+          <small id="error-crear-prenda" class="error-message"></small>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-secondary" id="modal-cancel-crear-prenda">Cancelar</button>
+        <button class="btn-primary" id="modal-confirm-crear-prenda">Crear</button>
+      </div>
+    </div>
+  `;
+
+  document.body.appendChild(overlay);
+  document.body.style.overflow = 'hidden';
+
+  setTimeout(() => {
+    document.getElementById('crear-prenda-nombre').focus();
+  }, 100);
+
+  document.getElementById('modal-cancel-crear-prenda').addEventListener('click', () => {
+    overlay.remove();
+    document.body.style.overflow = 'auto';
+  });
+
+  document.getElementById('modal-confirm-crear-prenda').addEventListener('click', async () => {
+    const nombreInput = document.getElementById('crear-prenda-nombre');
+    const nombre = nombreInput.value.trim();
+    const errorEl = document.getElementById('error-crear-prenda');
+
+    errorEl.textContent = '';
+    nombreInput.classList.remove('error');
+
+    if (!nombre) {
+      errorEl.textContent = 'El nombre no puede estar vacío';
+      nombreInput.classList.add('error');
+      return;
+    }
+
+    if (nombre.length < 3) {
+      errorEl.textContent = 'El nombre debe tener al menos 3 caracteres';
+      nombreInput.classList.add('error');
+      return;
+    }
+
+    try {
+      // Verificar si ya existe una prenda con ese nombre
+      const prendaExistente = await db.prendas
+        .where('nombre')
+        .equalsIgnoreCase(nombre)
+        .first();
+
+      if (prendaExistente) {
+        errorEl.textContent = 'Ya existe una prenda con este nombre';
+        nombreInput.classList.add('error');
+        return;
+      }
+
+      // Crear nueva prenda con tareas vacías
+      const nuevaPrenda = {
+        nombre: nombre,
+        tareas: [],
+      };
+
+      await db.prendas.add(nuevaPrenda);
+
+      // Cerrar modal
+      overlay.remove();
+      document.body.style.overflow = 'auto';
+
+      // Actualizar selector de prendas y seleccionar la nueva
+      await cargarPrendas();
+      const select = document.getElementById('prenda');
+      const nuevaOption = Array.from(select.options).find(opt => opt.textContent === nombre);
+      if (nuevaOption) {
+        select.value = nuevaOption.value;
+        // Cargar tareas (será vacío)
+        cargarTareas();
+      }
+
+      mostrarMensaje('✅ Prenda creada correctamente');
+    } catch (error) {
+      console.error('Error al crear prenda:', error);
+      errorEl.textContent = 'Error al guardar. Intente nuevamente.';
+      nombreInput.classList.add('error');
+    }
+  });
+
+  // Permitir crear con Enter
+  document.getElementById('crear-prenda-nombre').addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') {
+      document.getElementById('modal-confirm-crear-prenda').click();
+    }
   });
 
   overlay.addEventListener('click', (e) => {

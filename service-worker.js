@@ -1,9 +1,9 @@
 // ===========================================================================
 // Service Worker - Taller de Costura PWA
-// Versión: 8.1 (CSS modularizado para administrar-tareas)
+// Versión: 8.2 (UI refinada para asignación de tallas)
 // ===========================================================================
 
-const CACHE_NAME = "taller-costura-8.1";
+const CACHE_NAME = "taller-costura-8.2";
 
 // 🔹 Archivos locales a cachear
 const localUrlsToCache = [

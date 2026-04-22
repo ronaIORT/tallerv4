@@ -44,16 +44,17 @@
 }
 
 .tallas-inputs-list {
-    display: flex;
-    flex-direction: column;
+    display: grid;
+    /*grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));*/
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
     gap: 10px;
 }
 
 .talla-input-row {
     display: flex;
     align-items: center;
-    gap: 12px;
-    padding: 4px 12px;
+    gap: 5px;
+    padding: 4px 4px;
     background: rgba(0, 0, 0, 0.2);
     border-radius: var(--radius-sm);
     border: 1px solid var(--border-color);
@@ -69,8 +70,8 @@
 
 .talla-input-row .form-control {
     flex: 1;
-    max-width: 80px;
-    padding: 8px 12px;
+    max-width: 55px;
+    padding: 8px 2px;
     text-align: center;
     font-size: 14px;
     font-weight: 600;
@@ -82,30 +83,14 @@
     min-width: 50px;
 }
 
-.talla-input-row .btn-talla-toggle {
-    width: 32px;
-    height: 32px;
-    border-radius: var(--radius-sm);
-    border: 1px solid var(--border-color);
-    background: rgba(255, 255, 255, 0.05);
-    color: var(--text-muted);
-    font-size: 14px;
+.talla-name.clickable {
     cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: all 0.2s;
-    margin-left: 4px;
+    transition: color 0.2s;
 }
 
-.talla-input-row .btn-talla-toggle:hover {
-    background: rgba(37, 99, 235, 0.2);
-    border-color: var(--primary);
-    color: var(--primary);
-}
-
-.talla-input-row .btn-talla-toggle:active {
-    transform: scale(0.95);
+.talla-name.clickable:hover {
+    color: #3b82f6;
+    text-decoration: underline;
 }
 
 /* Celda de tallas en historial */

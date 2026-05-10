@@ -1,209 +1,120 @@
-# Referencia Técnica Rápida - Taller de Costura PWA
+# Referencia Tecnica Rapida - Taller de Costura PWA
 
-## Índice
+## Indice
 
 1. [Sistema de Monedas](#sistema-de-monedas)
 2. [API de Base de Datos](#api-de-base-de-datos)
 3. [Funciones Principales](#funciones-principales)
 4. [Componentes UI](#componentes-ui)
 5. [Utilidades](#utilidades)
-6. [Solución de Problemas](#solución-de-problemas)
+6. [Solucion de Problemas](#solucion-de-problemas)
 
 ---
 
 ## Sistema de Monedas
 
-### ⚠️ IMPORTANTE: Centavos vs Bolivianos
+### CRITICO: Centavos vs Bolivianos
 
-El proyecto utiliza un **sistema dual de monedas**:
+| Campo | Unidad | Tipo | Ejemplo |
+|---|---|---|---|
+| `precioUnitario` (tareas) | **Centavos** | Integer | `5` = 0.05 Bs |
+| `precioVentaUnitario` (venta) | **Bolivianos** | Decimal | `15.00` = 15 Bs |
+| `monto` (pagos) | **Centavos** | Integer | `2550` = 25.50 Bs |
 
-| Campo                 | Unidad         | Ejemplo         |
-| --------------------- | -------------- | --------------- |
-| `precioUnitario`      | **Centavos**   | `5` = 0.05 Bs   |
-| `precioVentaUnitario` | **Bolivianos** | `15.00` = 15 Bs |
-
-### Funciones de Conversión
+### Funciones de Conversion
 
 ```javascript
-import {
-  centavosABolivianos,
-  formatBs,
-  formatCentavos,
-} from "./administrar-tareas/utils.js";
+// En js/views/administrar-tareas/utils.js
+import { centavosABolivianos, formatBs, formatCentavos } from './utils.js';
+
+centavosABolivianos(50);   // 0.5
+formatBs(50);              // "0.50Bs"
+formatCentavos(50);        // "50¢"
+
+// Tambien en js/views/shared.js (duplicadas)
+import { formatBs, centavosABolivianos } from '../shared.js';
+```
+
+### Errores Comunes
+
+```javascript
+// INCORRECTO - mezclar unidades
+const total = tarea.precioUnitario * cantidad;
+console.log(total + " Bs"); // Muestra centavos como Bolivianos
+
+// CORRECTO - convertir antes de mostrar
+const totalCentavos = tarea.precioUnitario * cantidad;
+console.log(formatBs(totalCentavos)); // "X.XXBs"
+
+// INCORRECTO - usar decimal para precioUnitario
+{ precioUnitario: 0.05 } // NO
+
+// CORRECTO - usar entero (centavos)
+{ precioUnitario: 5 } // SI, 5 centavos = 0.05 Bs
+```
+
+### Calculo de Ganancias
+
+```javascript
+// Ingreso total en Bolivianos
+const totalVentaBs = corte.cantidadPrendas * corte.precioVentaUnitario;
+
+// Mano de obra REAL (solo asignado) en centavos
+const totalManoObraCentavos = corte.tareas.reduce((sum, tarea) => {
+  const cantidadAsignada = tarea.asignaciones.reduce((t, a) => t + a.cantidad, 0);
+  return sum + tarea.precioUnitario * cantidadAsignada;
+}, 0);
 
 // Convertir centavos a Bolivianos
-centavosABolivianos(50); // 0.5
-
-// Formatear como Bolivianos
-formatBs(50); // "0.50Bs"
-
-// Formatear como centavos
-formatCentavos(50); // "50¢"
-```
-
-### Ejemplo de Uso
-
-```javascript
-// Crear prenda con tareas en CENTAVOS
-await db.prendas.add({
-  nombre: "Pantalón",
-  tareas: [
-    { nombre: "over aleta simple", precioUnitario: 5 },     // 0.05 Bs
-    { nombre: "baston", precioUnitario: 15 },               // 0.15 Bs
-    { nombre: "armado de relojero", precioUnitario: 30 }    // 0.30 Bs
-  ]
-});
-
-// Crear corte con precio de venta en BOLIVIANOS
-await db.cortes.add({
-  nombrePrenda: "Pantalón",
-  cantidadPrendas: 100,
-  precioVentaUnitario: 15.00,  // 15 Bolivianos por unidad
-  tareas: [...]
-});
-```
-
-### Cálculo de Ganancias
-
-```javascript
-function calcularGananciaCorte(corte) {
-  // Ingreso total en Bolivianos
-  const totalVentaBs = corte.cantidadPrendas * corte.precioVentaUnitario;
-
-  // Mano de obra en centavos → convertir a Bs
-  const totalManoObraCentavos = corte.tareas.reduce((sum, tarea) => {
-    const cantidadAsignada = tarea.asignaciones.reduce(
-      (t, a) => t + a.cantidad,
-      0,
-    );
-    return sum + tarea.precioUnitario * cantidadAsignada;
-  }, 0);
-
-  const totalManoObraBs = totalManoObraCentavos / 100;
-
-  return totalVentaBs - totalManoObraBs;
-}
+const totalManoObraBs = totalManoObraCentavos / 100;
+const ganancia = totalVentaBs - totalManoObraBs;
 ```
 
 ---
 
 ## API de Base de Datos
 
-### Versión Actual: 4
+### Version Actual: 4
 
 ```javascript
+import { db } from './db.js';
+
 db.version(4).stores({
   prendas: "++id, &nombre",
   trabajadores: "++id, &nombre",
   cortes: "++id, estado, fechaCreacion",
-  pagos: "++id, trabajadorId, fecha, corteId", // corteId indexado
+  pagos: "++id, trabajadorId, fecha, corteId",
 });
 ```
 
-### Inicialización
+### Operaciones CRUD
 
 ```javascript
-import { db } from "./db.js";
+// CREAR
+const id = await db.cortes.add({ nombreCorte: "...", estado: "activo", ... });
+await db.prendas.bulkAdd([...]);
 
-// La instancia db está lista para usar
-// Dexie maneja la conexión automáticamente
-```
-
-### Operaciones CRUD Básicas
-
-#### Crear (Create)
-
-```javascript
-// Agregar una prenda con tareas en CENTAVOS
-const id = await db.prendas.add({
-  nombre: "Camisa",
-  tareas: [
-    { nombre: "cortar", precioUnitario: 10 },    // 0.10 Bs
-    { nombre: "coser", precioUnitario: 25 }      // 0.25 Bs
-  ]
-});
-
-// Agregar múltiples registros
-await db.prendas.bulkAdd([
-  { nombre: "Pantalón", tareas: [...] },
-  { nombre: "Falda", tareas: [...] }
-]);
-```
-
-#### Leer (Read)
-
-```javascript
-// Obtener todos los registros
-const prendas = await db.prendas.toArray();
-
-// Obtener por ID
-const prenda = await db.prendas.get(1);
-
-// Obtener por índice único
-const prenda = await db.prendas.where("nombre").equals("Pantalón").first();
-
-// Filtrar con condiciones
-const cortesActivos = await db.cortes
-  .where("estado")
-  .equals("activo")
-  .toArray();
-
-// Ordenar
-const cortesOrdenados = await db.cortes
-  .orderBy("fechaCreacion")
-  .reverse()
-  .toArray();
-
-// Contar
+// LEER
+const corte = await db.cortes.get(id);
+const activos = await db.cortes.where("estado").equals("activo").toArray();
+const ordenados = await db.cortes.orderBy("fechaCreacion").reverse().toArray();
 const total = await db.trabajadores.count();
-```
 
-#### Actualizar (Update)
-
-```javascript
-// Actualizar por ID
-await db.cortes.update(1, {
-  estado: "terminado",
-  fechaFinalizacion: new Date(),
-});
-
-// Actualizar con modificación
-const corte = await db.cortes.get(1);
-corte.tareas[0].asignaciones.push({
-  trabajadorId: 2,
-  trabajadorNombre: "María",
-  cantidad: 50,
-});
+// ACTUALIZAR
+await db.cortes.update(id, { estado: "terminado" });
+// Para documentos embebidos (tareas/asignaciones), leer + modificar + put:
+const corte = await db.cortes.get(id);
+corte.tareas[0].asignaciones.push({ trabajadorId: 2, cantidad: 50, talla: "M" });
 await db.cortes.put(corte);
-```
 
-#### Eliminar (Delete)
+// ELIMINAR
+await db.cortes.delete(id);
+await db.pagos.where("corteId").equals(corteId).delete();
 
-```javascript
-// Eliminar por ID
-await db.prendas.delete(1);
-
-// Eliminar múltiples
-await db.trabajadores.where("nombre").equals("Juan").delete();
-
-// Eliminar cortes con pagos relacionados
-async function eliminarCorteCompleto(corteId) {
+// TRANSACCION
+await db.transaction('rw', [db.cortes, db.pagos], async () => {
   await db.pagos.where("corteId").equals(corteId).delete();
   await db.cortes.delete(corteId);
-}
-
-// Limpiar tabla completa
-await db.pagos.clear();
-```
-
-### Transacciones
-
-```javascript
-await db.transaction('rw', [db.cortes, db.pagos], async () => {
-  const corte = await db.cortes.get(corteId);
-  // ... operaciones
-  await db.pagos.add({ ... });
-  await db.cortes.update(corteId, { ... });
 });
 ```
 
@@ -211,65 +122,66 @@ await db.transaction('rw', [db.cortes, db.pagos], async () => {
 
 ## Funciones Principales
 
-### app.js - Enrutador
+### app.js - Enrutador + Dashboard
 
-| Función                       | Descripción                                                         |
-| ----------------------------- | ------------------------------------------------------------------- |
-| `cargarVista(ruta)`           | Carga la vista correspondiente al hash                              |
-| `cargarEstadisticas()`        | Actualiza métricas del dashboard                                    |
-| `cargarCortesRecientes()`     | Renderiza lista de cortes                                           |
-| `filtrarCortes(termino)`      | Filtra cortes por texto                                             |
-| `aplicarFiltro(tipo)`         | Aplica filtro por estado ('all', 'activo', 'terminado', 'reciente') |
-| `calcularProgresoReal(corte)` | Calcula progreso real basado en unidades                            |
-| `confirmarEliminarCorte(id)`  | Muestra modal de confirmación para eliminar                         |
-| `eliminarCorte(id)`           | Elimina corte y pagos relacionados                                  |
-| `confirmarSalida()`           | Muestra modal de confirmación para salir                            |
-| `mostrarMensaje(texto)`       | Muestra toast temporal                                              |
+| Funcion | Descripcion |
+|---|---|
+| `cargarVista(ruta)` | Carga vista segun hash |
+| `cargarEstadisticas()` | Actualiza metricas del dashboard |
+| `confirmarSalida()` | Modal de salida |
+| `mostrarMensaje(texto)` | Toast temporal |
 
-### db.js - Base de Datos
+### Vistas (funciones exportadas)
 
-| Función/Evento                | Descripción              |
-| ----------------------------- | ------------------------ |
-| `db.on('populate')`           | Semilla inicial de datos |
-| `db.version(n).stores({...})` | Define schema de tablas  |
-
-### Vistas
-
-| Archivo                       | Función Exportada             | Descripción                   |
-| ----------------------------- | ----------------------------- | ----------------------------- |
-| `nuevo-corte.js`              | `renderNuevoCorte()`          | Formulario de nuevo corte     |
-| `gestion-trabajadores.js`     | `renderGestionTrabajadores()` | CRUD trabajadores             |
-| `gestion-prendas.js`          | `renderGestionPrendas()`      | CRUD prendas                  |
-| `gestion-prendas.js`          | `renderVerPrenda(id)`         | Ver detalle prenda            |
-| `gestion-prendas.js`          | `renderEditarPrenda(id)`      | Editar prenda                 |
-| `gestion-cortes` (en app.js)  | `renderGestionCortes()`       | Gestión de cortes con filtros |
-| `historial-pagos.js`          | `renderHistorialPagos()`      | Lista de pagos                |
-| `administrar-tareas/index.js` | `renderAdministrarTareas(id)` | Vista con tabs                |
+| Archivo | Export | Descripcion |
+|---|---|---|
+| `nuevo-corte.js` | `renderNuevoCorte()` | Crear corte con tallas |
+| `gestion-prendas.js` | `renderGestionPrendas()`, `renderVerPrenda(id)`, `renderEditarPrenda(id)` | CRUD prendas |
+| `gestion-trabajadores.js` | `renderGestionTrabajadores()` | CRUD trabajadores |
+| `gestion-cortes.js` | `renderGestionCortes()` | Lista con filtros |
+| `historial-pagos.js` | `renderHistorialPagos()` | Registro pagos |
+| `ganancias.js` | `renderGanancias()` | EN CONSTRUCCION |
+| `administrar-tareas/index.js` | `renderAdministrarTareas(id)` | Coordinador tabs |
 
 ### Administrar Tareas (Tabs)
 
-| Archivo             | Función                       | Descripción            |
-| ------------------- | ----------------------------- | ---------------------- |
-| `tab-resumen.js`    | `cargarPestanaResumen(id)`    | Info general del corte |
-| `tab-corte.js`      | `cargarPestanaCorte(id)`      | Editar datos del corte |
-| `tab-trabajador.js` | `cargarPestanaTrabajador(id)` | Vista por trabajador   |
-| `tab-editar.js`     | `cargarPestanaEditar(id)`     | Modificar tareas       |
-| `tab-asignar.js`    | `cargarPestanaAsignar(id)`    | Asignar tareas         |
-| `utils.js`          | Varias                        | Funciones auxiliares   |
+| Archivo | Funcion | Descripcion |
+|---|---|---|
+| `tab-resumen.js` | `cargarPestanaResumen(id)` | Info + exportar PDF |
+| `tab-corte.js` | `cargarPestanaCorte(id)` | Vista general con tabla |
+| `tab-trabajador.js` | `cargarPestanaTrabajador(id)` | Resumen por trabajador + pagar |
+| `tab-editar.js` | `cargarPestanaEditar(id)` | Modificar/agregar/eliminar tareas |
+| `tab-asignar.js` | `cargarPestanaAsignar(id)` | Asignar tareas por talla |
+| `utils.js` | Varias | Conversion moneda, calculos, modales |
 
 ### utils.js - Funciones de Utilidad
 
-| Función                          | Descripción                              |
-| -------------------------------- | ---------------------------------------- |
-| `centavosABolivianos(centavos)`  | Convierte centavos a Bolivianos          |
-| `formatBs(centavos)`             | Formatea centavos como "X.XXBs"          |
-| `formatCentavos(centavos)`       | Formatea como "X¢"                       |
-| `calcularManoObraTotal(corte)`   | Calcula mano de obra total (centavos)    |
-| `calcularManoObraReal(corte)`    | Calcula mano de obra asignada (centavos) |
-| `calcularCostoPorPrenda(tareas)` | Suma precios de tareas (centavos)        |
-| `formatDate(date)`               | Formatea fecha a DD/MM/YYYY              |
-| `mostrarMensaje(texto)`          | Muestra toast temporal                   |
-| `cambiarPestana(nombre)`         | Cambia a pestaña específica              |
+| Funcion | Retorna | Descripcion |
+|---|---|---|
+| `centavosABolivianos(c)` | Number | `c / 100` |
+| `formatBs(c)` | String | `"X.XXBs"` |
+| `formatCentavos(c)` | String | `"X¢"` |
+| `calcularManoObraTotal(corte)` | Number (centavos) | Suma precioUnitario * unidadesTotales |
+| `calcularManoObraReal(corte)` | Number (centavos) | Suma solo asignado |
+| `calcularCostoPorPrenda(tareas)` | Number (centavos) | Suma precios unitarios |
+| `formatDate(date)` | String | `"DD/MM/YYYY"` |
+| `mostrarMensaje(texto)` | void | Toast 2s |
+| `cambiarPestana(nombre)` | void | Click en tab button |
+| `getTallasDisponiblesParaTarea(corte, tarea)` | Array | Tallas con disponibilidad |
+| `getTareasDisponibles(corte)` | Array | Tareas con cupo libre |
+
+### shared.js - Utilidades compartidas
+
+| Funcion | Descripcion |
+|---|---|
+| `formatDate(date)` | `"DD/MM/YYYY"` |
+| `mostrarMensaje(msg)` | Toast temporal |
+| `renderHeader(title, backRoute)` | HTML del header |
+| `renderEmptyState(icon, text)` | HTML estado vacio |
+| `renderLoadingState()` | HTML carga |
+| `crearModalConfirmacion(opts)` | Modal reutilizable |
+| `formatBs(centavos)` | Duplicada de utils.js |
+| `centavosABolivianos(c)` | Duplicada de utils.js |
 
 ---
 
@@ -281,240 +193,96 @@ await db.transaction('rw', [db.cortes, db.pagos], async () => {
 <div class="mobile-container">
   <div class="header">
     <button class="back-btn" onclick="location.hash='#dashboard'">←</button>
-    <h1 class="small-title">Título</h1>
-    <button class="header-btn logout-btn" onclick="confirmarSalida()">
-      🚪
-    </button>
+    <h1 class="small-title">Titulo</h1>
   </div>
-
-  <div class="content">
-    <!-- Contenido específico -->
-  </div>
+  <div class="content"><!-- contenido --></div>
 </div>
 ```
 
 ### Clases CSS Comunes
 
-| Clase                 | Uso                             |
-| --------------------- | ------------------------------- |
-| `.mobile-container`   | Contenedor principal responsive |
-| `.header`             | Barra superior con título       |
-| `.back-btn`           | Botón de retroceso              |
-| `.small-title`        | Título de página                |
-| `.action-btn`         | Botón de acción                 |
-| `.action-btn.primary` | Botón principal (destacado)     |
-| `.action-btn.danger`  | Botón de acción peligrosa       |
-| `.stat-card`          | Tarjeta de estadística          |
-| `.corte-card`         | Tarjeta de corte en lista       |
-| `.progreso-bar`       | Barra de progreso visual        |
-| `.progreso-fill`      | Relleno de barra de progreso    |
-| `.tab-menu`           | Contenedor de pestañas          |
-| `.tab-item`           | Botón de pestaña                |
-| `.tab-item.active`    | Pestaña activa                  |
-| `.tab-content`        | Contenido de pestaña            |
-| `.search-input`       | Campo de búsqueda               |
-| `.filter-btn`         | Botón de filtro                 |
-| `.filter-btn.active`  | Filtro activo                   |
-| `.toast-message`      | Mensaje temporal                |
-| `.empty-state`        | Estado vacío                    |
-| `.error-state`        | Estado de error                 |
-| `.loading-item`       | Estado de carga                 |
+| Clase | Uso |
+|---|---|
+| `.mobile-container` | Contenedor principal responsive |
+| `.header` / `.back-btn` / `.small-title` | Barra superior |
+| `.action-btn` / `.action-btn.primary` / `.action-btn.danger` | Botones |
+| `.stat-card` | Tarjeta de estadistica |
+| `.corte-card` | Tarjeta de corte en lista |
+| `.progreso-bar` / `.progreso-fill` | Barra de progreso |
+| `.tab-menu` / `.tab-item.active` / `.tab-content` | Pestañas |
+| `.search-input` / `.filter-btn.active` | Busqueda y filtros |
+| `.toast-message` | Mensaje temporal |
+| `.empty-state` / `.error-state` | Estados vacio/error |
+| `.modal-overlay` / `.modal-content` | Modales |
+| `.badge-activo` / `.badge-terminado` | Badges de estado |
+| `.btn-primary` / `.btn-secondary` / `.btn-danger` | Botones de accion |
+| `.floating-action-btns` | Botones flotantes (editar/eliminar) |
 
-### Modales
+### CSS por Vista
 
-```html
-<div class="modal-overlay" id="mi-modal">
-  <div class="modal-content confirm-modal">
-    <div class="modal-icon">🗑️</div>
-    <h3 class="modal-title">Título Modal</h3>
-    <p class="modal-text">Descripción del modal.</p>
-    <div class="modal-actions">
-      <button class="action-btn" onclick="cerrarModal()">Cancelar</button>
-      <button class="action-btn primary" onclick="confirmar()">
-        Confirmar
-      </button>
-    </div>
-  </div>
-</div>
 ```
-
-### Tarjeta de Corte con Progreso
-
-```html
-<div class="corte-card" data-id="1">
-  <div class="corte-card-header">
-    <h3 class="corte-nombre">Pantalones Primavera</h3>
-    <span class="corte-estado estado-activo">Activo</span>
-  </div>
-
-  <div class="corte-card-body">
-    <div class="corte-progreso">
-      <div class="progreso-header">
-        <span class="progreso-label">Progreso</span>
-        <span class="progreso-text">75%</span>
-      </div>
-      <div class="progreso-bar">
-        <div class="progreso-fill" style="width: 75%"></div>
-      </div>
-    </div>
-
-    <div class="corte-detalles">
-      <div class="detalle-item">
-        <span class="detalle-icon">📦</span>
-        <span class="detalle-value">100 und</span>
-      </div>
-      <div class="detalle-item">
-        <span class="detalle-icon">📅</span>
-        <span class="detalle-value">23/02/2026</span>
-      </div>
-    </div>
-  </div>
-
-  <div class="corte-card-actions">
-    <button class="action-btn small primary">⚙️ Administrar</button>
-    <button class="action-btn small danger">🗑️ Eliminar</button>
-  </div>
-</div>
+css/views/
+  |- administrar-tareas/   (index, tab-resumen, tab-corte, tab-trabajador,
+  |                          tab-editar, tab-asignar, shared, responsive)
+  |- dashboard.css
+  |- gestion-cortes.css
+  |- gestion-prendas.css
+  |- gestion-trabajadores.css
+  |- historial-pagos.css
+  |- nuevo-corte.css
 ```
 
 ---
 
 ## Utilidades
 
-### Formateo de Fecha
+### Navegacion por Swipe
 
-```javascript
-function formatDate(date) {
-  const d = new Date(date);
-  return `${d.getDate().toString().padStart(2, "0")}/${(d.getMonth() + 1).toString().padStart(2, "0")}/${d.getFullYear()}`;
-}
-// Resultado: "23/02/2026"
-```
+La vista `administrar-tareas` soporta navegacion por swipe entre tabs (izq/der) con umbral de 50px. Implementado en `index.js`.
 
-### Cálculo de Progreso Real
+### Exportacion PDF
 
-```javascript
-function calcularProgresoReal(corte) {
-  // Total de unidades esperadas = cantidadPrendas × número de tareas
-  const totalTareas = corte.tareas.length;
-  const totalUnidadesEsperadas = corte.cantidadPrendas * totalTareas;
+En `tab-resumen.js`, usa jsPDF + AutoTable. Genera PDF con:
+- Encabezado (nombre, fechas, estado, tallas)
+- Tabla de tareas con asignaciones por trabajador/talla
+- Resumen financiero
 
-  // Total de unidades asignadas
-  const unidadesAsignadas = corte.tareas.reduce((total, tarea) => {
-    const cantidadTarea = tarea.asignaciones.reduce(
-      (sum, a) => sum + a.cantidad,
-      0,
-    );
-    return total + cantidadTarea;
-  }, 0);
+### Asignacion por Tallas
 
-  const progreso =
-    totalUnidadesEsperadas > 0
-      ? Math.round((unidadesAsignadas / totalUnidadesEsperadas) * 100)
-      : 0;
-
-  return {
-    progreso: Math.min(progreso, 100),
-    unidadesAsignadas,
-    totalUnidades: totalUnidadesEsperadas,
-  };
-}
-```
-
-### Cálculo de Ganancias
-
-```javascript
-function calcularGananciaCorte(corte) {
-  // Ingreso total en Bolivianos
-  const totalVentaBs = corte.cantidadPrendas * corte.precioVentaUnitario;
-
-  // Mano de obra en centavos (convertir a Bs)
-  const totalManoObraCentavos = corte.tareas.reduce((sum, tarea) => {
-    const cantidadAsignada = tarea.asignaciones.reduce(
-      (t, a) => t + a.cantidad,
-      0,
-    );
-    return sum + tarea.precioUnitario * cantidadAsignada;
-  }, 0);
-
-  const totalManoObraBs = totalManoObraCentavos / 100;
-
-  return totalVentaBs - totalManoObraBs;
-}
-```
+Los cortes tienen un array `tallas: [{ talla: "M", cantidad: 50 }]`. Al asignar tareas, se puede asignar por talla con disponibilidad calculada. Si el corte no tiene tallas, se usa cantidad global.
 
 ---
 
-## Solución de Problemas
+## Solucion de Problemas
 
-### La base de datos no carga
-
-1. Verificar que Dexie esté cargado desde CDN
-2. Comprobar que el navegador soporte IndexedDB
-3. Revisar consola por errores de versión
+### DB no carga
 
 ```javascript
-// Resetear base de datos (desarrollo)
+// Resetear DB (desarrollo)
 await db.delete();
 await db.open();
 ```
 
-### El Service Worker no se actualiza
+### Service Worker no actualiza
 
-1. En desarrollo, el SW puede estar habilitado para pruebas offline
-2. En producción, forzar actualización con `registration.update()`
-3. Limpiar cache del navegador
+- SW activo en desarrollo para pruebas offline
+- Cambiar `CACHE_NAME` en `service-worker.js` para forzar update
+- `DISABLE_SW_IN_DEV = true` en app.js para deshabilitar
 
-### Los módulos no cargan
+### Modulos no cargan
 
-1. Verificar que se use `type="module"` en script tags
-2. Comprobar rutas relativas correctas
-3. Revisar errores CORS en consola
+- Verificar `type="module"` en script tags
+- Requiere servidor HTTP (no file://)
+- Puertos: Live Server 5501, o `python -m http.server 8080`
 
-### PWA no instala
+### Errores con monedas
 
-1. Verificar manifest.json válido
-2. Comprobar HTTPS requerido
-3. Revisar que los iconos existan
+1. `precioUnitario` en **centavos** (enteros)
+2. `precioVentaUnitario` en **Bolivianos** (decimales)
+3. `monto` en pagos en **centavos** (enteros)
+4. Siempre usar `formatBs()` o `/ 100` para mostrar
 
-### IndexedDB lento con muchos datos
-
-1. Usar índices correctamente
-2. Implementar paginación
-3. Usar `bulkAdd` en lugar de múltiples `add`
-
-```javascript
-// Paginación
-const pagina = await db.cortes
-  .orderBy("fechaCreacion")
-  .reverse()
-  .offset(0)
-  .limit(20)
-  .toArray();
-```
-
-### Errores con precios/monedas
-
-1. Verificar que `precioUnitario` esté en **centavos** (enteros)
-2. Verificar que `precioVentaUnitario` esté en **Bolivianos** (decimales)
-3. Al mostrar precios de tareas, dividir entre 100
-4. Usar las funciones de `utils.js` para conversión
-
-```javascript
-// ❌ Incorrecto - mezclar unidades
-const total = tarea.precioUnitario * cantidad; // Resultado en centavos
-console.log(total + " Bs"); // Error: muestra centavos como Bolivianos
-
-// ✅ Correcto - convertir antes de mostrar
-const totalCentavos = tarea.precioUnitario * cantidad;
-console.log(formatBs(totalCentavos)); // "X.XXBs"
-```
-
----
-
-## Debugging
-
-### Ver contenido de la DB
+### Debugging rapido
 
 ```javascript
 // En consola del navegador
@@ -524,33 +292,4 @@ console.log("Prendas:", await db.prendas.toArray());
 console.log("Cortes:", await db.cortes.toArray());
 console.log("Trabajadores:", await db.trabajadores.toArray());
 console.log("Pagos:", await db.pagos.toArray());
-```
-
-### Ver Service Worker
-
-```javascript
-navigator.serviceWorker.getRegistrations().then((regs) => {
-  console.log("SW registrados:", regs);
-});
-```
-
-### Ver estado de PWA
-
-```javascript
-// Ver si es instalable
-window.addEventListener("beforeinstallprompt", (e) => {
-  console.log("PWA instalable");
-});
-```
-
-### Probar conversión de monedas
-
-```javascript
-// En consola, después de cargar la app
-const { formatBs, centavosABolivianos } = window;
-
-// Probar conversión
-console.log(formatBs(50)); // "0.50Bs"
-console.log(formatBs(100)); // "1.00Bs"
-console.log(centavosABolivianos(5)); // 0.05
 ```

@@ -1,9 +1,9 @@
 // ===========================================================================
 // Service Worker - Taller de Costura PWA
-// Versión: 8.2 (UI refinada para asignación de tallas)
+// Versión: 9.1 (Dashboard interactivo con Chart.js)
 // ===========================================================================
 
-const CACHE_NAME = "taller-costura-8.2";
+const CACHE_NAME = "taller-costura-9.1";
 
 // 🔹 Archivos locales a cachear
 const localUrlsToCache = [
@@ -40,6 +40,10 @@ const localUrlsToCache = [
   "./css/views/historial-pagos.css",
   "./css/views/nuevo-corte.css",
   "./css/views/gestion-cortes.css",
+  "./css/views/perfil.css",
+
+  // CSS barra de navegacion
+  "./css/bottom-nav.css",
 
   // JavaScript principal
   "./js/app.js",
@@ -52,6 +56,8 @@ const localUrlsToCache = [
   "./js/views/nuevo-corte.js",
   "./js/views/gestion-cortes.js",
   "./js/views/ganancias.js",
+  "./js/views/dashboard.js",
+  "./js/views/perfil.js",
 
   // JavaScript de administrar-tareas (módulos)
   "./js/views/administrar-tareas/index.js",
@@ -69,6 +75,7 @@ const externalUrlsToCache = [
   "https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js",
   "https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js",
   "https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js",
+  "https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js",
 ];
 
 // ===========================================================================

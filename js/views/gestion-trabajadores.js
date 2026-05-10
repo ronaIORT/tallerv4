@@ -5,11 +5,6 @@ export function renderGestionTrabajadores() {
     const app = document.getElementById('app');
     app.innerHTML = `
     <div class="mobile-container">
-      <div class="header">
-        <button onclick="location.hash='#dashboard'" class="back-btn">←</button>
-        <h1 class="small-title">Gestión de Trabajadores</h1>
-      </div>
-      
       <div class="form-section">
         <div class="form-card">
           <h2 class="section-title">Agregar Nuevo Trabajador</h2>

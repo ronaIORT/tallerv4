@@ -1,0 +1,171 @@
+/* ==========================================================================
+   PERFIL.CSS - Vista de Perfil
+   Taller de Costura PWA
+   ========================================================================== */
+
+.perfil-view {
+    padding-bottom: 90px;
+}
+
+.perfil-content {
+    padding: var(--space-4);
+    animation: fadeIn 0.3s ease;
+}
+
+.perfil-header {
+    display: flex;
+    align-items: center;
+    gap: var(--space-4);
+    padding: var(--space-6) var(--space-4);
+    background: var(--bg-surface);
+    border-radius: var(--radius-xl);
+    border: 1px solid var(--border-default);
+    margin-bottom: var(--space-6);
+}
+
+.perfil-avatar {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--accent), #e8913a);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #1a1000;
+    flex-shrink: 0;
+    box-shadow: 0 4px 16px rgba(240, 160, 48, 0.3);
+}
+
+.perfil-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.perfil-title {
+    font-size: var(--text-lg);
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 0 0 2px 0;
+    font-family: var(--font-display);
+}
+
+.perfil-subtitle {
+    font-size: var(--text-sm);
+    color: var(--text-muted);
+    margin: 0;
+}
+
+.perfil-actions {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+    margin-bottom: var(--space-8);
+}
+
+.perfil-card {
+    display: flex;
+    align-items: center;
+    gap: var(--space-4);
+    padding: var(--space-5);
+    background: var(--bg-surface);
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-lg);
+    cursor: pointer;
+    transition: var(--transition-normal);
+    -webkit-tap-highlight-color: transparent;
+}
+
+.perfil-card:hover {
+    border-color: var(--accent-muted);
+    background: var(--bg-elevated);
+    transform: translateX(4px);
+}
+
+.perfil-card:active {
+    transform: scale(0.98);
+}
+
+.perfil-card-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: var(--radius-md);
+    background: rgba(255, 255, 255, 0.04);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--accent);
+    flex-shrink: 0;
+}
+
+.perfil-card-text {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.perfil-card-label {
+    font-size: var(--text-base);
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.perfil-card-desc {
+    font-size: var(--text-sm);
+    color: var(--text-muted);
+}
+
+.perfil-card-arrow {
+    color: var(--text-muted);
+    flex-shrink: 0;
+    transition: transform var(--transition-normal);
+}
+
+.perfil-card:hover .perfil-card-arrow {
+    transform: translateX(3px);
+    color: var(--accent);
+}
+
+.perfil-footer {
+    padding-top: var(--space-4);
+    border-top: 1px solid var(--border-default);
+}
+
+.perfil-logout-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-2);
+    width: 100%;
+    padding: var(--space-4);
+    background: var(--danger-subtle);
+    border: 1px solid var(--danger-muted);
+    border-radius: var(--radius-lg);
+    color: var(--danger);
+    font-family: var(--font-body);
+    font-size: var(--text-sm);
+    font-weight: 600;
+    cursor: pointer;
+    transition: var(--transition-normal);
+    -webkit-tap-highlight-color: transparent;
+}
+
+.perfil-logout-btn:hover {
+    background: var(--danger-muted);
+    box-shadow: 0 4px 12px rgba(239, 83, 80, 0.2);
+}
+
+.perfil-logout-btn:active {
+    transform: scale(0.98);
+}
+
+@media (min-width: 768px) {
+    .perfil-actions {
+        max-width: 420px;
+    }
+
+    .perfil-header {
+        max-width: 420px;
+    }
+}

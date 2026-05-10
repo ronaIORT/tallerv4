@@ -1,206 +1,99 @@
 ---
 name: taller-costura-context
-description: Proporciona contexto completo del proyecto PWA Taller de Costura para que agentes de IA entiendan la arquitectura, modelo de datos, convenciones y flujos de trabajo. Activar cuando se trabaje en cualquier funcionalidad del proyecto tallerv4.
+description: Contexto completo del proyecto PWA Taller de Costura. Activar cuando se trabaje en cualquier funcionalidad del proyecto tallerv4.
 license: MIT
-compatibility: Proyecto JavaScript ES6+ con Dexie.js para IndexedDB. Requiere navegador con soporte PWA.
+compatibility: JavaScript ES6+ con Dexie.js para IndexedDB. Navegador con soporte PWA.
 metadata:
-  version: "2.0.0"
-  author: "Equipo Taller de Costura"
+  version: "3.0.0"
   project: "tallerv4"
-  repository: "https://github.com/ronaIORT/tallerv4.git"
-allowed-tools: read_file write_to_file execute_command
+  sw_version: "8.2"
+  db_version: 4
 ---
 
 # Taller de Costura PWA - Contexto del Proyecto
 
-## Descripción General
+## Resumen Ejecutivo
 
-**Taller de Costura** es una Progressive Web App (PWA) diseñada para gestionar un taller de confección de prendas. Permite administrar cortes de producción, asignar tareas a trabajadores, calcular pagos y llevar un historial de operaciones.
+**Taller de Costura** es una PWA offline-first para gestionar un taller de confeccion de prendas. Administra cortes de produccion, asigna tareas a trabajadores por talla, calcula pagos y genera reportes PDF. Sin framework, sin bundler, sin npm.
 
-### Características Principales
+## Stack
 
-- **Gestión de Cortes**: Crear y administrar órdenes de producción
-- **Asignación de Tareas**: Distribuir trabajo entre los trabajadores
-- **Cálculo de Pagos**: Automatizar el cálculo de mano de obra
-- **Modo Offline**: Funciona sin conexión a internet
-- **Diseño Mobile-First**: Optimizado para dispositivos móviles
-- **Tema Oscuro**: Interfaz con tema oscuro compacto
+| Tecnologia | Uso | Version |
+|---|---|---|
+| JavaScript | Modulos ES6, vanilla | - |
+| Dexie.js | Wrapper IndexedDB | 4.0.8 (CDN) |
+| SheetJS | Importar Excel/CSV | 0.20.1 (CDN) |
+| jsPDF + AutoTable | Exportar PDF | 2.5.1 (CDN) |
+| Service Worker | Cache offline | Cache-First |
+| PWA Manifest | Instalacion como app | - |
 
----
+No hay bundler, no hay npm, no hay node_modules. Todo se sirve como archivos estaticos.
 
-## Stack Tecnológico
+## Sistema Dual de Monedas (CRITICO)
 
-| Tecnología      | Uso                              |
-| --------------- | -------------------------------- |
-| HTML5           | Estructura semántica             |
-| CSS3            | Estilos con arquitectura modular |
-| JavaScript ES6+ | Lógica de aplicación (módulos)   |
-| Dexie.js v4.0.8 | Wrapper de IndexedDB             |
-| Service Worker  | Cache y funcionalidad offline    |
-| PWA Manifest    | Instalación como app nativa      |
+Este es el error mas comun al modificar el proyecto. Leelo completo en `references/MODELO_DATOS.md`.
 
----
+| Campo | Unidad | Tipo | Ejemplo |
+|---|---|---|---|
+| `precioUnitario` (tareas) | **Centavos** | Integer | `5` = 0.05 Bs |
+| `precioVentaUnitario` (venta) | **Bolivianos** | Decimal | `15.00` = 15 Bs |
+| `monto` (pagos) | Centavos | Integer | `2550` = 25.50 Bs |
 
-## ⚠️ Sistema de Monedas (IMPORTANTE)
+Conversion: `bolivianos = centavos / 100`. Funciones en `js/views/administrar-tareas/utils.js`:
+- `formatBs(centavos)` -> "0.50Bs"
+- `centavosABolivianos(centavos)` -> 0.5
+- `formatCentavos(centavos)` -> "50¢"
 
-### Precios en Centavos vs Bolivianos
+Tambien duplicadas en `js/views/shared.js` (formatBs, centavosABolivianos).
 
-El proyecto utiliza un **sistema dual de monedas**:
+## Arquitectura
 
-| Campo                 | Unidad         | Descripción                                    |
-| --------------------- | -------------- | ---------------------------------------------- |
-| `precioUnitario`      | **Centavos**   | Precio de tareas (enteros, ej: 5 = 0.05 Bs)    |
-| `precioVentaUnitario` | **Bolivianos** | Precio de venta del corte (decimal, ej: 15.00) |
-
-### Conversión
-
-```javascript
-// De centavos a Bolivianos
-function centavosABolivianos(centavos) {
-  return centavos / 100;
-}
-
-// Formatear como Bolivianos
-function formatBs(centavos) {
-  return `${(centavos / 100).toFixed(2)}Bs`;
-}
-
-// Ejemplo: 50 centavos = 0.50 Bs
-formatBs(50); // "0.50Bs"
-```
-
-### Ejemplo de Datos
-
-```javascript
-// Prenda con tareas en centavos
-{
-  nombre: "Pantalón",
-  tareas: [
-    { nombre: "over aleta simple", precioUnitario: 5 },    // 0.05 Bs
-    { nombre: "baston", precioUnitario: 15 },              // 0.15 Bs
-    { nombre: "armado de relojero completo", precioUnitario: 30 } // 0.30 Bs
-  ]
-}
-
-// Corte con precio de venta en Bolivianos
-{
-  cantidadPrendas: 100,
-  precioVentaUnitario: 15.00,  // 15 Bolivianos por unidad
-  tareas: [...] // precios en centavos
-}
-```
-
-### Cálculo de Ganancias
-
-```javascript
-function calcularGananciaCorte(corte) {
-  // Ingreso total en Bolivianos
-  const totalVentaBs = corte.cantidadPrendas * corte.precioVentaUnitario;
-
-  // Mano de obra en centavos (convertir a Bs)
-  const totalManoObraCentavos = corte.tareas.reduce((sum, tarea) => {
-    const cantidadAsignada = tarea.asignaciones.reduce(
-      (t, a) => t + a.cantidad,
-      0,
-    );
-    return sum + tarea.precioUnitario * cantidadAsignada;
-  }, 0);
-
-  // Convertir centavos a Bolivianos
-  const totalManoObraBs = totalManoObraCentavos / 100;
-
-  return totalVentaBs - totalManoObraBs;
-}
-```
-
----
-
-## Arquitectura de la Aplicación
-
-### Patrón de Diseño
-
-La aplicación sigue una arquitectura **SPA (Single Page Application)** con enrutamiento basado en hash (`#ruta`).
+SPA con router hash-based. Ver `references/ARQUITECTURA.md` para diagramas completos.
 
 ```
-┌─────────────────────────────────────────────┐
-│                 index.html                   │
-│  ┌───────────────────────────────────────┐  │
-│  │           #app (contenedor)            │  │
-│  │  ┌─────────────────────────────────┐  │  │
-│  │  │     Vista cargada dinámicamente  │  │  │
-│  │  └─────────────────────────────────┘  │  │
-│  └───────────────────────────────────────┘  │
-└─────────────────────────────────────────────┘
+index.html
+  |-> js/db.js          (Dexie, schema v4, seed data)
+  |-> js/app.js         (Router + Dashboard)
+  |-> js/views/         (Vistas, cada una render* exportada)
+  |     |- nuevo-corte.js
+  |     |- gestion-prendas.js  (3 exports: render, ver, editar)
+  |     |- gestion-trabajadores.js
+  |     |- gestion-cortes.js
+  |     |- historial-pagos.js
+  |     |- ganancias.js       (EN CONSTRUCCION)
+  |     |- shared.js          (utilidades compartidas)
+  |     |- administrar-tareas/
+  |           |- index.js     (coordinador de tabs + swipe)
+  |           |- tab-resumen.js   (info + exportar PDF)
+  |           |- tab-corte.js     (vista general)
+  |           |- tab-trabajador.js (resumen por trabajador + pagar)
+  |           |- tab-editar.js    (modificar tareas)
+  |           |- tab-asignar.js   (asignar tareas por talla)
+  |           |- utils.js        (formato moneda, calculos)
 ```
 
-### Estructura de Directorios
+Cada vista: `app.innerHTML = '<template>';` + carga datos + eventos. No hay virtual DOM ni reactividad.
 
-```
-tallerv4/
-├── index.html              # Punto de entrada HTML
-├── manifest.json           # Configuración PWA
-├── service-worker.js       # Worker para cache offline
-├── css/
-│   ├── style.css           # Estilos principales (imports)
-│   ├── base.css            # Reset y estilos base
-│   ├── components.css      # Componentes reutilizables
-│   ├── layout.css          # Estructura y grid
-│   ├── modals.css          # Estilos de modales
-│   ├── responsive.css      # Media queries
-│   ├── variables.css       # Variables CSS
-│   └── views/              # Estilos específicos por vista
-├── js/
-│   ├── app.js              # Enrutador principal
-│   ├── db.js               # Configuración Dexie/IndexedDB
-│   └── views/              # Vistas de la aplicación
-│       ├── nuevo-corte.js
-│       ├── gestion-prendas.js
-│       ├── gestion-trabajadores.js
-│       ├── historial-pagos.js
-│       └── administrar-tareas/
-│           ├── index.js    # Vista principal con tabs
-│           ├── tab-resumen.js
-│           ├── tab-corte.js
-│           ├── tab-trabajador.js
-│           ├── tab-editar.js
-│           ├── tab-asignar.js
-│           └── utils.js    # Utilidades compartidas
-├── icons/                  # Iconos PWA
-└── taller-costura-context/ # Esta Skill
-```
+## Rutas
 
----
+| Hash | Vista | Descripcion |
+|---|---|---|
+| `#dashboard` | Inline en app.js | Estadisticas + navegacion |
+| `#nuevo-corte` | renderNuevoCorte() | Crear corte con tallas |
+| `#gestion-prendas` | renderGestionPrendas() | CRUD prendas |
+| `#gestion-trabajadores` | renderGestionTrabajadores() | CRUD trabajadores |
+| `#gestion-cortes` | renderGestionCortes() | Lista cortes con filtros |
+| `#historial-pagos` | renderHistorialPagos() | Registro de pagos |
+| `#ganancias` | renderGanancias() | EN CONSTRUCCION |
+| `#administrar-tareas/:id` | renderAdministrarTareas(id) | 5 tabs |
+| `#ver-prenda/:id` | renderVerPrenda(id) | Detalle prenda |
+| `#editar-prenda/:id` | renderEditarPrenda(id) | Editar prenda |
 
-## Sistema de Rutas
+## Modelo de Datos (IndexedDB v4)
 
-El enrutador en `js/app.js` maneja las siguientes rutas:
+Ver `references/MODELO_DATOS.md` para schema completo y ejemplos.
 
-### Rutas Estáticas
-
-| Ruta                    | Vista                       | Descripción                      |
-| ----------------------- | --------------------------- | -------------------------------- |
-| `#dashboard`            | Dashboard                   | Panel principal con estadísticas |
-| `#nuevo-corte`          | renderNuevoCorte()          | Crear nuevo corte de producción  |
-| `#gestion-trabajadores` | renderGestionTrabajadores() | CRUD de trabajadores             |
-| `#gestion-prendas`      | renderGestionPrendas()      | CRUD de prendas                  |
-| `#gestion-cortes`       | renderGestionCortes()       | Gestión de cortes con filtros    |
-| `#historial-pagos`      | renderHistorialPagos()      | Historial de pagos               |
-
-### Rutas Dinámicas
-
-| Patrón                    | Ejemplo                 | Descripción                     |
-| ------------------------- | ----------------------- | ------------------------------- |
-| `#administrar-tareas/:id` | `#administrar-tareas/5` | Administrar un corte específico |
-| `#ver-prenda/:id`         | `#ver-prenda/2`         | Ver detalle de una prenda       |
-| `#editar-prenda/:id`      | `#editar-prenda/3`      | Editar una prenda               |
-
----
-
-## Modelo de Datos (IndexedDB)
-
-### Tablas (Versión 4)
-
-```javascript
+```js
 db.version(4).stores({
   prendas: "++id, &nombre",
   trabajadores: "++id, &nombre",
@@ -209,211 +102,88 @@ db.version(4).stores({
 });
 ```
 
-### Estructura de Entidades
+### Entidades clave
 
-#### Prenda
-
-```javascript
+**Corte** (la mas compleja - documento embebido):
+```js
 {
-  id: Number,           // Auto-incrementado
-  nombre: String,       // Único (ej: "Pantalón", "Short", "Falda")
-  tareas: [             // Array de tareas
-    {
-      nombre: String,       // Nombre de la tarea
-      precioUnitario: Number // Precio en CENTAVOS (ej: 5 = 0.05 Bs)
-    }
-  ]
+  id, estado, fechaCreacion, fechaFinalizacion,
+  nombreCorte, nombrePrendaOriginal,
+  cantidadPrendas, precioVentaUnitario,  // EN BOLIVIANOS
+  prendaId,
+  tallas: [{ talla: "M", cantidad: 50 }],  // Array de tallas
+  tareas: [{
+    id: "task-...", nombre,
+    precioUnitario,  // EN CENTAVOS
+    unidadesTotales,
+    asignaciones: [{
+      trabajadorId, cantidad, talla, fecha
+    }]
+  }]
 }
 ```
 
-#### Trabajador
-
-```javascript
+**Prenda** (template para cortes):
+```js
 {
-  id: Number,           // Auto-incrementado
-  nombre: String        // Único
+  id, nombre,  // Unique
+  tareas: [{ nombre, precioUnitario }]  // EN CENTAVOS
 }
 ```
 
-#### Corte
-
-```javascript
+**Pago**:
+```js
 {
-  id: Number,           // Auto-incrementado
-  estado: String,       // "activo" | "terminado"
-  fechaCreacion: Date,  // Timestamp de creación
-  fechaFinalizacion: Date, // Timestamp de finalización (opcional)
-  nombreCorte: String,  // Nombre personalizado (opcional)
-  nombrePrenda: String, // Nombre de la prenda base
-  nombrePrendaOriginal: String, // Backup del nombre original
-  cantidadPrendas: Number, // Cantidad de unidades
-  precioVentaUnitario: Number, // Precio de venta por unidad en BOLIVIANOS
-  prendaId: Number,     // FK a prenda
-  tareas: [             // Tareas heredadas de la prenda
-    {
-      nombre: String,
-      precioUnitario: Number,  // En CENTAVOS
-      asignaciones: [   // Trabajadores asignados
-        {
-          trabajadorId: Number,
-          trabajadorNombre: String,
-          cantidad: Number
-        }
-      ]
-    }
-  ]
+  id, trabajadorId, fecha, corteId,
+  monto,  // EN CENTAVOS (entero)
+  notas
 }
 ```
 
-#### Pago
+## Funciones Globales (window.*)
 
-```javascript
-{
-  id: Number,           // Auto-incrementado
-  trabajadorId: Number, // FK a trabajador
-  fecha: Date,          // Fecha del pago
-  monto: Number,        // Monto pagado
-  corteId: Number       // FK al corte relacionado
-}
+El codigo usa `window.funcion = funcion` para exponer handlers a onclick inline en templates HTML. Las mas importantes:
+
+- `window.confirmarSalida`, `window.salirAplicacion` - en app.js
+- `window.exportarCortePDF` - en tab-resumen.js
+- `window.mostrarModalFinalizarCorte` - en utils.js
+- `window.eliminarTallaNueva` - en nuevo-corte.js
+- `window.corteIdActual` - en tab-asignar.js
+
+## Convenciones
+
+Ver `references/CONVENCIONES.md` para guia completa.
+
+- Modulos ES6: `import`/`export`
+- Funciones vista: prefijo `render` (ej: `renderNuevoCorte()`)
+- Archivos: kebab-case; funciones: camelCase
+- Tema: oscuro, mobile-first
+- No agregar comentarios salvo que se pida
+- Service Worker habilitado tambien en desarrollo
+
+## Version Actual
+
+- App: v8.1 (badge en dashboard)
+- Service Worker cache: `taller-costura-8.2`
+- DB schema: v4
+- Puerto Live Server: 5501
+
+## Vista en Construccion
+
+`#ganancias` (ganancias.js) muestra solo un placeholder "en construccion". Las estadisticas de ganancias se calculan inline en `cargarEstadisticas()` de app.js para el dashboard.
+
+## Dependencias CDN
+
+```html
+<script src="https://unpkg.com/dexie@4.0.8/dist/dexie.js"></script>
+<script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
 ```
-
----
-
-## Convenciones de Código
-
-### JavaScript
-
-- **Módulos ES6**: Usar `import/export` para todas las dependencias
-- **Funciones exportadas**: Prefijo `render` para vistas (ej: `renderNuevoCorte`)
-- **Async/Await**: Preferir sobre `.then()` para operaciones asíncronas
-- **Manejo de errores**: Usar `try/catch` en operaciones de DB
-
-### CSS
-
-- **Arquitectura modular**: Un archivo por categoría
-- **Variables CSS**: Definidas en `variables.css`
-- **BEM-like**: Clases descriptivas con guiones
-- **Mobile-first**: Media queries para desktop
-
-### Nomenclatura
-
-- **Archivos**: kebab-case (ej: `nuevo-corte.js`)
-- **Funciones**: camelCase (ej: `cargarEstadisticas`)
-- **Constantes**: UPPER_SNAKE_CASE o camelCase
-- **IDs DOM**: kebab-case (ej: `#lista-cortes`)
-
----
-
-## Flujo de Trabajo Principal
-
-### Crear un Nuevo Corte
-
-1. Usuario navega a `#nuevo-corte`
-2. Selecciona prenda base (carga tareas automáticamente)
-3. Ingresa cantidad y precio de venta (en Bolivianos)
-4. Opcionalmente asigna un nombre personalizado
-5. Guarda el corte en IndexedDB
-
-### Administrar Tareas de un Corte
-
-1. Desde dashboard o gestión de cortes, clic en "Administrar"
-2. Navega a `#administrar-tareas/:id`
-3. Pestañas disponibles:
-   - **Info**: Resumen del corte
-   - **Corte**: Editar datos del corte
-   - **Trabajador**: Ver tareas por trabajador
-   - **Editar**: Modificar tareas
-   - **Asignar**: Distribuir tareas a trabajadores
-
-### Calcular Pagos
-
-1. Al asignar tareas, se calcula automáticamente el pago por trabajador
-2. Fórmula: `cantidad × precioUnitario` (resultado en centavos)
-3. Para mostrar en Bolivianos: dividir entre 100
-4. Los pagos se registran en la tabla `pagos`
-
----
-
-## Funciones Principales de app.js
-
-| Función                       | Descripción                            |
-| ----------------------------- | -------------------------------------- |
-| `cargarVista(ruta)`           | Carga la vista correspondiente al hash |
-| `cargarEstadisticas()`        | Actualiza métricas del dashboard       |
-| `cargarCortesRecientes()`     | Renderiza lista de cortes              |
-| `filtrarCortes(termino)`      | Filtra cortes por texto                |
-| `aplicarFiltro(tipo)`         | Aplica filtro por estado               |
-| `calcularProgresoReal(corte)` | Calcula progreso real del corte        |
-| `confirmarEliminarCorte(id)`  | Modal de confirmación para eliminar    |
-| `eliminarCorte(id)`           | Elimina corte y pagos relacionados     |
-| `confirmarSalida()`           | Modal de confirmación para salir       |
-| `mostrarMensaje(texto)`       | Muestra toast temporal                 |
-
----
-
-## Instrucciones para Nuevas Funcionalidades
-
-Al agregar nuevas características al proyecto:
-
-### 1. Nueva Vista
-
-```javascript
-// 1. Crear archivo en js/views/mi-vista.js
-export function renderMiVista() {
-  const app = document.getElementById('app');
-  app.innerHTML = `...`;
-}
-
-// 2. Importar en app.js
-import { renderMiVista } from './views/mi-vista.js';
-
-// 3. Agregar caso en switch de cargarVista()
-case '#mi-vista':
-  renderMiVista();
-  break;
-```
-
-### 2. Nueva Tabla en DB
-
-```javascript
-// En db.js, incrementar versión y agregar tabla
-db.version(5).stores({
-  // ...tablas existentes
-  nuevaTabla: "++id, campo1, campo2",
-});
-```
-
-### 3. Nuevo Estilo de Vista
-
-```css
-/* Crear archivo en css/views/mi-vista.css */
-/* Importar en style.css si es necesario */
-```
-
----
-
-## Scripts Disponibles
-
-El proyecto no usa bundler ni npm. Para desarrollo:
-
-- **Live Server**: Usar extensión de VS Code (puerto 5500)
-- **Producción**: Desplegar archivos estáticos directamente
-
-### Validación de Datos
-
-Ejecutar el script de validación:
-
-```bash
-python taller-costura-context/scripts/validar_estructura.py
-```
-
----
 
 ## Recursos Adicionales
 
-Para información más detallada, consultar:
-
 - `references/ARQUITECTURA.md` - Diagramas y flujos detallados
-- `references/MODELO_DATOS.md` - Schema completo y relaciones
-- `references/CONVENCIONES.md` - Guía de estilo completa
-- `REFERENCE.md` - Referencia técnica rápida
+- `references/MODELO_DATOS.md` - Schema completo, relaciones, consultas
+- `references/CONVENCIONES.md` - Guia de estilo y mejores practicas
+- `REFERENCE.md` - Referencia tecnica rapida (API, componentes, debugging)

@@ -1,4 +1,4 @@
-// gestion-cortes.js - Módulo de gestión de cortes
+// gestion-cortes.js - Gestión de cortes con tabs Cortes | Prendas
 import { db } from '../db.js';
 
 // ===========================================================================
@@ -140,51 +140,397 @@ async function eliminarCorte(corteId) {
 }
 
 // ===========================================================================
-// 📋 FUNCIÓN PARA RENDERIZAR VISTA DE GESTIÓN DE CORTES
+// 📋 FUNCIÓN PARA RENDERIZAR VISTA DE GESTIÓN DE CORTES (con tabs)
 // ===========================================================================
 export function renderGestionCortes() {
   const app = document.getElementById("app");
-  
+
+  tabPrendasInicializado = false;
+
   app.innerHTML = `
     <div class="mobile-container">
-      <div class="header">
-        <button class="back-btn" onclick="window.location.hash='#dashboard'">←</button>
-        <h1 class="small-title">📋 Gestión de Cortes</h1>
+      <div class="tab-menu">
+        <div class="tab-container">
+          <button class="tab-item active" data-tab="cortes">
+            <span>Cortes</span>
+          </button>
+          <button class="tab-item" data-tab="prendas">
+            <span>Prendas</span>
+          </button>
+        </div>
       </div>
 
-      <div class="dashboard-content">
-        <!-- Barra de búsqueda y filtros -->
-        <div class="search-filters-section">
-          <div class="search-container">
-            <input type="text" class="search-input" id="search-cortes"
-              placeholder="🔍 Buscar por nombre, fecha o cantidad...">
-            <button class="search-clear" onclick="limpiarBusquedaCortes()" title="Limpiar búsqueda">✕</button>
+      <!-- Tab: Cortes -->
+      <div id="tab-cortes-content" class="tab-content">
+        <div class="dashboard-content">
+          <div class="search-filters-section">
+            <div class="search-container">
+              <input type="text" class="search-input" id="search-cortes"
+                placeholder="🔍 Buscar por nombre, fecha o cantidad...">
+              <button class="search-clear" onclick="limpiarBusquedaCortes()" title="Limpiar búsqueda">✕</button>
+            </div>
+            <div class="filter-buttons" id="filtros-cortes">
+              <button class="filter-btn active" data-filter="all">Todos</button>
+              <button class="filter-btn" data-filter="activo">Activos</button>
+              <button class="filter-btn" data-filter="terminado">Terminados</button>
+              <button class="filter-btn" data-filter="reciente">Última semana</button>
+            </div>
           </div>
-          <div class="filter-buttons" id="filtros-cortes">
-            <button class="filter-btn active" data-filter="all">Todos</button>
-            <button class="filter-btn" data-filter="activo">Activos</button>
-            <button class="filter-btn" data-filter="terminado">Terminados</button>
-            <button class="filter-btn" data-filter="reciente">Última semana</button>
+
+          <div id="lista-cortes">
+            <div class="loading-item">
+              <div class="loading-line"></div>
+              <div class="loading-line short"></div>
+            </div>
           </div>
         </div>
+      </div>
 
-        <!-- Lista de cortes -->
-        <div id="lista-cortes">
-          <div class="loading-item">
-            <div class="loading-line"></div>
-            <div class="loading-line short"></div>
+      <!-- Tab: Prendas (hidden) -->
+      <div id="tab-prendas-content" class="tab-content" style="display:none">
+        <div class="dashboard-content gestion-prendas">
+          <div class="form-section">
+            <div class="form-card">
+              <h2 class="section-title">Crear Nueva Prenda</h2>
+              <div class="form-group">
+                <label for="nueva-prenda">Nombre de la Prenda</label>
+                <input type="text" id="nueva-prenda" class="form-control" placeholder="Ej: Pantalón Ajustado">
+                <small id="error-nueva-prenda" class="error-message"></small>
+              </div>
+              <div class="btn-group">
+                <button id="btn-crear-prenda" class="btn-primary">Crear Prenda</button>
+                <button id="btn-importar-prenda" class="btn-secondary">📥 Importar</button>
+              </div>
+              <input type="file" id="input-importar-prenda" accept=".xlsx,.xls,.csv" style="display: none;">
+            </div>
+          </div>
+
+          <div class="prendas-section">
+            <div class="section-header">
+              <h2 class="section-title">Prendas Registradas</h2>
+              <button class="refresh-btn" onclick="cargarPrendasTab()">↻</button>
+            </div>
+            <div id="lista-prendas" class="prendas-list">
+              <div class="loading-item">
+                <div class="loading-line"></div>
+                <div class="loading-line short"></div>
+              </div>
+            </div>
+          </div>
+
+          <div id="floating-actions-prenda" class="floating-action-btns" style="display: none;">
+            <button class="btn-view-floating" onclick="verPrendaSeleccionada()">👁️ Ver</button>
+            <button class="btn-edit-floating" onclick="editarPrendaSeleccionada()">✏️ Editar</button>
+            <button class="btn-create-floating" onclick="crearPrendaDesdeSeleccionada()">➕ Crear</button>
+            <button class="btn-danger-floating" onclick="eliminarPrendaSeleccionada()">🗑️ Eliminar</button>
           </div>
         </div>
       </div>
     </div>
   `;
 
-  // Cargar cortes
+  inicializarTabsCortesPrendas();
   cargarCortesGestion();
-  
-  // Inicializar búsqueda y filtros
   setTimeout(() => inicializarBusquedaCortes(), 100);
 }
+
+// ===========================================================================
+// 🔄 NAVEGACIÓN POR TABS (Cortes | Prendas) + SWIPE
+// ===========================================================================
+const ORDEN_TABS_CORTES = ['cortes', 'prendas'];
+
+function inicializarTabsCortesPrendas() {
+  document.querySelectorAll('#app .tab-item[data-tab]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const tab = btn.dataset.tab;
+      activarTabCortesPrendas(tab);
+    });
+  });
+
+  const tabContainer = document.querySelector('#app .mobile-container');
+  if (!tabContainer) return;
+
+  let startX = 0;
+  let startY = 0;
+  const threshold = 50;
+
+  tabContainer.addEventListener('touchstart', (e) => {
+    startX = e.touches[0].clientX;
+    startY = e.touches[0].clientY;
+  }, { passive: true });
+
+  tabContainer.addEventListener('touchend', (e) => {
+    const endX = e.changedTouches[0].clientX;
+    const endY = e.changedTouches[0].clientY;
+    const diffX = endX - startX;
+    const diffY = endY - startY;
+
+    if (Math.abs(diffX) > Math.abs(diffY) && Math.abs(diffX) > threshold) {
+      const currentTabBtn = document.querySelector('#app .tab-item.active');
+      if (!currentTabBtn) return;
+
+      const currentTab = currentTabBtn.dataset.tab;
+      const currentIndex = ORDEN_TABS_CORTES.indexOf(currentTab);
+
+      let newIndex;
+      if (diffX < 0) {
+        newIndex = currentIndex + 1;
+      } else {
+        newIndex = currentIndex - 1;
+      }
+
+      if (newIndex >= 0 && newIndex < ORDEN_TABS_CORTES.length) {
+        const nextTab = ORDEN_TABS_CORTES[newIndex];
+        activarTabCortesPrendas(nextTab);
+      }
+    }
+  }, { passive: true });
+}
+
+function activarTabCortesPrendas(tab) {
+  document.querySelectorAll('#app .tab-item').forEach(b => b.classList.remove('active'));
+  const targetBtn = document.querySelector(`#app .tab-item[data-tab="${tab}"]`);
+  if (targetBtn) targetBtn.classList.add('active');
+
+  const cortesEl = document.getElementById('tab-cortes-content');
+  const prendasEl = document.getElementById('tab-prendas-content');
+
+  if (tab === 'cortes') {
+    if (cortesEl) cortesEl.style.display = '';
+    if (prendasEl) prendasEl.style.display = 'none';
+  } else if (tab === 'prendas') {
+    if (cortesEl) cortesEl.style.display = 'none';
+    if (prendasEl) {
+      prendasEl.style.display = '';
+      inicializarTabPrendas();
+    }
+  }
+}
+
+// ===========================================================================
+// 👕 TAB PRENDAS - Inicializar y cargar
+// ===========================================================================
+let tabPrendasInicializado = false;
+
+function inicializarTabPrendas() {
+  if (tabPrendasInicializado) {
+    cargarPrendasTab();
+    return;
+  }
+  tabPrendasInicializado = true;
+
+  const btnCrear = document.getElementById('btn-crear-prenda');
+  const inputPrenda = document.getElementById('nueva-prenda');
+  const btnImportar = document.getElementById('btn-importar-prenda');
+  const inputImportar = document.getElementById('input-importar-prenda');
+
+  if (btnCrear) {
+    btnCrear.addEventListener('click', () => {
+      crearPrendaTab();
+    });
+  }
+
+  if (inputPrenda) {
+    inputPrenda.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') crearPrendaTab();
+    });
+  }
+
+  if (btnImportar && inputImportar) {
+    btnImportar.addEventListener('click', () => {
+      inputImportar.click();
+    });
+  }
+
+  if (inputImportar) {
+    inputImportar.addEventListener('change', async (e) => {
+      if (typeof window.manejarArchivoImportacion === 'function') {
+        await window.manejarArchivoImportacion(e);
+        setTimeout(() => cargarPrendasTab(), 500);
+      }
+    });
+  }
+
+  cargarPrendasTab();
+}
+
+async function crearPrendaTab() {
+  const input = document.getElementById("nueva-prenda");
+  const nombre = input.value.trim();
+  const errorEl = document.getElementById("error-nueva-prenda");
+
+  errorEl.textContent = "";
+  input.classList.remove("error");
+
+  if (!nombre) {
+    errorEl.textContent = "El nombre no puede estar vacío";
+    input.classList.add("error");
+    return;
+  }
+
+  if (nombre.length < 3) {
+    errorEl.textContent = "El nombre debe tener al menos 3 caracteres";
+    input.classList.add("error");
+    return;
+  }
+
+  try {
+    const prendaExistente = await db.prendas
+      .where("nombre")
+      .equalsIgnoreCase(nombre)
+      .first();
+
+    if (prendaExistente) {
+      errorEl.textContent = "Ya existe una prenda con este nombre";
+      input.classList.add("error");
+      return;
+    }
+
+    const nuevaPrenda = { nombre: nombre, tareas: [] };
+    await db.prendas.add(nuevaPrenda);
+    input.value = "";
+    mostrarMensaje("✅ Prenda creada correctamente");
+    cargarPrendasTab();
+  } catch (error) {
+    console.error("Error al crear prenda:", error);
+    errorEl.textContent = "Error al guardar. Intente nuevamente.";
+    input.classList.add("error");
+  }
+}
+
+async function cargarPrendasTab() {
+  const lista = document.getElementById('lista-prendas');
+  if (!lista) return;
+
+  lista.innerHTML = `<div class="loading-item"><div class="loading-line"></div><div class="loading-line short"></div></div>`;
+
+  try {
+    const prendas = await db.prendas.toArray();
+
+    if (prendas.length === 0) {
+      lista.innerHTML = `
+        <div class="empty-state">
+          <div class="empty-icon">👕</div>
+          <p class="empty-text">No hay prendas registradas</p>
+          <p class="empty-subtext">Crea la primera prenda usando el formulario</p>
+        </div>
+      `;
+      document.getElementById('floating-actions-prenda').style.display = 'none';
+      return;
+    }
+
+    lista.innerHTML = prendas
+      .map(
+        (prenda) => `
+      <div class="prenda-card selectable-row" data-id="${prenda.id}" data-nombre="${prenda.nombre}">
+        <div class="prenda-card-main">
+          <div class="prenda-info">
+            <h3 class="prenda-name">${prenda.nombre}</h3>
+            <div class="prenda-meta">
+              <span class="prenda-id">ID: ${prenda.id}</span>
+              <span class="prenda-tareas">${prenda.tareas.length} tareas</span>
+            </div>
+          </div>
+          <div class="prenda-summary">
+            <span class="summary-label">Costo Total</span>
+            <span class="summary-value">${(prenda.tareas.reduce((sum, tarea) => sum + tarea.precioUnitario, 0) / 100).toFixed(2)}Bs</span>
+          </div>
+        </div>
+      </div>
+    `,
+      )
+      .join("");
+
+    inicializarEventosSeleccionPrendasTab();
+  } catch (error) {
+    console.error("Error al cargar prendas:", error);
+    lista.innerHTML = `
+      <div class="error-state">
+        <div class="error-icon">⚠️</div>
+        <p class="error-text">Error al cargar prendas</p>
+        <button class="action-btn" onclick="cargarPrendasTab()">Reintentar</button>
+      </div>
+    `;
+  }
+}
+
+function inicializarEventosSeleccionPrendasTab() {
+  let prendaIdSeleccionada = null;
+  let prendaNombreSeleccionada = null;
+
+  document.querySelectorAll("#tab-prendas-content .prenda-card.selectable-row").forEach((card) => {
+    card.addEventListener("click", (e) => {
+      if (e.target.tagName === "BUTTON" || e.target.tagName === "A") return;
+
+      document.querySelectorAll("#tab-prendas-content .selectable-row").forEach((r) => {
+        r.classList.remove("selected");
+      });
+
+      card.classList.add("selected");
+      prendaIdSeleccionada = parseInt(card.dataset.id);
+      prendaNombreSeleccionada = card.dataset.nombre;
+
+      const floatingActions = document.getElementById("floating-actions-prenda");
+      floatingActions.style.display = "flex";
+
+      e.stopPropagation();
+    });
+  });
+
+  document.addEventListener("click", function cerrarFloatingPrendas(e) {
+    const floatingActions = document.getElementById("floating-actions-prenda");
+    if (!floatingActions) return;
+    const isClickInsideList = e.target.closest("#tab-prendas-content .prendas-list");
+    const isClickInsideFloating = e.target.closest("#floating-actions-prenda");
+
+    if (!isClickInsideList && !isClickInsideFloating && floatingActions) {
+      floatingActions.style.display = "none";
+      document.querySelectorAll("#tab-prendas-content .selectable-row").forEach((r) => {
+        r.classList.remove("selected");
+      });
+      prendaIdSeleccionada = null;
+      prendaNombreSeleccionada = null;
+    }
+  });
+
+  window.verPrendaSeleccionada = function () {
+    if (prendaIdSeleccionada !== null) {
+      window.location.hash = `#ver-prenda/${prendaIdSeleccionada}`;
+    }
+  };
+
+  window.editarPrendaSeleccionada = function () {
+    if (prendaIdSeleccionada !== null) {
+      window.location.hash = `#editar-prenda/${prendaIdSeleccionada}`;
+    }
+  };
+
+  window.eliminarPrendaSeleccionada = function () {
+    if (prendaIdSeleccionada !== null && prendaNombreSeleccionada !== null) {
+      if (typeof window.mostrarModalEliminarPrenda === 'function') {
+        window.mostrarModalEliminarPrenda(prendaIdSeleccionada, prendaNombreSeleccionada);
+      }
+      document.getElementById("floating-actions-prenda").style.display = "none";
+      document.querySelectorAll("#tab-prendas-content .selectable-row").forEach((r) => {
+        r.classList.remove("selected");
+      });
+    }
+  };
+
+  window.crearPrendaDesdeSeleccionada = function () {
+    if (prendaIdSeleccionada !== null && prendaNombreSeleccionada !== null) {
+      if (typeof window.mostrarModalCrearPrendaDesdeExistente === 'function') {
+        window.mostrarModalCrearPrendaDesdeExistente(prendaIdSeleccionada, prendaNombreSeleccionada);
+      }
+      document.getElementById("floating-actions-prenda").style.display = "none";
+      document.querySelectorAll("#tab-prendas-content .selectable-row").forEach((r) => {
+        r.classList.remove("selected");
+      });
+    }
+  };
+}
+
+window.cargarPrendasTab = cargarPrendasTab;
 
 // ===========================================================================
 // Cargar cortes en la vista de gestión

@@ -1,18 +1,10 @@
-/* ==========================================================================
-   TAB ASIGNAR CSS - Estilos para la pestaña Asignar de Administrar Tareas
-   ========================================================================== */
-
-/* ==========================================================================
-   PESTAÑA ASIGNAR
-   ========================================================================== */
-
 .administrar-tareas .assignment-section {
-    padding: 20px 0;
+    padding: var(--space-5) 0;
 }
 
 .administrar-tareas .assignment-form {
-    padding: 20px;
-    margin-bottom: 24px;
+    padding: var(--space-5);
+    margin-bottom: var(--space-6);
 }
 
 .administrar-tareas .history-table .task-quantity {
@@ -22,48 +14,42 @@
     min-width: 60px;
 }
 
-/* Inputs de tallas en columna */
 .tallas-inputs-container {
-    background: rgba(37, 99, 235, 0.08);
+    background: var(--accent-subtle);
     border-radius: var(--radius-md);
-    /*padding: 16px;*/
-    padding: 4px;
-    /*margin-bottom: 16px;*/
-    margin-bottom: 8px;
-    border: 1px solid rgba(37, 99, 235, 0.2);
+    padding: var(--space-1);
+    margin-bottom: var(--space-2);
+    border: 1px solid var(--accent-muted);
 }
 
 .tallas-inputs-container .tallas-label {
     display: block;
-    /*font-size: 13px;*/
-    font-size: 14px;
+    font-size: var(--text-sm);
     font-weight: 600;
     color: var(--text-primary);
-    /*margin-bottom: 12px;*/
-    margin-bottom: 5px;
+    margin-bottom: var(--space-1);
 }
 
 .tallas-inputs-list {
     display: grid;
-    /*grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));*/
     grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
-    gap: 10px;
+    gap: var(--space-2);
 }
 
 .talla-input-row {
     display: flex;
     align-items: center;
-    gap: 5px;
-    padding: 4px 4px;
-    background: rgba(0, 0, 0, 0.2);
+    gap: var(--space-1);
+    padding: var(--space-1);
+    background: rgba(0, 0, 0, 0.15);
     border-radius: var(--radius-sm);
-    border: 1px solid var(--border-color);
+    border: 1px solid var(--border-default);
 }
 
 .talla-input-row .talla-name {
-    font-size: 14px;
+    font-size: var(--text-sm);
     font-weight: 700;
-    color: #60a5fa;
+    color: var(--accent);
     min-width: 30px;
     text-transform: uppercase;
 }
@@ -71,31 +57,30 @@
 .talla-input-row .form-control {
     flex: 1;
     max-width: 55px;
-    padding: 8px 2px;
+    padding: var(--space-2) var(--space-1);
     text-align: center;
-    font-size: 14px;
+    font-size: var(--text-sm);
     font-weight: 600;
 }
 
 .talla-input-row .talla-max {
-    font-size: 12px;
+    font-size: var(--text-xs);
     color: var(--text-muted);
     min-width: 50px;
 }
 
 .talla-name.clickable {
     cursor: pointer;
-    transition: color 0.2s;
+    transition: color var(--transition-fast);
 }
 
 .talla-name.clickable:hover {
-    color: #3b82f6;
+    color: var(--accent-hover);
     text-decoration: underline;
 }
 
-/* Celda de tallas en historial */
 .tallas-cell {
-    font-size: 12px;
+    font-size: var(--text-xs);
     color: var(--text-primary);
     word-break: break-word;
 }

@@ -136,7 +136,7 @@ function cerrarModalFinalizar() {
 // Confirmar finalización del corte
 async function confirmarFinalizarCorte(corteId) {
   try {
-    await db.cortes.update(corteId, { estado: 'terminado' });
+    await db.cortes.update(corteId, { estado: 'terminado', fechaFinalizacion: new Date() });
     cerrarModalFinalizar();
     mostrarMensaje('✅ Corte finalizado');
     setTimeout(() => location.reload(), 1500);

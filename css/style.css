@@ -50,6 +50,10 @@
 @import url("./views/administrar-tareas/index.css");
 @import url("./views/historial-pagos.css");
 @import url("./views/gestion-cortes.css");
+@import url("./views/perfil.css");
+
+/* Barra de navegacion inferior */
+@import url("./bottom-nav.css");
 
 /* Media queries responsive - Debe ir último */
 @import url("./responsive.css");

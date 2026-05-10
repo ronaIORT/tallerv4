@@ -1,95 +1,85 @@
 # Modelo de Datos - Taller de Costura PWA
 
-## Visión General
+## Vision General
 
-La aplicación utiliza **IndexedDB** como sistema de persistencia, accedido a través del wrapper **Dexie.js**. El modelo está optimizado para consultas rápidas y funcionamiento offline.
+IndexedDB via Dexie.js v4.0.8. Modelo optimizado para consultas rapidas y funcionamiento offline. Las relaciones se manejan manualmente (no hay foreign keys automaticas).
 
 ---
 
-## ⚠️ Sistema de Monedas
+## Sistema Dual de Monedas (CRITICO)
 
-### IMPORTANTE: Centavos vs Bolivianos
-
-El proyecto utiliza un **sistema dual de monedas** que debe ser respetado:
-
-| Campo                 | Unidad         | Tipo    | Ejemplo         |
-| --------------------- | -------------- | ------- | --------------- |
-| `precioUnitario`      | **Centavos**   | Integer | `5` = 0.05 Bs   |
+| Campo | Unidad | Tipo | Ejemplo |
+|---|---|---|---|
+| `precioUnitario` | **Centavos** | Integer | `5` = 0.05 Bs |
 | `precioVentaUnitario` | **Bolivianos** | Decimal | `15.00` = 15 Bs |
+| `monto` (pagos) | **Centavos** | Integer | `2550` = 25.50 Bs |
 
-### Razón del Diseño
+Razon: Centavos evita errores de punto flotante. Bolivianos es mas intuitivo para el usuario al ingresar precio de venta.
 
-- **Centavos para tareas**: Evita errores de punto flotante en cálculos frecuentes
-- **Bolivianos para ventas**: Más intuitivo para el usuario al ingresar precios de venta
-
-### Conversión
-
+Conversion siempre con funciones de `utils.js`:
 ```javascript
-// Siempre usar las funciones de utils.js
-import { centavosABolivianos, formatBs } from "./administrar-tareas/utils.js";
-
-// Convertir para cálculos
-const precioBs = centavosABolivianos(precioUnitario);
-
-// Formatear para mostrar
-const texto = formatBs(precioUnitario); // "0.05Bs"
+import { formatBs, centavosABolivianos, formatCentavos } from './administrar-tareas/utils.js';
 ```
 
 ---
 
-## Diagrama Entidad-Relación
+## Diagrama Entidad-Relacion
 
 ```
-┌─────────────────┐       ┌─────────────────┐
-│     PRENDA      │       │   TRABAJADOR    │
-├─────────────────┤       ├─────────────────┤
-│ id (PK)         │       │ id (PK)         │
-│ nombre (UNIQUE) │       │ nombre (UNIQUE) │
-│ tareas[]        │       └────────┬────────┘
-└────────┬────────┘                │
-         │                         │
-         │ hereda tareas           │ trabaja en
-         │                         │
-         ▼                         ▼
-┌─────────────────────────────────────────────┐
-│                   CORTE                      │
-├─────────────────────────────────────────────┤
-│ id (PK)                                      │
-│ estado (INDEX)                               │
-│ fechaCreacion (INDEX)                        │
-│ fechaFinalizacion                            │
-│ nombreCorte                                  │
-│ nombrePrenda                                 │
-│ cantidadPrendas                              │
-│ precioVentaUnitario (BOLIVIANOS)             │
-│ prendaId (FK → Prenda)                       │
-│ tareas[]                                     │
-│   ├── nombre                                 │
-│   ├── precioUnitario (CENTAVOS)              │
-│   └── asignaciones[]                         │
-│        ├── trabajadorId (FK → Trabajador)    │
-│        ├── trabajadorNombre                  │
-│        └── cantidad                          │
-└────────────────────┬────────────────────────┘
-                     │
-                     │ genera
-                     ▼
-          ┌─────────────────┐
-          │      PAGO       │
-          ├─────────────────┤
-          │ id (PK)         │
-          │ trabajadorId(FK)│
-          │ fecha (INDEX)   │
-          │ monto           │
-          │ corteId (INDEX) │
-          └─────────────────┘
++-----------------+       +-----------------+
+|     PRENDA      |       |   TRABAJADOR    |
++-----------------+       +-----------------+
+| id (PK, auto)   |       | id (PK, auto)   |
+| nombre (UNIQUE) |       | nombre (UNIQUE) |
+| tareas[]        |       +--------+--------+
++--------+--------+                |
+         |                         |
+         | hereda tareas           | trabaja en
+         |                         |
+         v                         v
++-----------------------------------------------+
+|                   CORTE                        |
++-----------------------------------------------+
+| id (PK, auto)                                 |
+| estado (INDEX: "activo" | "terminado")        |
+| fechaCreacion (INDEX)                         |
+| fechaFinalizacion                              |
+| nombreCorte                                   |
+| nombrePrendaOriginal                           |
+| cantidadPrendas                               |
+| precioVentaUnitario (BOLIVIANOS)              |
+| prendaId (FK manual)                          |
+| tallas: [{ talla, cantidad }]                |
+| tareas[]:                                     |
+|   |- id, nombre                               |
+|   |- precioUnitario (CENTAVOS)               |
+|   |- unidadesTotales                          |
+|   |- asignaciones[]:                          |
+|        |- trabajadorId (FK)                    |
+|        |- cantidad                             |
+|        |- talla                                |
+|        |- fecha                                |
++-----------------------+------------------------+
+                        |
+                        | genera
+                        v
+             +-----------------+
+             |      PAGO       |
+             +-----------------+
+             | id (PK, auto)   |
+             | trabajadorId(FK)|
+             | fecha (INDEX)   |
+             | monto (CENTAVOS)|
+             | corteId (INDEX) |
+             | notas           |
+             +-----------------+
 ```
 
 ---
 
-## Definición de Tablas
+## Definicion de Tablas
 
-### Versión de Base de Datos: 4
+### Version de DB: 4
 
 ```javascript
 db.version(4).stores({
@@ -102,146 +92,121 @@ db.version(4).stores({
 
 ### Historial de Versiones
 
-| Versión | Cambios                                         |
-| ------- | ----------------------------------------------- |
-| v1      | Tablas iniciales: prendas, trabajadores, cortes |
-| v2      | Agrega tabla pagos                              |
-| v3      | Agrega índice fechaFinalizacion (implícito)     |
-| v4      | Agrega índice corteId en pagos                  |
+| Version | Cambios |
+|---|---|
+| v1 | Tablas iniciales: prendas, trabajadores, cortes |
+| v2 | Agrega tabla pagos |
+| v3 | Preparacion para fechaFinalizacion |
+| v4 | Agrega indice corteId en pagos |
 
 ---
 
-### Tabla: prendas
+## Tabla: prendas
 
-Almacena el catálogo de tipos de prendas que se confeccionan en el taller.
+Catalogo de tipos de prendas. Sirve como template para crear cortes.
 
 ```javascript
-// Definición en Dexie
+// Schema
 prendas: "++id, &nombre"
 
-// Esquema de documento
+// Documento
 {
-  id: Number,           // Auto-incrementado (primary key)
-  nombre: String,       // Nombre único de la prenda (indexed, unique)
-  tareas: Array         // Lista de tareas requeridas
+  id: Number,           // Auto-incrementado
+  nombre: String,       // Unico (indexed)
+  tareas: [{
+    nombre: String,
+    precioUnitario: Number  // CENTAVOS (ej: 5 = 0.05 Bs)
+  }]
 }
 ```
 
-#### Estructura de Tarea
+### Seed Data
 
-```javascript
-{
-  nombre: String,           // Nombre descriptivo de la tarea
-  precioUnitario: Number    // Precio en CENTAVOS (ej: 5 = 0.05 Bs)
-}
-```
+Se ejecuta automaticamente en DB vacia via `db.on("populate")`:
+- **Pantalon**: 30 tareas, precios de 5-35 centavos
+- **Short**: 31 tareas, precios de 5-35 centavos
+- **Falda**: 29 tareas, precios de 5-35 centavos
 
-#### Ejemplo de Documento
+### Ejemplo
 
 ```javascript
 {
   id: 1,
-  nombre: "Pantalón",
+  nombre: "Pantalon",
   tareas: [
-    { nombre: "over aleta simple", precioUnitario: 5 },      // 0.05 Bs
-    { nombre: "over aleta doble", precioUnitario: 5 },       // 0.05 Bs
-    { nombre: "over bolsillo", precioUnitario: 5 },          // 0.05 Bs
+    { nombre: "over aleta simple", precioUnitario: 5 },       // 0.05 Bs
     { nombre: "armado de relojero completo", precioUnitario: 30 }, // 0.30 Bs
-    { nombre: "cierre a aleta", precioUnitario: 5 },         // 0.05 Bs
-    { nombre: "baston", precioUnitario: 15 },                // 0.15 Bs
-    // ... más tareas
+    { nombre: "union traseros", precioUnitario: 30 },          // 0.30 Bs
+    { nombre: "parchar bolsillo", precioUnitario: 35 },       // 0.35 Bs
+    // ... 26 tareas mas
   ]
 }
 ```
 
-#### Índices
-
-| Campo    | Tipo         | Descripción                |
-| -------- | ------------ | -------------------------- |
-| `id`     | Primary Key  | Auto-incrementado          |
-| `nombre` | Unique Index | Búsqueda rápida por nombre |
-
 ---
 
-### Tabla: trabajadores
+## Tabla: trabajadores
 
-Almacena la información del personal del taller.
+Personal del taller. Relacion simple.
 
 ```javascript
-// Definición en Dexie
+// Schema
 trabajadores: "++id, &nombre"
 
-// Esquema de documento
+// Documento
 {
-  id: Number,           // Auto-incrementado (primary key)
-  nombre: String        // Nombre único del trabajador (indexed, unique)
+  id: Number,           // Auto-incrementado
+  nombre: String        // Unico (indexed)
 }
 ```
 
-#### Ejemplo de Documento
+### Ejemplo
 
 ```javascript
-{
-  id: 1,
-  nombre: "María García"
-}
+{ id: 1, nombre: "Maria Garcia" }
 ```
-
-#### Índices
-
-| Campo    | Tipo         | Descripción                |
-| -------- | ------------ | -------------------------- |
-| `id`     | Primary Key  | Auto-incrementado          |
-| `nombre` | Unique Index | Búsqueda rápida por nombre |
 
 ---
 
-### Tabla: cortes
+## Tabla: cortes
 
-Almacena las órdenes de producción (cortes) con sus tareas y asignaciones.
+La entidad mas compleja. Usa un patron de documento embebido: tareas y asignaciones se guardan dentro del corte como arrays anidados.
 
 ```javascript
-// Definición en Dexie
+// Schema
 cortes: "++id, estado, fechaCreacion"
 
-// Esquema de documento
+// Documento
 {
-  id: Number,                  // Auto-incrementado (primary key)
+  id: Number,
   estado: String,              // "activo" | "terminado" (indexed)
-  fechaCreacion: Date,         // Timestamp de creación (indexed)
-  fechaFinalizacion: Date,     // Timestamp de finalización (opcional)
-  nombreCorte: String,         // Nombre personalizado (opcional)
-  nombrePrenda: String,        // Nombre de la prenda base
-  nombrePrendaOriginal: String, // Backup del nombre original
-  cantidadPrendas: Number,     // Cantidad de unidades
-  precioVentaUnitario: Number, // Precio de venta por unidad en BOLIVIANOS
-  prendaId: Number,            // FK a prenda (no enforced)
-  tareas: Array                // Tareas heredadas + asignaciones
+  fechaCreacion: Date,         // (indexed)
+  fechaFinalizacion: Date,     // null si activo
+  nombreCorte: String,         // Nombre personalizado
+  nombrePrendaOriginal: String, // Backup del nombre de la prenda
+  cantidadPrendas: Number,    // Total unidades
+  precioVentaUnitario: Number, // BOLIVIANOS (decimal)
+  prendaId: Number,            // FK manual a prenda
+  tallas: [{                   // Array de tallas del corte
+    talla: String,             // Ej: "M", "L", "36"
+    cantidad: Number           // Unidades de esta talla
+  }],
+  tareas: [{                   // Tareas heredadas de la prenda
+    id: String,                // "task-{timestamp}-{index}"
+    nombre: String,
+    precioUnitario: Number,    // CENTAVOS (integer)
+    unidadesTotales: Number,   // = cantidadPrendas del corte
+    asignaciones: [{           // Trabajadores asignados
+      trabajadorId: Number,   // FK a trabajadores
+      cantidad: Number,        // Unidades asignadas
+      talla: String | null,    // Talla especifica o null
+      fecha: String            // ISO timestamp
+    }]
+  }]
 }
 ```
 
-#### Estructura de Tarea en Corte
-
-```javascript
-{
-  nombre: String,              // Nombre de la tarea
-  precioUnitario: Number,      // Precio unitario en CENTAVOS
-  unidadesTotales: Number,     // Total de unidades para esta tarea (opcional)
-  asignaciones: Array          // Trabajadores asignados
-}
-```
-
-#### Estructura de Asignación
-
-```javascript
-{
-  trabajadorId: Number,        // FK a trabajador
-  trabajadorNombre: String,    // Cache del nombre
-  cantidad: Number             // Cantidad de unidades asignadas
-}
-```
-
-#### Ejemplo de Documento Completo
+### Ejemplo Completo
 
 ```javascript
 {
@@ -250,127 +215,127 @@ cortes: "++id, estado, fechaCreacion"
   fechaCreacion: "2026-02-23T04:30:00.000Z",
   fechaFinalizacion: null,
   nombreCorte: "Pantalones Primavera",
-  nombrePrenda: "Pantalón",
-  nombrePrendaOriginal: "Pantalón",
+  nombrePrendaOriginal: "Pantalon",
   cantidadPrendas: 100,
-  precioVentaUnitario: 15.00,  // 15 Bolivianos por unidad
+  precioVentaUnitario: 15.00,   // 15 Bs
   prendaId: 1,
+  tallas: [
+    { talla: "S", cantidad: 20 },
+    { talla: "M", cantidad: 40 },
+    { talla: "L", cantidad: 40 }
+  ],
   tareas: [
     {
+      id: "task-1700000000000-0",
       nombre: "over aleta simple",
       precioUnitario: 5,  // 0.05 Bs (CENTAVOS)
+      unidadesTotales: 100,
       asignaciones: [
-        { trabajadorId: 1, trabajadorNombre: "María García", cantidad: 50 },
-        { trabajadorId: 2, trabajadorNombre: "Juan Pérez", cantidad: 50 }
+        { trabajadorId: 1, cantidad: 30, talla: "S", fecha: "2026-02-23T10:00:00.000Z" },
+        { trabajadorId: 2, cantidad: 40, talla: "M", fecha: "2026-02-23T10:05:00.000Z" }
       ]
     },
     {
+      id: "task-1700000000000-1",
       nombre: "baston",
       precioUnitario: 15,  // 0.15 Bs (CENTAVOS)
-      asignaciones: [
-        { trabajadorId: 1, trabajadorNombre: "María García", cantidad: 100 }
-      ]
-    },
-    // ... más tareas con o sin asignaciones
+      unidadesTotales: 100,
+      asignaciones: []  // Sin asignar
+    }
   ]
 }
 ```
 
-#### Índices
+### Indices
 
-| Campo           | Tipo        | Descripción                  |
-| --------------- | ----------- | ---------------------------- |
-| `id`            | Primary Key | Auto-incrementado            |
-| `estado`        | Index       | Filtrar por activo/terminado |
-| `fechaCreacion` | Index       | Ordenar por fecha            |
+| Campo | Tipo | Uso |
+|---|---|---|
+| `id` | Primary Key | Auto-incrementado |
+| `estado` | Index | Filtrar activo/terminado |
+| `fechaCreacion` | Index | Ordenar por fecha |
 
 ---
 
-### Tabla: pagos
+## Tabla: pagos
 
-Almacena el historial de pagos realizados a trabajadores.
+Historial de pagos realizados a trabajadores.
 
 ```javascript
-// Definición en Dexie
+// Schema
 pagos: "++id, trabajadorId, fecha, corteId"
 
-// Esquema de documento
+// Documento
 {
-  id: Number,              // Auto-incrementado (primary key)
+  id: Number,              // Auto-incrementado
   trabajadorId: Number,    // FK a trabajador (indexed)
   fecha: Date,             // Fecha del pago (indexed)
-  monto: Number,           // Monto pagado
-  corteId: Number,         // FK al corte relacionado (indexed)
-  notas: String            // Notas adicionales (opcional)
+  monto: Number,           // CENTAVOS (integer)
+  corteId: Number,         // FK al corte (indexed)
+  notas: String            // Opcional
 }
 ```
 
-#### Ejemplo de Documento
+### Ejemplo
 
 ```javascript
 {
   id: 1,
   trabajadorId: 1,
   fecha: "2026-02-23T04:30:00.000Z",
-  monto: 25.50,
+  monto: 2550,  // 25.50 Bs (CENTAVOS)
   corteId: 5,
   notas: "Pago parcial por pantalones"
 }
 ```
 
-#### Índices
+### Indices
 
-| Campo          | Type        | Description                  |
-| -------------- | ----------- | ---------------------------- |
-| `id`           | Primary Key | Auto-incrementado            |
-| `trabajadorId` | Index       | Filtrar pagos por trabajador |
-| `fecha`        | Index       | Ordenar/filtrar por fecha    |
-| `corteId`      | Index       | Filtrar pagos por corte      |
+| Campo | Tipo | Uso |
+|---|---|---|
+| `id` | Primary Key | Auto-incrementado |
+| `trabajadorId` | Index | Filtrar por trabajador |
+| `fecha` | Index | Ordenar/filtrar por fecha |
+| `corteId` | Index | Filtrar por corte (para eliminar) |
 
 ---
 
 ## Relaciones
 
-### Prenda → Corte (1:N)
+### Prenda -> Corte (1:N)
 
-Una prenda puede ser base de múltiples cortes. La relación se mantiene mediante `prendaId` en el corte.
+Una prenda puede ser base de multiples cortes. La relacion se mantiene mediante `prendaId` en el corte. Las tareas se copian (heredan) al crear el corte, no se referencian.
 
 ```javascript
-// Obtener todos los cortes de una prenda
 const cortesDePrenda = await db.cortes
-  .filter((corte) => corte.prendaId === prendaId)
+  .filter(c => c.prendaId === prendaId)
   .toArray();
 ```
 
-### Trabajador → Asignaciones (1:N)
+### Trabajador -> Asignaciones (1:N, embebidas)
 
-Un trabajador puede tener múltiples asignaciones en diferentes cortes. La relación está embebida en el documento del corte.
+Un trabajador puede tener asignaciones en multiples cortes. Las asignaciones estan embebidas en el documento del corte.
 
 ```javascript
-// Obtener todas las asignaciones de un trabajador
 const cortes = await db.cortes.toArray();
-const asignaciones = cortes.flatMap((corte) =>
-  corte.tareas.flatMap((tarea) =>
+const asignaciones = cortes.flatMap(corte =>
+  corte.tareas.flatMap(tarea =>
     tarea.asignaciones
-      .filter((a) => a.trabajadorId === trabajadorId)
-      .map((a) => ({
+      .filter(a => a.trabajadorId === trabajadorId)
+      .map(a => ({
         corteId: corte.id,
-        corteNombre: corte.nombreCorte,
         tarea: tarea.nombre,
         cantidad: a.cantidad,
-        precioUnitario: tarea.precioUnitario, // En CENTAVOS
-        total: a.cantidad * tarea.precioUnitario, // En CENTAVOS
-      })),
-  ),
+        talla: a.talla,
+        precioUnitario: tarea.precioUnitario,  // CENTAVOS
+        total: a.cantidad * tarea.precioUnitario  // CENTAVOS
+      }))
+  )
 );
 ```
 
-### Corte → Pago (1:N)
-
-Un corte puede generar múltiples pagos a diferentes trabajadores.
+### Corte -> Pago (1:N)
 
 ```javascript
-// Obtener pagos de un corte
 const pagosCorte = await db.pagos.where("corteId").equals(corteId).toArray();
 ```
 
@@ -378,92 +343,54 @@ const pagosCorte = await db.pagos.where("corteId").equals(corteId).toArray();
 
 ## Consultas Comunes
 
-### Obtener cortes activos
+### Cortes activos
 
 ```javascript
-const cortesActivos = await db.cortes
-  .where("estado")
-  .equals("activo")
-  .toArray();
+const activos = await db.cortes.where("estado").equals("activo").toArray();
 ```
 
-### Obtener cortes ordenados por fecha
+### Cortes ordenados por fecha
 
 ```javascript
-const cortesOrdenados = await db.cortes
-  .orderBy("fechaCreacion")
-  .reverse()
-  .toArray();
+const ordenados = await db.cortes.orderBy("fechaCreacion").reverse().toArray();
 ```
 
 ### Buscar prenda por nombre
 
 ```javascript
-const prenda = await db.prendas.where("nombre").equals("Pantalón").first();
+const prenda = await db.prendas.where("nombre").equals("Pantalon").first();
 ```
 
-### Calcular total a pagar por corte (en Bolivianos)
+### Total a pagar por corte (por trabajador, en Bolivianos)
 
 ```javascript
-async function calcularTotalPagar(corteId) {
-  const corte = await db.cortes.get(corteId);
-
+function calcularTotalPagar(corte) {
   const totalPorTrabajador = {};
-
-  corte.tareas.forEach((tarea) => {
-    tarea.asignaciones.forEach((asig) => {
-      // precioUnitario está en CENTAVOS
+  corte.tareas.forEach(tarea => {
+    tarea.asignaciones.forEach(asig => {
       const montoCentavos = asig.cantidad * tarea.precioUnitario;
       const montoBs = montoCentavos / 100;
-
       if (!totalPorTrabajador[asig.trabajadorId]) {
-        totalPorTrabajador[asig.trabajadorId] = {
-          nombre: asig.trabajadorNombre,
-          total: 0,
-        };
+        totalPorTrabajador[asig.trabajadorId] = { nombre: asig.trabajadorNombre || '', total: 0 };
       }
       totalPorTrabajador[asig.trabajadorId].total += montoBs;
     });
   });
-
   return totalPorTrabajador;
 }
 ```
 
-### Calcular ganancia neta de un corte
+### Ganancia neta de un corte
 
 ```javascript
 function calcularGananciaNeta(corte) {
-  // Ingreso total en Bolivianos
-  const ingresoTotal = corte.cantidadPrendas * corte.precioVentaUnitario;
-
-  // Costo de mano de obra en centavos → Bolivianos
-  const costoManoObraCentavos = corte.tareas.reduce((total, tarea) => {
+  const ingresoBs = corte.cantidadPrendas * corte.precioVentaUnitario;
+  const costoCentavos = corte.tareas.reduce((total, tarea) => {
     const asignado = tarea.asignaciones.reduce((sum, a) => sum + a.cantidad, 0);
     return total + asignado * tarea.precioUnitario;
   }, 0);
-
-  const costoManoObra = costoManoObraCentavos / 100;
-
-  return {
-    ingresoTotal,
-    costoManoObra,
-    gananciaNeta: ingresoTotal - costoManoObra,
-  };
-}
-```
-
-### Obtener historial de pagos de un trabajador
-
-```javascript
-async function historialPagosTrabajador(trabajadorId) {
-  const pagos = await db.pagos
-    .where("trabajadorId")
-    .equals(trabajadorId)
-    .reverse()
-    .sortBy("fecha");
-
-  return pagos;
+  const costoBs = costoCentavos / 100;
+  return { ingresoBs, costoBs, ganancia: ingresoBs - costoBs };
 }
 ```
 
@@ -471,71 +398,53 @@ async function historialPagosTrabajador(trabajadorId) {
 
 ```javascript
 async function eliminarCorteCompleto(corteId) {
-  await db.transaction("rw", [db.cortes, db.pagos], async () => {
-    // Eliminar pagos relacionados
+  await db.transaction('rw', [db.cortes, db.pagos], async () => {
     await db.pagos.where("corteId").equals(corteId).delete();
-    // Eliminar el corte
     await db.cortes.delete(corteId);
   });
 }
+```
+
+### Historial de pagos de un trabajador
+
+```javascript
+const pagos = await db.pagos.where("trabajadorId").equals(trabajadorId).reverse().sortBy("fecha");
 ```
 
 ---
 
 ## Migraciones
 
-### Versión 1 → Versión 2
-
-Se agregó la tabla `pagos`:
+### v1 -> v2: Tabla pagos
 
 ```javascript
-db.version(1).stores({
-  prendas: "++id, &nombre",
-  trabajadores: "++id, &nombre",
-  cortes: "++id, estado, fechaCreacion",
-});
-
 db.version(2).stores({
   prendas: "++id, &nombre",
   trabajadores: "++id, &nombre",
   cortes: "++id, estado, fechaCreacion",
-  pagos: "++id, trabajadorId, fecha", // Nueva tabla
+  pagos: "++id, trabajadorId, fecha",  // Nueva tabla
 });
 ```
 
-### Versión 2 → Versión 3
+### v2 -> v3: Sin cambios en schema
 
-Sin cambios en schema (preparación para fechaFinalizacion):
+Preparacion para fechaFinalizacion.
 
-```javascript
-db.version(3).stores({
-  prendas: "++id, &nombre",
-  trabajadores: "++id, &nombre",
-  cortes: "++id, estado, fechaCreacion",
-  pagos: "++id, trabajadorId, fecha",
-});
-```
-
-### Versión 3 → Versión 4
-
-Se agregó índice `corteId` en pagos:
+### v3 -> v4: Indice corteId en pagos
 
 ```javascript
 db.version(4).stores({
-  prendas: "++id, &nombre",
-  trabajadores: "++id, &nombre",
-  cortes: "++id, estado, fechaCreacion",
-  pagos: "++id, trabajadorId, fecha, corteId", // corteId indexado
+  // ... sin cambios
+  pagos: "++id, trabajadorId, fecha, corteId",  // corteId indexado
 });
 ```
 
-### Agregar una Nueva Tabla (Futuro)
+### Agregar tabla nueva (futuro)
 
 ```javascript
-// Incrementar versión y agregar tabla
 db.version(5).stores({
   // ... tablas existentes
-  configuracion: "id, clave", // Nueva tabla para settings
+  configuracion: "id, clave",
 });
 ```
 
@@ -543,36 +452,22 @@ db.version(5).stores({
 
 ## Seed Data
 
-La base de datos se pobla automáticamente al crearla con precios en **CENTAVOS**:
+Se ejecuta automaticamente en DB vacia. 3 prendas con ~30 tareas cada una, precios en CENTAVOS.
 
 ```javascript
 db.on("populate", async () => {
   const prendasBase = [
     {
-      nombre: "Pantalón",
+      nombre: "Pantalon",
       tareas: [
-        { nombre: "over aleta simple", precioUnitario: 5 }, // 0.05 Bs
-        { nombre: "over aleta doble", precioUnitario: 5 }, // 0.05 Bs
+        { nombre: "over aleta simple", precioUnitario: 5 },     // 0.05 Bs
         { nombre: "armado de relojero completo", precioUnitario: 30 }, // 0.30 Bs
-        // ... más tareas
-      ],
+        // ... ~30 tareas
+      ]
     },
-    {
-      nombre: "Short",
-      tareas: [
-        { nombre: "over aleta simple", precioUnitario: 5 },
-        // ... más tareas
-      ],
-    },
-    {
-      nombre: "Falda",
-      tareas: [
-        { nombre: "over aleta simple", precioUnitario: 5 },
-        // ... más tareas
-      ],
-    },
+    { nombre: "Short", tareas: [...] },
+    { nombre: "Falda", tareas: [...] },
   ];
-
   await db.prendas.bulkAdd(prendasBase);
 });
 ```
@@ -581,24 +476,22 @@ db.on("populate", async () => {
 
 ## Validaciones
 
-### Integridad Referencial (Manual)
+### Integridad Referencial (manual)
 
-IndexedDB no soporta foreign keys automáticas, por lo que las validaciones deben hacerse en código:
+IndexedDB no soporta foreign keys. Las validaciones se hacen en codigo:
 
 ```javascript
-// Antes de crear un corte, verificar que la prenda existe
 async function crearCorte(datos) {
   const prenda = await db.prendas.get(datos.prendaId);
-  if (!prenda) {
-    throw new Error("La prenda no existe");
-  }
+  if (!prenda) throw new Error("La prenda no existe");
 
-  // Crear corte con tareas heredadas (precios en centavos)
   const corte = {
     ...datos,
-    tareas: prenda.tareas.map((t) => ({
+    tareas: prenda.tareas.map(t => ({
       ...t,
-      asignaciones: [],
+      id: `task-${Date.now()}-${prenda.tareas.indexOf(t)}`,
+      unidadesTotales: datos.cantidadPrendas,
+      asignaciones: []
     })),
   };
 
@@ -606,34 +499,19 @@ async function crearCorte(datos) {
 }
 ```
 
-### Validación de Datos
+### Validacion de datos
 
 ```javascript
 function validarCorte(corte) {
   const errores = [];
+  if (!corte.nombrePrenda) errores.push("Nombre de prenda requerido");
+  if (corte.cantidadPrendas <= 0) errores.push("Cantidad debe ser > 0");
+  if (corte.precioVentaUnitario <= 0) errores.push("Precio de venta debe ser > 0");
+  if (!["activo", "terminado"].includes(corte.estado)) errores.push("Estado invalido");
 
-  if (!corte.nombrePrenda) {
-    errores.push("El nombre de prenda es requerido");
-  }
-
-  if (corte.cantidadPrendas <= 0) {
-    errores.push("La cantidad debe ser mayor a 0");
-  }
-
-  if (corte.precioVentaUnitario <= 0) {
-    errores.push("El precio de venta debe ser mayor a 0");
-  }
-
-  if (!["activo", "terminado"].includes(corte.estado)) {
-    errores.push("Estado inválido");
-  }
-
-  // Validar que los precios de tareas estén en centavos (enteros)
   corte.tareas?.forEach((tarea, i) => {
     if (!Number.isInteger(tarea.precioUnitario)) {
-      errores.push(
-        `Tarea ${i + 1}: precioUnitario debe ser un entero (centavos)`,
-      );
+      errores.push(`Tarea ${i + 1}: precioUnitario debe ser entero (centavos)`);
     }
   });
 
@@ -643,49 +521,34 @@ function validarCorte(corte) {
 
 ---
 
-## Backup y Restauración
+## Backup y Restauracion
 
-### Exportar Base de Datos
+### Exportar
 
 ```javascript
 async function exportarDB() {
-  const data = {
+  return JSON.stringify({
     version: 4,
     fecha: new Date().toISOString(),
-    moneda: {
-      precioUnitario: "centavos",
-      precioVentaUnitario: "bolivianos",
-    },
+    moneda: { precioUnitario: "centavos", precioVentaUnitario: "bolivianos", monto: "centavos" },
     prendas: await db.prendas.toArray(),
     trabajadores: await db.trabajadores.toArray(),
     cortes: await db.cortes.toArray(),
     pagos: await db.pagos.toArray(),
-  };
-
-  return JSON.stringify(data, null, 2);
+  }, null, 2);
 }
 ```
 
-### Importar Base de Datos
+### Importar
 
 ```javascript
 async function importarDB(jsonString) {
   const data = JSON.parse(jsonString);
-
-  await db.transaction(
-    "rw",
-    [db.prendas, db.trabajadores, db.cortes, db.pagos],
-    async () => {
-      await db.prendas.clear();
-      await db.trabajadores.clear();
-      await db.cortes.clear();
-      await db.pagos.clear();
-
-      await db.prendas.bulkAdd(data.prendas);
-      await db.trabajadores.bulkAdd(data.trabajadores);
-      await db.cortes.bulkAdd(data.cortes);
-      await db.pagos.bulkAdd(data.pagos);
-    },
-  );
+  await db.transaction('rw', [db.prendas, db.trabajadores, db.cortes, db.pagos], async () => {
+    await db.prendas.clear();  await db.prendas.bulkAdd(data.prendas);
+    await db.trabajadores.clear();  await db.trabajadores.bulkAdd(data.trabajadores);
+    await db.cortes.clear();  await db.cortes.bulkAdd(data.cortes);
+    await db.pagos.clear();  await db.pagos.bulkAdd(data.pagos);
+  });
 }
 ```

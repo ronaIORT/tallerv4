@@ -1,149 +1,89 @@
-# Convenciones de Código - Taller de Costura PWA
+# Convenciones de Codigo - Taller de Costura PWA
 
-## Filosofía General
+## Regla Fundamental: Sistema de Monedas
 
-Este proyecto sigue principios de **código limpio** y **simplicidad**, priorizando la legibilidad sobre la abstracción. Al ser un proyecto sin framework, las convenciones son aún más importantes para mantener la consistencia.
+| Campo | Unidad | Tipo | Uso |
+|---|---|---|---|
+| `precioUnitario` | **Centavos** | Integer | Precio de tareas |
+| `precioVentaUnitario` | **Bolivianos** | Decimal | Precio de venta |
+| `monto` (pagos) | **Centavos** | Integer | Monto pagado |
 
----
-
-## ⚠️ Sistema de Monedas
-
-### Regla Fundamental
-
-El proyecto utiliza un **sistema dual de monedas** que debe respetarse en todo el código:
-
-| Campo                 | Unidad          | Tipo    | Uso              |
-| --------------------- | --------------- | ------- | ---------------- |
-| `precioUnitario`      | **Centavos**    | Integer | Precio de tareas |
-| `precioVentaUnitario` | \*\*Bolivianos` | Decimal | Precio de venta  |
-
-### Convenciones de Moneda
+### Correcto
 
 ```javascript
-// ✅ CORRECTO: precioUnitario en centavos (entero)
-const tarea = {
-  nombre: "over aleta simple",
-  precioUnitario: 5, // 5 centavos = 0.05 Bs
-};
+const tarea = { nombre: "over aleta simple", precioUnitario: 5 }; // 5 centavos = 0.05 Bs
+const corte = { cantidadPrendas: 100, precioVentaUnitario: 15.0 }; // 15 Bs
+const pago = { monto: 2550 }; // 25.50 Bs
 
-// ✅ CORRECTO: precioVentaUnitario en Bolivianos (decimal)
-const corte = {
-  cantidadPrendas: 100,
-  precioVentaUnitario: 15.0, // 15 Bolivianos
-};
-
-// ❌ INCORRECTO: mezclar unidades
-const tarea = {
-  nombre: "over aleta simple",
-  precioUnitario: 0.05, // ❌ NO usar decimales para tareas
-};
-```
-
-### Funciones de Conversión
-
-Siempre usar las funciones de `utils.js`:
-
-```javascript
-import {
-  centavosABolivianos,
-  formatBs,
-  formatCentavos,
-} from "./administrar-tareas/utils.js";
-
-// ✅ CORRECTO: usar funciones de conversión
+// Siempre usar funciones de conversion
 const precioMostrar = formatBs(tarea.precioUnitario); // "0.05Bs"
-const precioCalculo = centavosABolivianos(tarea.precioUnitario); // 0.05
-
-// ❌ INCORRECTO: conversión manual propensa a errores
-const precioMostrar = tarea.precioUnitario / 100 + " Bs"; // Inconsistente
 ```
 
-### Cálculos con Monedas
+### Incorrecto
 
 ```javascript
-// ✅ CORRECTO: calcular en centavos, mostrar en Bs
-function calcularTotalTarea(tarea, cantidad) {
-  // Resultado en centavos
-  const totalCentavos = tarea.precioUnitario * cantidad;
+const tarea = { precioUnitario: 0.05 };  // NO usar decimales para tareas
+const corte = { precioVentaUnitario: 1500 }; // NO usar centavos para venta
 
-  // Convertir para mostrar
-  return {
-    centavos: totalCentavos,
-    bolivianos: totalCentavos / 100,
-    formato: formatBs(totalCentavos),
-  };
-}
+// NO hacer conversion manual inconsistente
+const precio = tarea.precioUnitario / 100 + " Bs"; // Inconsistente
+```
 
-// ✅ CORRECTO: ganancia con conversión apropiada
-function calcularGanancia(corte) {
-  // Venta en Bolivianos
-  const ingresoBs = corte.cantidadPrendas * corte.precioVentaUnitario;
+### Calculos con Monedas
 
-  // Mano de obra en centavos → Bolivianos
-  const manoObraCentavos = corte.tareas.reduce((sum, t) => {
-    const asignado = t.asignaciones.reduce((s, a) => s + a.cantidad, 0);
-    return sum + t.precioUnitario * asignado;
-  }, 0);
-  const manoObraBs = manoObraCentavos / 100;
+```javascript
+// CORRECTO: calcular en centavos, mostrar en Bs
+const totalCentavos = tarea.precioUnitario * cantidad;
+return formatBs(totalCentavos);
 
-  return ingresoBs - manoObraBs;
-}
+// CORRECTO: ganancia con conversion apropiada
+const ingresoBs = corte.cantidadPrendas * corte.precioVentaUnitario; // Bs
+const manoObraCentavos = corte.tareas.reduce((sum, t) => {
+  const asignado = t.asignaciones.reduce((s, a) => s + a.cantidad, 0);
+  return sum + t.precioUnitario * asignado;  // centavos
+}, 0);
+const manoObraBs = manoObraCentavos / 100;
+return ingresoBs - manoObraBs;
 
-// ❌ INCORRECTO: no convertir unidades
-function calcularGanancia(corte) {
-  const ingreso = corte.cantidadPrendas * corte.precioVentaUnitario;
-  const manoObra = corte.tareas.reduce((sum, t) => {
-    return sum + t.precioUnitario; // ❌ Mezclando centavos con Bs
-  }, 0);
-  return ingreso - manoObra; // ❌ Resultado incorrecto
-}
+// INCORRECTO: mezclar unidades sin convertir
+const ingreso = corte.cantidadPrendas * corte.precioVentaUnitario;
+const manoObra = corte.tareas.reduce((sum, t) => sum + t.precioUnitario, 0);
+return ingreso - manoObra; // Bs - centavos = incorrecto
 ```
 
 ---
 
 ## JavaScript
 
-### Formato General
+### Modulos ES6
 
 ```javascript
-// ✅ Correcto
-const miVariable = "valor";
-function miFuncion(parametro) {
-  return parametro;
-}
+// Importaciones
+import { db } from "./db.js";
+import { formatBs, centavosABolivianos } from "./administrar-tareas/utils.js";
 
-// ❌ Evitar
-var miVariable = "valor"; // Usar const/let
+// Exportaciones nombradas al final
+function helper1() {}
+function helper2() {}
+export { helper1, helper2 };
+
+// Exportacion de funcion principal
+export function renderMiVista() {}
 ```
 
-### Declaración de Variables
+### Variables y Funciones
 
 ```javascript
-// ✅ Preferir const para valores que no cambian
-const API_URL = "https://api.example.com";
-const configuracion = { tema: "oscuro" };
-
-// ✅ Usar let solo cuando el valor cambia
+// Preferir const, usar let solo si cambia
+const MAX_ITEMS = 100;
 let contador = 0;
-contador++;
 
-// ❌ Evitar var
-var nombre = "Juan"; // Obsoleto
-```
-
-### Funciones
-
-```javascript
-// ✅ Funciones con nombre descriptivo (verbos)
+// Funciones con nombre descriptivo (verbos)
 function cargarDatos() {}
 function validarFormulario() {}
 function calcularTotal() {}
 
-// ✅ Arrow functions para callbacks cortos
-const numeros = [1, 2, 3];
-const dobles = numeros.map((n) => n * 2);
-
-// ✅ Async/await para operaciones asíncronas
+// Async/await (no .then() anidados)
 async function obtenerDatos() {
   try {
     const datos = await db.prendas.toArray();
@@ -153,148 +93,71 @@ async function obtenerDatos() {
     throw error;
   }
 }
-
-// ❌ Evitar callbacks anidados (callback hell)
-function obtenerDatos(cb) {
-  db.prendas.toArray().then((datos) => {
-    procesar(datos, (resultado) => {
-      guardar(resultado, () => {
-        // ...
-      });
-    });
-  });
-}
 ```
 
-### Módulos ES6
+### Funciones Globales (window.*)
+
+Los templates HTML usan `onclick="funcionGlobal()"`. Las funciones deben exponerse:
 
 ```javascript
-// ✅ Importaciones nombradas
-import { db } from "./db.js";
-import { renderVista } from "./views/vista.js";
-import { formatBs, centavosABolivianos } from "./administrar-tareas/utils.js";
-
-// ✅ Exportaciones nombradas al final
-function helper1() {}
-function helper2() {}
-export { helper1, helper2 };
-
-// ✅ Exportación por defecto para función principal
-export function renderMiVista() {}
+window.miFuncion = miFuncion;
+window.confirmarSalida = confirmarSalida;
 ```
 
 ### Manejo de Errores
 
 ```javascript
-// ✅ Siempre usar try/catch en operaciones de DB
+// Siempre try/catch en operaciones de DB
 async function guardarDatos(datos) {
   try {
     await db.cortes.add(datos);
-    mostrarMensaje("✅ Guardado correctamente");
+    mostrarMensaje("Guardado correctamente");
   } catch (error) {
     console.error("Error al guardar:", error);
-    mostrarMensaje("❌ Error al guardar");
+    mostrarMensaje("Error al guardar");
   }
-}
-
-// ✅ Validar entrada antes de procesar
-function procesarCorte(corte) {
-  if (!corte) {
-    throw new Error("Corte no proporcionado");
-  }
-  if (!corte.nombrePrenda) {
-    throw new Error("Nombre de prenda requerido");
-  }
-  // ... procesar
 }
 ```
 
 ### Nomenclatura
 
-| Tipo       | Convención                   | Ejemplo                            |
-| ---------- | ---------------------------- | ---------------------------------- |
-| Variables  | camelCase                    | `corteActivo`, `listaTrabajadores` |
-| Constantes | UPPER_SNAKE_CASE o camelCase | `API_URL`, `maxItems`              |
-| Funciones  | camelCase (verbos)           | `cargarDatos`, `validarFormulario` |
-| Clases     | PascalCase                   | `GestorDatos` (no usadas aún)      |
-| Archivos   | kebab-case                   | `nuevo-corte.js`                   |
-| IDs DOM    | kebab-case                   | `#lista-cortes`                    |
-| Clases CSS | kebab-case                   | `.corte-card`                      |
+| Tipo | Convencion | Ejemplo |
+|---|---|---|
+| Variables | camelCase | `corteActivo`, `listaTrabajadores` |
+| Constantes | UPPER_SNAKE_CASE o camelCase | `MAX_ITEMS`, `maxItems` |
+| Funciones | camelCase (verbos) | `cargarDatos`, `validarFormulario` |
+| Archivos | kebab-case | `nuevo-corte.js` |
+| IDs DOM | kebab-case | `#lista-cortes` |
+| Clases CSS | kebab-case | `.corte-card` |
+| Data attributes | kebab-case | `data-corte-id` |
 
 ---
 
 ## HTML
 
-### Estructura
+### Estructura Base
 
 ```html
-<!-- ✅ Estructura semántica -->
 <div class="mobile-container">
-  <header class="header">
-    <button class="back-btn">←</button>
-    <h1 class="small-title">Título</h1>
-    <button class="header-btn logout-btn">🚪</button>
-  </header>
-
-  <main class="content">
-    <!-- Contenido principal -->
-  </main>
-</div>
-
-<!-- ❌ Evitar divs sin semántica -->
-<div>
-  <div>
-    <div>Contenido</div>
+  <div class="header">
+    <button class="back-btn" onclick="location.hash='#dashboard'">←</button>
+    <h1 class="small-title">Titulo</h1>
   </div>
-</div>
-```
-
-### Atributos
-
-```html
-<!-- ✅ Orden consistente de atributos -->
-<button
-  id="btn-guardar"
-  class="action-btn primary"
-  type="button"
-  onclick="guardar()"
->
-  Guardar
-</button>
-
-<!-- ✅ Data attributes para datos personalizados -->
-<div class="corte-card" data-id="123" data-estado="activo">
-  <!-- ... -->
+  <div class="content">
+    <!-- contenido -->
+  </div>
 </div>
 ```
 
 ### Templates en JavaScript
 
 ```javascript
-// ✅ Template literals para HTML
 app.innerHTML = `
   <div class="container">
     <h1>${titulo}</h1>
-    <p>${descripcion}</p>
     <span class="precio">${formatBs(precio)}</span>
   </div>
 `;
-
-// ✅ Para templates largos, usar array join o funciones
-function renderLista(items) {
-  const itemsHTML = items
-    .map(
-      (item) => `
-    <li class="item" data-id="${item.id}">
-      ${item.nombre}
-      <span class="precio">${formatBs(item.precioUnitario)}</span>
-    </li>
-  `,
-    )
-    .join("");
-
-  return `<ul class="lista">${itemsHTML}</ul>`;
-}
 ```
 
 ---
@@ -305,222 +168,86 @@ function renderLista(items) {
 
 ```
 css/
-├── style.css        # Solo imports, sin reglas directas
-├── variables.css    # Variables CSS globales (incluye tema oscuro)
-├── base.css         # Reset y estilos base
-├── components.css   # Componentes reutilizables
-├── layout.css       # Estructura de página
-├── modals.css       # Modales
-├── responsive.css   # Media queries
-└── views/           # Estilos específicos por vista
+  |- style.css        # Solo imports
+  |- variables.css    # Variables globales (tema oscuro)
+  |- base.css         # Reset, tipografia
+  |- components.css   # Botones, cards, inputs
+  |- layout.css       # Grid, contenedores
+  |- modals.css       # Modales
+  |- responsive.css   # Media queries
+  |- views/           # Estilos por vista
 ```
 
-### Variables CSS
+### Variables CSS (Tema Oscuro)
 
 ```css
-/* ✅ Definir en variables.css */
 :root {
-  /* Colores - Tema Oscuro */
   --color-background: #1a202c;
   --color-surface: #2d3748;
   --color-primary: #4a5568;
-  --color-secondary: #718096;
-  --color-success: #48bb78;
-  --color-danger: #f56565;
   --color-text: #e2e8f0;
   --color-text-secondary: #a0aec0;
-
-  /* Espaciado */
-  --spacing-xs: 0.25rem;
-  --spacing-sm: 0.5rem;
-  --spacing-md: 1rem;
-  --spacing-lg: 1.5rem;
-  --spacing-xl: 2rem;
-
-  /* Tipografía */
-  --font-family:
-    -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  --font-size-sm: 0.875rem;
-  --font-size-md: 1rem;
-  --font-size-lg: 1.25rem;
-
-  /* Bordes */
-  --border-radius: 8px;
-  --border-color: #4a5568;
-}
-
-/* ✅ Usar variables */
-.button {
-  background-color: var(--color-primary);
-  padding: var(--spacing-sm) var(--spacing-md);
-  border-radius: var(--border-radius);
 }
 ```
 
 ### Nomenclatura de Clases
 
 ```css
-/* ✅ BEM-like: bloque__elemento--modificador */
-.corte-card {
-}
-.corte-card__header {
-}
-.corte-card__title {
-}
-.corte-card--active {
-}
+/* BEM-like */
+.corte-card {}
+.corte-card__header {}
 
-/* ✅ Clases utilitarias para estados */
-.is-active {
-}
-.is-loading {
-}
-.is-hidden {
-}
-.has-error {
-}
+/* Estados */
+.estado-activo { color: var(--color-success); }
+.estado-terminado { color: var(--color-secondary); }
 
-/* ✅ Clases para estados de corte */
-.estado-activo {
-  color: var(--color-success);
-}
-.estado-terminado {
-  color: var(--color-secondary);
-}
-
-/* ❌ Evitar IDs para estilos */
-#mi-elemento {
-} /* Muy específico, difícil de sobrescribir */
+/* Evitar IDs para estilos */
 ```
 
 ### Mobile-First
 
 ```css
-/* ✅ Estilos base para móvil */
-.container {
-  padding: var(--spacing-md);
-}
-
-/* ✅ Media queries para pantallas más grandes */
-@media (min-width: 768px) {
-  .container {
-    padding: var(--spacing-xl);
-    max-width: 600px;
-    margin: 0 auto;
-  }
-}
-
-@media (min-width: 1024px) {
-  .container {
-    max-width: 800px;
-  }
-}
-```
-
-### Organización de Reglas
-
-```css
-/* ✅ Orden lógico de propiedades */
-.elemento {
-  /* 1. Posicionamiento */
-  position: relative;
-  top: 0;
-  z-index: 1;
-
-  /* 2. Modelo de caja */
-  display: flex;
-  width: 100%;
-  padding: var(--spacing-md);
-  margin: 0;
-
-  /* 3. Tipografía */
-  font-size: var(--font-size-md);
-  text-align: center;
-
-  /* 4. Visual */
-  background-color: var(--color-surface);
-  border-radius: var(--border-radius);
-
-  /* 5. Animaciones */
-  transition: background-color 0.2s ease;
-}
+.container { padding: var(--spacing-md); }
+@media (min-width: 768px) { .container { max-width: 600px; } }
 ```
 
 ---
 
 ## Estructura de Archivos
 
-### Nombres de Archivos
+### Nombres
 
 ```
-✅ Correcto:
-- nuevo-corte.js
-- gestion-prendas.js
-- tab-resumen.js
-- administrar-tareas.css
-
-❌ Evitar:
-- nuevoCorte.js
-- GestionPrendas.js
-- tab_resumen.js
+CORRECTO: nuevo-corte.js, tab-resumen.js, gestion-prendas.css
+INCORRECTO: nuevoCorte.js, TabResumen.js, gestion_prendas.js
 ```
 
-### Organización de Directorios
+### Directorios
 
 ```
 tallerv4/
-├── index.html              # Punto de entrada
-├── manifest.json           # PWA manifest
-├── service-worker.js       # Service Worker
-├── css/                    # Estilos
-│   ├── style.css
-│   └── views/
-├── js/                     # JavaScript
-│   ├── app.js
-│   ├── db.js
-│   └── views/
-│       └── administrar-tareas/
-├── icons/                  # Iconos PWA
-└── taller-costura-context/ # Skill de contexto
+  |- index.html
+  |- manifest.json
+  |- service-worker.js
+  |- css/
+  |    |- style.css, variables.css, base.css, components.css, layout.css, modals.css, responsive.css
+  |    |- views/
+  |- js/
+  |    |- app.js, db.js
+  |    |- views/
+  |         |- *.js
+  |         |- administrar-tareas/
+  |- icons/
+  |- taller-costura-context/
 ```
 
 ---
 
 ## Comentarios
 
-### Cuándo Comentar
-
-```javascript
-// ✅ Comentar "por qué", no "qué"
-// Usar setTimeout para esperar a que el DOM se actualice
-setTimeout(() => inicializarEventos(), 100);
-
-// ✅ Documentar funciones públicas
-/**
- * Calcula el total a pagar a cada trabajador en un corte
- * @param {number} corteId - ID del corte
- * @returns {Object} Objeto con totales por trabajador en Bolivianos
- */
-async function calcularTotalPagar(corteId) {
-  // ...
-}
-
-// ✅ Documentar decisiones de moneda
-// precioUnitario está en centavos, convertir a Bs para mostrar
-const precioBs = centavosABolivianos(tarea.precioUnitario);
-
-// ❌ Evitar comentarios obvios
-// Incrementa el contador
-contador++;
-```
-
-### TODOs y FIXMEs
-
-```javascript
-// TODO: Implementar paginación para listas largas
-// FIXME: El cálculo no considera tareas sin asignar
-// HACK: Solución temporal mientras se implementa el sistema de cache
-```
+- No agregar comentarios salvo que se pida explicitamente
+- Si se comenta, documentar "por que", no "que"
+- Documentar decisiones de moneda: `// precioUnitario en centavos, convertir a Bs para mostrar`
 
 ---
 
@@ -529,106 +256,27 @@ contador++;
 ### Mensajes de Commit
 
 ```
-✅ Formato:
-tipo(alcance): descripción
+tipo(alcance): descripcion
 
-Tipos:
-- feat: Nueva funcionalidad
-- fix: Corrección de bug
-- docs: Documentación
-- style: Formato (no afecta lógica)
-- refactor: Refactorización
-- test: Tests
-- chore: Tareas de mantenimiento
+Tipos: feat, fix, docs, style, refactor, test, chore
 
 Ejemplos:
-feat(cortes): agregar función de eliminar corte con pagos
+feat(cortes): agregar funcion de eliminar corte con pagos
 fix(db): corregir precios en centavos para tareas
-docs(skill): actualizar documentación de sistema de monedas
-style(css): mejorar espaciado en tarjetas
-refactor(app): simplificar lógica del router
+refactor(app): simplificar logica del router
 ```
 
 ---
 
-## Mejores Prácticas
+## Checklist para Nuevo Codigo
 
-### Rendimiento
-
-```javascript
-// ✅ Usar fragmentos para múltiples inserciones
-const fragment = document.createDocumentFragment();
-items.forEach((item) => {
-  const li = document.createElement("li");
-  li.textContent = item.nombre;
-  fragment.appendChild(li);
-});
-lista.appendChild(fragment);
-
-// ✅ Debounce para eventos frecuentes
-function debounce(func, wait) {
-  let timeout;
-  return function executedFunction(...args) {
-    const later = () => {
-      clearTimeout(timeout);
-      func(...args);
-    };
-    clearTimeout(timeout);
-    timeout = setTimeout(later, wait);
-  };
-}
-
-searchInput.addEventListener(
-  "input",
-  debounce((e) => buscar(e.target.value), 300),
-);
-
-// ✅ Usar enteros para cálculos (centavos)
-const totalCentavos = precioUnitario * cantidad; // Rápido y preciso
-const totalBs = totalCentavos / 100; // Convertir solo al final
-```
-
-### Accesibilidad
-
-```html
-<!-- ✅ Labels asociados a inputs -->
-<label for="nombre">Nombre:</label>
-<input type="text" id="nombre" name="nombre" />
-
-<!-- ✅ Botones con texto descriptivo -->
-<button aria-label="Cerrar modal" class="close-btn">×</button>
-
-<!-- ✅ Estructura de encabezados jerárquica -->
-<h1>Título Principal</h1>
-<h2>Sección</h2>
-<h3>Subsección</h3>
-```
-
-### Seguridad
-
-```javascript
-// ✅ Sanitizar entrada de usuario
-function sanitizar(texto) {
-  const elemento = document.createElement("div");
-  elemento.textContent = texto;
-  return elemento.innerHTML;
-}
-
-// ✅ Nunca evaluar código dinámico
-eval(usuarioInput); // ❌ PELIGROSO
-```
-
----
-
-## Checklist para Nuevo Código
-
-Antes de commit, verificar:
-
-- [ ] ¿Los precios de tareas están en **centavos** (enteros)?
-- [ ] ¿Los precios de venta están en **Bolivianos** (decimales)?
-- [ ] ¿Se usan las funciones de conversión de `utils.js`?
-- [ ] ¿Las funciones async tienen try/catch?
-- [ ] ¿Los nombres siguen las convenciones (camelCase, kebab-case)?
-- [ ] ¿El HTML es semántico?
-- [ ] ¿Se usan variables CSS en lugar de valores hardcodeados?
-- [ ] ¿El código funciona en móvil (responsive)?
+- [ ] `precioUnitario` en **centavos** (enteros)?
+- [ ] `precioVentaUnitario` en **Bolivianos** (decimales)?
+- [ ] `monto` en pagos en **centavos** (enteros)?
+- [ ] Se usan funciones de conversion de `utils.js`?
+- [ ] Funciones async tienen try/catch?
+- [ ] Nombres siguen convenciones (camelCase, kebab-case)?
+- [ ] HTML es semantico?
+- [ ] Se usan variables CSS en lugar de valores hardcodeados?
+- [ ] Funciona en movil (responsive)?
+- [ ] Nuevas rutas agregadas a `service-worker.js`?

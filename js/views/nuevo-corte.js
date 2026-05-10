@@ -8,11 +8,6 @@ export function renderNuevoCorte() {
   const app = document.getElementById('app');
   app.innerHTML = `
     <div class="mobile-container nuevo-corte-view">
-      <div class="header">
-        <button onclick="location.hash='#dashboard'" class="back-btn">←</button>
-        <h1 class="small-title">Nuevo Corte</h1>
-      </div>
-      
       <div class="form-section">
         <div class="form-card">
           <div class="form-group">

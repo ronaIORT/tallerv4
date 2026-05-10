@@ -1,465 +1,338 @@
 # Arquitectura del Proyecto - Taller de Costura PWA
 
-## Visión General
+## Vision General
 
-El proyecto implementa una arquitectura **SPA (Single Page Application)** sin framework, utilizando JavaScript vanilla con módulos ES6. La persistencia de datos se maneja completamente del lado del cliente mediante IndexedDB.
+SPA sin framework. JavaScript vanilla con modulos ES6. Persistencia 100% client-side via IndexedDB. No hay bundler, no hay npm, no hay node_modules. Todo se sirve como archivos estaticos.
 
 ---
 
 ## Diagrama de Arquitectura
 
 ```
-┌─────────────────────────────────────────────────────────────────┐
-│                         NAVEGADOR                                │
-├─────────────────────────────────────────────────────────────────┤
-│                                                                  │
-│  ┌──────────────┐    ┌──────────────┐    ┌──────────────┐      │
-│  │  index.html  │───▶│   app.js     │───▶│    Views     │      │
-│  │  (Punto de   │    │  (Router)    │    │  (Vistas)    │      │
-│  │   entrada)   │    └──────┬───────┘    └──────┬───────┘      │
-│  └──────────────┘           │                   │               │
-│                             │                   │               │
-│                             ▼                   ▼               │
-│                      ┌──────────────┐    ┌──────────────┐      │
-│                      │    db.js     │◀───│  Templates   │      │
-│                      │   (Dexie)    │    │   (HTML)     │      │
-│                      └──────┬───────┘    └──────────────┘      │
-│                             │                                   │
-│                             ▼                                   │
-│  ┌─────────────────────────────────────────────────────────┐   │
-│  │                    IndexedDB                              │   │
-│  │  ┌─────────┐ ┌─────────┐ ┌─────────┐ ┌─────────┐       │   │
-│  │  │ prendas │ │trabajad.│ │ cortes  │ │  pagos  │       │   │
-│  │  └─────────┘ └─────────┘ └─────────┘ └─────────┘       │   │
-│  └─────────────────────────────────────────────────────────┘   │
-│                                                                  │
-│  ┌──────────────┐    ┌──────────────┐                          │
-│  │Service Worker│    │   manifest   │                          │
-│  │   (Cache)    │    │    .json     │                          │
-│  └──────────────┘    └──────────────┘                          │
-│                                                                  │
-└─────────────────────────────────────────────────────────────────┘
++-----------------------------------------------------------------+
+|                          NAVEGADOR                               |
++-----------------------------------------------------------------+
+|                                                                   |
+|  +--------------+    +--------------+    +--------------+        |
+|  |  index.html  |--->|   app.js     |--->|    Views     |        |
+|  |  (Entry)     |    |  (Router)    |    |  (render*)   |        |
+|  +--------------+    +------+-------+    +------+-------+        |
+|                             |                   |                 |
+|                             |                   |                 |
+|                             v                   v                 |
+|                      +--------------+    +--------------+        |
+|                      |    db.js     |<---|  Templates   |        |
+|                      |   (Dexie)    |    |   (HTML)     |        |
+|                      +------+-------+    +--------------+        |
+|                             |                                     |
+|                             v                                     |
+|  +-----------------------------------------------------------+   |
+|  |                    IndexedDB (v4)                          |   |
+|  |  +---------+ +-----------+ +---------+ +---------+       |   |
+|  |  | prendas | |trabajadore| | cortes  | |  pagos  |       |   |
+|  |  +---------+ +-----------+ +---------+ +---------+       |   |
+|  +-----------------------------------------------------------+   |
+|                                                                   |
+|  +--------------+    +--------------+                            |
+|  |Service Worker|    |   manifest   |                            |
+|  | (Cache-First)|    |    .json     |                            |
+|  +--------------+    +--------------+                            |
++-----------------------------------------------------------------+
 ```
 
 ---
 
-## Sistema de Monedas
+## Sistema Dual de Monedas
 
-### Arquitectura de Precios
-
-El proyecto implementa un **sistema dual de monedas** para optimizar precisión y usabilidad:
+### Diagrama
 
 ```
-┌─────────────────────────────────────────────────────────────┐
-│                    SISTEMA DE MONEDAS                        │
-├─────────────────────────────────────────────────────────────┤
-│                                                              │
-│  ┌─────────────────────┐    ┌─────────────────────┐        │
-│  │   precioUnitario    │    │ precioVentaUnitario │        │
-│  │     (CENTAVOS)      │    │    (BOLIVIANOS)     │        │
-│  ├─────────────────────┤    ├─────────────────────┤        │
-│  │ • Tipo: Integer     │    │ • Tipo: Decimal     │        │
-│  │ • Uso: Tareas       │    │ • Uso: Venta        │        │
-│  │ • Sin decimales     │    │ • Input directo     │        │
-│  │ • Ej: 5 = 0.05 Bs   │    │ • Ej: 15.00 Bs      │        │
-│  └──────────┬──────────┘    └──────────┬──────────┘        │
-│             │                          │                    │
-│             │    ┌──────────────┐      │                    │
-│             └───▶│  Conversión  │◀─────┘                    │
-│                  │  centavos/100 │                           │
-│                  └──────────────┘                            │
-│                                                              │
-└─────────────────────────────────────────────────────────────┘
++-------------------------------------------------------------+
+|                    SISTEMA DE MONEDAS                        |
++-------------------------------------------------------------+
+|                                                              |
+|  +---------------------+    +---------------------+         |
+|  |   precioUnitario    |    | precioVentaUnitario |         |
+|  |     (CENTAVOS)      |    |    (BOLIVIANOS)     |         |
+|  +---------------------+    +---------------------+         |
+|  | Tipo: Integer       |    | Tipo: Decimal       |         |
+|  | Uso: Tareas/Pagos   |    | Uso: Venta corte   |         |
+|  | Ej: 5 = 0.05 Bs    |    | Ej: 15.00 Bs       |         |
+|  +----------+----------+    +----------+----------+         |
+|             |                          |                     |
+|             |    +--------------+      |                     |
+|             +--->|  Conversion  |<-----+                     |
+|                  |  centavos/100 |                            |
+|                  +--------------+                             |
+|                                                              |
+|  monto (pagos) = CENTAVOS (Integer)                        |
+|  Ej: 2550 = 25.50 Bs                                       |
++-------------------------------------------------------------+
 ```
 
-### Funciones de Conversión (utils.js)
+### Razon del diseno
+
+- **Centavos para tareas**: Evita errores de punto flotante en calculos frecuentes. En movil es mas facil ingresar enteros.
+- **Bolivianos para ventas**: Mas intuitivo para el usuario al ingresar precios de venta.
+- **Centavos para pagos**: Consistencia con el sistema de tareas.
+
+### Funciones de Conversion (utils.js)
 
 ```javascript
-// Conversión de centavos a Bolivianos
-export function centavosABolivianos(centavos) {
-  return centavos / 100;
-}
+export function centavosABolivianos(centavos) { return centavos / 100; }
+export function formatBs(centavos) { return `${(centavos / 100).toFixed(2)}Bs`; }
+export function formatCentavos(centavos) { return `${centavos}`; }
+```
 
-// Formateo para mostrar
-export function formatBs(centavos) {
-  return `${(centavos / 100).toFixed(2)}Bs`;
-}
+Tambien duplicadas en `shared.js`.
+
+---
+
+## Flujo de Navegacion
+
+```
+                    +-------------+
+                    |  Dashboard  |
+                    |  #dashboard |
+                    +------+------+
+                           |
+       +-------------------+-------------------+--------------+
+       |                   |                   |              |
+       v                   v                   v              v
++---------------+  +---------------+  +---------------+  +---------------+
+|  Nuevo Corte  |  |   Trabajadores|  |    Prendas    |  |    Cortes     |
+|  #nuevo-corte |  | #gestion-...  |  | #gestion-...  |  |#gestion-cortes|
++-------+-------+  +---------------+  +-------+-------+  +-------+-------+
+        |                                     |                    |
+        |                                     v                    |
+        |                           +-----------------+           |
+        |                           |   Ver Prenda    |           |
+        |                           | #ver-prenda/:id |           |
+        |                           +-----------------+           |
+        |                           +-----------------+           |
+        |                           |  Editar Prenda  |           |
+        |                           |#editar-prenda/:id|          |
+        |                           +-----------------+           |
+        |                                                         |
+        v                                                         |
++-------------------+                                             |
+| Administrar Tareas|<--------------------------------------------+
+| #administrar-...  |
+|     /:corteId     |
++---------+---------+
+          |
+    +-----+-----+---------+---------+---------+
+    |           |         |         |         |
+    v           v         v         v         v
++-------+ +-------+ +-------+ +-------+ +-------+
+| Info  | | Corte | |Trabaj.| |Editar | |Asignar|
+| (Tab) | | (Tab) | | (Tab) | | (Tab) | | (Tab) |
++-------+ +-------+ +-------+ +-------+ +-------+
+                                    |
+                                    v
+                              +----------+
+                              | Historial|
+                              | Pagos    |
+                              |#historial|
+                              +----------+
 ```
 
 ---
 
-## Flujo de Navegación
+## Capas de la Aplicacion
 
-```
-                    ┌─────────────┐
-                    │  Dashboard  │
-                    │  #dashboard │
-                    └──────┬──────┘
-                           │
-        ┌──────────────────┼──────────────────┬──────────────┐
-        │                  │                  │              │
-        ▼                  ▼                  ▼              ▼
-┌───────────────┐  ┌───────────────┐  ┌───────────────┐  ┌───────────────┐
-│  Nuevo Corte  │  │   Trabajadores│  │    Prendas    │  │    Cortes     │
-│  #nuevo-corte │  │ #gestion-...  │  │ #gestion-...  │  │#gestion-cortes│
-└───────────────┘  └───────────────┘  └───────┬───────┘  └───────────────┘
-        │                                      │                 │
-        │                                      ▼                 │
-        │                            ┌─────────────────┐        │
-        │                            │   Ver Prenda    │        │
-        │                            │ #ver-prenda/:id │        │
-        │                            └─────────────────┘        │
-        │                                                       │
-        ▼                                                       │
-┌───────────────────┐                                           │
-│ Administrar Tareas│◀──────────────────────────────────────────┘
-│ #administrar-...  │
-│     /:corteId     │
-└─────────┬─────────┘
-          │
-    ┌─────┴─────┬─────────┬─────────┬─────────┐
-    │           │         │         │         │
-    ▼           ▼         ▼         ▼         ▼
-┌───────┐ ┌───────┐ ┌───────┐ ┌───────┐ ┌───────┐
-│ Info  │ │ Corte │ │Trabaj.│ │Editar │ │Asignar│
-│ (Tab) │ │ (Tab) │ │ (Tab) │ │ (Tab) │ │ (Tab) │
-└───────┘ └───────┘ └───────┘ └───────┘ └───────┘
-```
-
----
-
-## Capas de la Aplicación
-
-### 1. Capa de Presentación (UI)
-
-**Responsabilidad**: Renderizar interfaces y capturar interacciones del usuario.
+### 1. Capa de Presentacion (UI/CSS)
 
 ```
 css/
-├── style.css        # Importa todos los demás
-├── base.css         # Reset, tipografía base
-├── variables.css    # Colores, espaciados, fuentes (Tema Oscuro)
-├── components.css   # Botones, cards, inputs
-├── layout.css       # Grid, contenedores
-├── modals.css       # Ventanas modales
-├── responsive.css   # Media queries
-└── views/           # Estilos específicos por vista
-    ├── dashboard.css
-    ├── nuevo-corte.css
-    ├── gestion-prendas.css
-    ├── gestion-trabajadores.css
-    └── administrar-tareas.css
+  |- style.css        # Solo imports
+  |- variables.css    # Colores, espaciados, fuentes (Tema Oscuro)
+  |- base.css         # Reset, tipografia
+  |- components.css   # Botones, cards, inputs
+  |- layout.css       # Grid, contenedores
+  |- modals.css       # Modales
+  |- responsive.css   # Media queries
+  |- views/
+       |- administrar-tareas/  (index, tab-*, shared, responsive)
+       |- dashboard.css
+       |- gestion-cortes.css
+       |- gestion-prendas.css
+       |- gestion-trabajadores.css
+       |- historial-pagos.css
+       |- nuevo-corte.css
 ```
 
-**Patrones utilizados**:
-
-- Mobile-first responsive design
-- CSS Variables para theming (Tema Oscuro)
-- BEM-like naming convention
-- Modularización por funcionalidad
-
-### 2. Capa de Lógica de Negocio
-
-**Responsabilidad**: Coordinar flujos de datos y aplicar reglas del dominio.
+### 2. Capa de Logica (JS)
 
 ```
 js/
-├── app.js           # Router principal + lógica dashboard
-├── db.js            # Configuración DB + seed data
-└── views/
-    ├── nuevo-corte.js
-    ├── gestion-prendas.js
-    ├── gestion-trabajadores.js
-    ├── historial-pagos.js
-    └── administrar-tareas/
-        ├── index.js      # Coordinador de tabs
-        ├── tab-resumen.js
-        ├── tab-corte.js
-        ├── tab-trabajador.js
-        ├── tab-editar.js
-        ├── tab-asignar.js
-        └── utils.js      # Funciones compartidas (conversión monedas)
+  |- app.js           # Router + Dashboard + funciones globales
+  |- db.js            # Dexie config + seed data
+  |- views/
+       |- nuevo-corte.js          (1045 lineas)
+       |- gestion-prendas.js      (3 exports)
+       |- gestion-trabajadores.js
+       |- gestion-cortes.js
+       |- historial-pagos.js
+       |- ganancias.js            (EN CONSTRUCCION - placeholder)
+       |- shared.js               (utilidades compartidas)
+       |- administrar-tareas/
+            |- index.js           (coordinador + swipe)
+            |- tab-resumen.js     (info + PDF export)
+            |- tab-corte.js       (vista general tabla)
+            |- tab-trabajador.js (resumen por trabajador + pagar)
+            |- tab-editar.js     (CRUD tareas)
+            |- tab-asignar.js    (asignar por talla)
+            |- utils.js          (moneda, calculos, modales)
 ```
 
-**Patrones utilizados**:
-
-- Module Pattern (ES6 modules)
-- Router Pattern (hash-based)
-- Template Method (render functions)
-- Observer (event listeners)
-
-### 3. Capa de Datos
-
-**Responsabilidad**: Persistir y recuperar datos del navegador.
+### 3. Capa de Datos (IndexedDB)
 
 ```
-IndexedDB (via Dexie.js)
-├── TallerCosturaDB (v4)
-│   ├── prendas       # Catálogo de prendas
-│   ├── trabajadores  # Personal del taller
-│   ├── cortes        # Órdenes de producción
-│   └── pagos         # Historial de pagos
+TallerCosturaDB (v4)
+  |- prendas       # Catalogo con tareas template (centavos)
+  |- trabajadores  # Personal del taller
+  |- cortes        # Ordenes de produccion (documento embebido)
+  |- pagos         # Historial de pagos (centavos)
 ```
-
-**Características**:
-
-- Offline-first architecture
-- Schema versioning (migraciones)
-- Seed data automático
-- Índices para consultas eficientes
 
 ---
 
-## Patrones de Diseño Implementados
+## Patrones de Diseno
 
-### 1. Router Pattern
-
-El enrutador en `app.js` implementa navegación basada en hash:
+### 1. Router Pattern (hash-based)
 
 ```javascript
-// Estructura del router
+// app.js
 function cargarVista(ruta) {
-  // Rutas estáticas
-  if (ruta === "#dashboard") { ... }
+  if (ruta === "#dashboard") { /* inline */ return; }
   if (ruta === "#gestion-cortes") { renderGestionCortes(); return; }
 
-  // Rutas dinámicas con parámetros
+  // Rutas dinamicas
   if (ruta.startsWith("#administrar-tareas/")) {
     const id = parseInt(ruta.split("/")[1]);
     renderAdministrarTareas(id);
+    return;
   }
 
-  // Ruta por defecto (404)
-  default: { ... }
+  // Estaticas
+  switch (ruta) { case "#nuevo-corte": renderNuevoCorte(); break; }
 }
 
-// Escuchar cambios
 window.addEventListener("hashchange", () => cargarVista(location.hash));
 ```
 
-### 2. Module Pattern
-
-Cada vista es un módulo ES6 independiente:
-
-```javascript
-// nuevo-corte.js
-import { db } from "../db.js";
-
-export function renderNuevoCorte() {
-  // Lógica de la vista
-}
-
-// Funciones privadas (no exportadas)
-function validarFormulario() { ... }
-```
-
-### 3. Template Method
-
-Las funciones de renderizado siguen un patrón consistente:
+### 2. Template Method (cada vista sigue el mismo patron)
 
 ```javascript
 export function renderVista(id) {
-  // 1. Obtener contenedor
-  const app = document.getElementById("app");
-
-  // 2. Renderizar HTML inicial (template)
-  app.innerHTML = `...`;
-
-  // 3. Cargar datos
-  const datos = await db.tabla.get(id);
-
-  // 4. Actualizar UI con datos
-  actualizarUI(datos);
-
-  // 5. Configurar event listeners
-  configurarEventos();
+  const app = document.getElementById('app');
+  app.innerHTML = `...template...`;  // 1. Render HTML
+  cargarDatos(id);                    // 2. Cargar datos
+  configurarEventos();                // 3. Event listeners
 }
 ```
 
-### 4. Observer Pattern
+### 3. Funciones Globales para onclick inline
 
-Los eventos del DOM siguen el patrón Observer:
+Los templates HTML usan `onclick="funcionGlobal()"`, por lo que las funciones deben exponerse:
 
 ```javascript
-// Suscripción a eventos
-document.querySelector(".btn").addEventListener("click", handler);
+window.miFuncion = miFuncion;
+window.confirmarSalida = confirmarSalida;
+window.exportarCortePDF = exportarCortePDF;
+```
 
-// Múltiples observadores
-document.querySelectorAll(".tab-item").forEach((btn) => {
-  btn.addEventListener("click", onTabClick);
+### 4. Tab System con Swipe
+
+```javascript
+// administrar-tareas/index.js
+const ORDEN_PESTANAS = ['resumen', 'corte', 'trabajador', 'editar', 'asignar'];
+
+// Navegacion por click
+document.querySelectorAll('.tab-item').forEach(btn => {
+  btn.addEventListener('click', () => { /* cargar tab */ });
 });
+
+// Navegacion por swipe (umbral 50px, solo horizontal)
+tabContent.addEventListener('touchstart/touchend', /* ... */);
 ```
 
 ---
 
-## Flujo de Datos
-
-### Creación de un Corte
+## Flujo de Datos: Creacion de Corte
 
 ```
 Usuario                    Vista                    DB
-   │                        │                       │
-   │──Selecciona prenda────▶│                       │
-   │                        │───Carga tareas───────▶│
-   │                        │◀───Lista tareas───────│
-   │                        │                       │
-   │──Ingresa cantidad─────▶│                       │
-   │──Ingresa precio (Bs)──▶│                       │
-   │                        │                       │
-   │──Clic "Guardar"───────▶│                       │
-   │                        │──Crea objeto corte───▶│
-   │                        │  (tareas en centavos) │
-   │                        │──Persiste en DB──────▶│
-   │                        │◀──Confirmación────────│
-   │                        │                       │
-   │◀──Mensaje éxito───────│                       │
-   │                        │                       │
-   │──Redirige a dashboard─▶│                       │
+   |                        |                       |
+   |--Selecciona prenda---->|                       |
+   |                        |---Carga tareas------->|
+   |                        |<---Lista tareas-------|
+   |                        |                       |
+   |--Ingresa tallas------->|                       |
+   |--Ingresa precio (Bs)-->|                       |
+   |                        |                       |
+   |--Clic "Guardar"------->|                       |
+   |                        |--Crea objeto corte-->|
+   |                        |  (tareas centavos)    |
+   |                        |--Persiste en DB----->|
+   |                        |<--Confirmacion--------|
+   |                        |                       |
+   |<--Mensaje exito--------|                       |
+   |--Redirige dashboard--->|                       |
 ```
 
-### Asignación de Tareas
+## Flujo de Datos: Asignacion por Talla
 
 ```
 Usuario                 Tab-Asignar                 DB
-   │                        │                       │
-   │──Selecciona tarea─────▶│                       │
-   │                        │──Lista trabajadores──▶│
-   │                        │◀──Lista───────────────│
-   │                        │                       │
-   │──Selecciona trabajador─▶│                      │
-   │──Ingresa cantidad─────▶│                       │
-   │                        │                       │
-   │──Clic "Asignar"───────▶│                       │
-   │                        │──Lee corte───────────▶│
-   │                        │◀──Objeto corte────────│
-   │                        │                       │
-   │                        │──Actualiza tareas────▶│
-   │                        │──Guarda corte────────▶│
-   │                        │◀──Confirmación────────│
-   │                        │                       │
-   │◀──Actualiza UI────────│                       │
-   │  (monto en centavos    │                       │
-   │   mostrar en Bs)       │                       │
-```
-
----
-
-## Sistema de Pestañas
-
-La vista `administrar-tareas` implementa un sistema de pestañas modular:
-
-```javascript
-// index.js - Coordinador
-export function renderAdministrarTareas(corteId) {
-  // Renderizar estructura con tabs
-  app.innerHTML = `
-    <div class="tab-menu">
-      <button class="tab-item active" data-tab="resumen">Info</button>
-      <button class="tab-item" data-tab="corte">Corte</button>
-      ...
-    </div>
-    <div id="tab-content"></div>
-  `;
-
-  // Cargar tab por defecto
-  cargarPestanaResumen(corteId);
-
-  // Configurar navegación
-  inicializarPestanas(corteId);
-}
-
-function inicializarPestanas(corteId) {
-  document.querySelectorAll(".tab-item").forEach((btn) => {
-    btn.addEventListener("click", () => {
-      // Actualizar UI
-      document
-        .querySelectorAll(".tab-item")
-        .forEach((b) => b.classList.remove("active"));
-      btn.classList.add("active");
-
-      // Cargar contenido
-      const tab = btn.dataset.tab;
-      switch (tab) {
-        case "resumen":
-          cargarPestanaResumen(corteId);
-          break;
-        case "corte":
-          cargarPestanaCorte(corteId);
-          break;
-        // ...
-      }
-    });
-  });
-}
+   |                        |                       |
+   |--Selecciona tarea----->|                       |
+   |--Selecciona trabajador>|                      |
+   |                        |---Lista tallas------>|
+   |                        |<---Tallas disponibles-|
+   |                        |                       |
+   |--Ingresa cant/talla-->|                       |
+   |--Clic "Asignar"------->|                       |
+   |                        |---Lee corte--------->|
+   |                        |<---Objeto corte-------|
+   |                        |                       |
+   |                        |--Actualiza asignac.-->|
+   |                        |--Guarda corte------->|
+   |                        |<---OK----------------|
+   |<--Actualiza UI---------|                       |
+   |  (monto en centavos,   |                       |
+   |   mostrar en Bs)       |                       |
 ```
 
 ---
 
 ## PWA Features
 
-### Service Worker
+### Service Worker (Cache-First)
 
-```javascript
-// service-worker.js
-const CACHE_NAME = "taller-v1";
-const urlsToCache = [
-  "./",
-  "./index.html",
-  "./css/style.css",
-  "./js/app.js",
-  "./js/db.js",
-];
-
-// Instalación
-self.addEventListener("install", (event) => {
-  event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => cache.addAll(urlsToCache)),
-  );
-});
-
-// Intercepción de requests
-self.addEventListener("fetch", (event) => {
-  event.respondWith(
-    caches.match(event.request).then((response) => {
-      return response || fetch(event.request);
-    }),
-  );
-});
-```
+- Cache: `taller-costura-8.2`
+- Estrategia Cache-First para todos los recursos
+- Recursos externos (CDN) cacheados con fallback
+- Limpieza de caches antiguos en activate
+- Activado tambien en desarrollo
 
 ### Manifest
 
-```json
-{
-  "name": "Taller de Costura",
-  "short_name": "Taller",
-  "start_url": "./index.html",
-  "display": "standalone",
-  "theme_color": "#4a5568",
-  "icons": [...]
-}
-```
+- Display: standalone
+- Orientation: portrait
+- Theme: #4a5568
 
 ---
 
 ## Consideraciones de Rendimiento
 
-### Optimizaciones Implementadas
-
-1. **Lazy Loading de Vistas**: Solo se carga el JS de la vista actual
-2. **CSS Modular**: Solo se importan los estilos necesarios
-3. **IndexedDB**: Acceso asíncrono no bloqueante
-4. **Service Worker**: Cache de recursos estáticos
-5. **Debounce en Búsqueda**: Evita consultas excesivas
-6. **Precios en Centavos**: Operaciones con enteros son más rápidas
-
-### Métricas Objetivo
-
-| Métrica             | Objetivo | Actual |
-| ------------------- | -------- | ------ |
-| First Paint         | < 1s     | ~0.5s  |
-| Time to Interactive | < 3s     | ~2s    |
-| Lighthouse Score    | > 90     | ~85    |
+1. CSS modular (solo imports en style.css)
+2. IndexedDB acceso asincrono no bloqueante
+3. Service Worker cachea todo para offline
+4. Precios en centavos: operaciones con enteros mas rapidas y precisas
+5. Templates inline en JS (no hay virtual DOM)
+6. Funciones globales para handlers onclick (patron simple)
 
 ---
 
@@ -467,47 +340,22 @@ self.addEventListener("fetch", (event) => {
 
 ### Agregar Nueva Vista
 
-1. Crear archivo en `js/views/mi-vista.js`
-2. Exportar función `renderMiVista()`
-3. Importar en `app.js`
-4. Agregar caso en el router
-5. Crear estilos en `css/views/mi-vista.css`
+1. Crear `js/views/mi-vista.js` con `export function renderMiVista()`
+2. Importar en `app.js`
+3. Agregar caso en `cargarVista()`
+4. Crear `css/views/mi-vista.css`
+5. Agregar ruta en `service-worker.js`
 
 ### Agregar Nueva Tabla DB
 
-1. Incrementar versión en `db.js`
-2. Agregar definición en `.stores()`
-3. Opcional: Agregar seed data en `populate`
+1. Incrementar version en `db.js`
+2. Agregar definicion en `.stores()`
+3. Opcional: seed data en `populate`
 
-### Agregar Nueva Pestaña
+### Agregar Nueva Tab en Administrar Tareas
 
-1. Crear archivo `tab-mi-tab.js` en `administrar-tareas/`
-2. Exportar función `cargarPestanaMiTab(corteId)`
-3. Importar en `index.js`
-4. Agregar botón en template
-5. Agregar caso en switch de navegación
-
----
-
-## Tema Oscuro
-
-La aplicación implementa un tema oscuro compacto:
-
-```css
-/* variables.css */
-:root {
-  --color-background: #1a202c;
-  --color-surface: #2d3748;
-  --color-primary: #4a5568;
-  --color-text: #e2e8f0;
-  --color-text-secondary: #a0aec0;
-}
-```
-
-### Características del Tema
-
-- Fondo oscuro (#1a202c)
-- Superficies ligeramente más claras (#2d3748)
-- Texto claro con buen contraste
-- Acentos de color para acciones importantes
-- Modales con overlay oscuro
+1. Crear `tab-mi-tab.js` con `export async function cargarPestanaMiTab(corteId)`
+2. Importar en `index.js`
+3. Agregar boton en template
+4. Agregar caso en switch
+5. Agregar en `ORDEN_PESTANAS`

@@ -1,286 +1,62 @@
-/* ==========================================================================
-   NUEVO CORTE CSS - Estilos para crear nuevo corte
-   ========================================================================== */
-
-/* Sección de formulario específica */
 .nuevo-corte-view .form-section {
-    padding: 12px 8px;
+    padding: var(--space-3) var(--space-2);
 }
-
-.nuevo-corte-view .form-card {
-    background: #1e1e1e;
-    border-radius: var(--radius-md);
-    padding: 16px;
-    border: 1px solid #333333;
-    margin-bottom: 16px;
-}
-
-.nuevo-corte-view .form-row {
-    display: flex;
-    gap: 12px;
-    margin-top: 12px;
-}
-
-.nuevo-corte-view .form-group-half {
-    flex: 1;
-}
-
-.nuevo-corte-view .form-group label {
-    display: block;
-    margin-bottom: 6px;
-    font-weight: 500;
-    color: #ffffff;
-    font-size: 12px;
-}
-
-.nuevo-corte-view .form-control {
-    width: 100%;
-    padding: 10px 12px;
-    background: rgba(0, 0, 0, 0.2);
-    border: 1px solid #333333;
-    border-radius: var(--radius-sm);
-    color: #ffffff;
-    font-size: 13px;
-    transition: all 0.2s;
-}
-
-.nuevo-corte-view .form-control:focus {
-    outline: none;
-    border-color: #2563eb;
-    background: rgba(0, 0, 0, 0.3);
-}
-
-.nuevo-corte-view .form-control.error {
-    border-color: #ef4444;
-    background: rgba(239, 68, 68, 0.1);
-}
-
-/* ==========================================================================
-   TABLA DE TAREAS
-   ========================================================================== */
-
-.nuevo-corte-view .tasks-section {
-    padding: 0 3px;
-    margin-bottom: 16px;
-}
-
-.nuevo-corte-view .tasks-table {
-    width: 100%;
-    border-collapse: collapse;
-}
-
-.nuevo-corte-view .tasks-table th {
-    background: rgba(0, 0, 0, 0.2);
-    color: #a0a0a0;
-    font-weight: 600;
-    font-size: 11px;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    padding: 10px 12px;
-    text-align: left;
-    border-bottom: 1px solid #333333;
-}
-
-.nuevo-corte-view .tasks-table td {
-    padding: 10px 12px;
-    border-bottom: 1px solid #333333;
-    font-size: 12px;
-}
-
-.nuevo-corte-view .task-name {
-    color: #ffffff;
-    font-weight: 500;
-    max-width: 120px;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-
-.nuevo-corte-view .task-price-cell .form-control {
-    padding: 8px 10px;
-    font-size: 12px;
-    text-align: right;
-    max-width: 80px;
-    margin: 0;
-}
-
-.nuevo-corte-view .task-total {
-    font-family: 'Menlo', 'Monaco', 'Courier New', monospace;
-    font-weight: 500;
-    text-align: right;
-}
-
-.nuevo-corte-view .no-data {
-    padding: 20px !important;
-    text-align: center;
-}
-
-.nuevo-corte-view .empty-state {
-    padding: 20px 0;
-}
-
-.nuevo-corte-view .empty-icon {
-    font-size: 32px;
-    margin-bottom: 12px;
-    opacity: 0.5;
-}
-
-.nuevo-corte-view .empty-state p {
-    color: #a0a0a0;
-    font-size: 13px;
-    margin: 0;
-}
-
-/* ==========================================================================
-   TARJETA DE RESUMEN
-   ========================================================================== */
-
-.nuevo-corte-view .summary-card {
-    background: #1e1e1e;
-    border-radius: var(--radius-md);
-    padding: 16px;
-    margin: 16px 8px;
-    border: 1px solid #333333;
-}
-
-.nuevo-corte-view .summary-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 10px 0;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-    font-size: 13px;
-    color: #a0a0a0;
-}
-
-.nuevo-corte-view .summary-row:last-child {
-    border-bottom: none;
-}
-
-.nuevo-corte-view .summary-row.ganancia {
-    font-weight: 600;
-    color: #ffffff;
-    font-size: 14px;
-}
-
-.nuevo-corte-view .highlight {
-    font-weight: 600;
-    color: #ffffff;
-}
-
-/* ==========================================================================
-   SECCIÓN DE ACCIONES
-   ========================================================================== */
-
-.nuevo-corte-view .actions-section {
-    padding: 12px 8px;
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-}
-
-.nuevo-corte-view .btn-primary {
-    background: #2563eb;
-    color: white;
-    border: none;
-    padding: 14px;
-    border-radius: var(--radius-sm);
-    font-size: 14px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.2s;
-    width: 100%;
-}
-
-.nuevo-corte-view .btn-primary:hover:not(:disabled) {
-    background: #3b82f6;
-}
-
-.nuevo-corte-view .btn-primary:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-}
-
-.nuevo-corte-view .btn-primary.success {
-    background: #10b981;
-}
-
-.nuevo-corte-view .btn-secondary {
-    background: rgba(255, 255, 255, 0.1);
-    color: #ffffff;
-    border: 1px solid #333333;
-    padding: 14px;
-    border-radius: var(--radius-sm);
-    font-size: 14px;
-    font-weight: 500;
-    cursor: pointer;
-    transition: all 0.2s;
-    width: 100%;
-}
-
-.nuevo-corte-view .btn-secondary:hover {
-    background: rgba(255, 255, 255, 0.15);
-}
-
-/* ==========================================================================
-   SECCIÓN DE TALLAS
-   ========================================================================== */
 
 .nuevo-corte-view .tallas-card {
-    border: 1px dashed #444444;
-    background: rgba(37, 99, 235, 0.05);
+    border: 1px dashed var(--border-default);
+    background: var(--accent-subtle);
 }
 
 .nuevo-corte-view .card-subtitle {
-    font-size: 14px;
+    font-size: var(--text-base);
     font-weight: 600;
-    color: #ffffff;
-    margin: 0 0 12px 0;
+    color: var(--text-primary);
+    margin: 0 0 var(--space-3) 0;
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: var(--space-2);
 }
 
 .nuevo-corte-view .tallas-input-row {
     display: flex;
-    gap: 12px;
-    margin-bottom: 12px;
+    gap: var(--space-3);
+    margin-bottom: var(--space-3);
 }
 
 .nuevo-corte-view .btn-add-talla {
     width: 100%;
-    padding: 12px;
-    background: linear-gradient(135deg, #2563eb 0%, #3b82f6 100%);
-    color: white;
+    padding: var(--space-3);
+    background: linear-gradient(135deg, var(--accent) 0%, #e8913a 100%);
+    color: #1a1000;
     border: none;
-    border-radius: var(--radius-sm);
-    font-size: 13px;
+    border-radius: var(--radius-md);
+    font-size: var(--text-sm);
     font-weight: 600;
+    font-family: var(--font-body);
     cursor: pointer;
-    transition: all 0.2s;
-    margin-bottom: 12px;
+    transition: var(--transition-normal);
+    margin-bottom: var(--space-3);
 }
 
 .nuevo-corte-view .btn-add-talla:hover {
-    background: linear-gradient(135deg, #3b82f6 0%, #60a5fa 100%);
     transform: translateY(-1px);
+    box-shadow: var(--shadow-sm), 0 4px 12px rgba(240, 160, 48, 0.3);
 }
 
 .nuevo-corte-view .btn-add-talla:active {
     transform: scale(0.98);
 }
 
-/* Lista de tallas */
 .nuevo-corte-view .tallas-lista {
     min-height: 40px;
-    margin-bottom: 12px;
+    margin-bottom: var(--space-3);
 }
 
 .nuevo-corte-view .tallas-empty {
-    padding: 16px;
+    padding: var(--space-4);
     text-align: center;
-    color: #666666;
-    font-size: 12px;
+    color: var(--text-muted);
+    font-size: var(--text-xs);
     font-style: italic;
     background: rgba(0, 0, 0, 0.1);
     border-radius: var(--radius-sm);
@@ -290,351 +66,83 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 10px 12px;
-    background: rgba(255, 255, 255, 0.05);
+    padding: var(--space-2) var(--space-3);
+    background: rgba(255, 255, 255, 0.03);
     border-radius: var(--radius-sm);
-    margin-bottom: 8px;
-    border: 1px solid #333333;
-    animation: slideIn 0.2s ease;
-}
-
-@keyframes slideIn {
-    from {
-        opacity: 0;
-        transform: translateX(-10px);
-    }
-    to {
-        opacity: 1;
-        transform: translateX(0);
-    }
+    margin-bottom: var(--space-2);
+    border: 1px solid var(--border-default);
+    animation: fadeIn 0.2s ease;
 }
 
 .nuevo-corte-view .talla-nombre {
     font-weight: 600;
-    color: #ffffff;
-    font-size: 13px;
+    color: var(--text-primary);
+    font-size: var(--text-sm);
     min-width: 50px;
 }
 
 .nuevo-corte-view .talla-cantidad {
     flex: 1;
     text-align: center;
-    color: #a0a0a0;
-    font-size: 12px;
+    color: var(--text-secondary);
+    font-size: var(--text-xs);
 }
 
 .nuevo-corte-view .btn-eliminar-talla {
     width: 28px;
     height: 28px;
     border-radius: 50%;
-    background: rgba(239, 68, 68, 0.15);
-    border: 1px solid rgba(239, 68, 68, 0.3);
-    color: #f87171;
+    background: var(--danger-subtle);
+    border: 1px solid var(--danger-muted);
+    color: var(--danger);
     font-size: 16px;
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: all 0.2s;
+    transition: var(--transition-normal);
 }
 
 .nuevo-corte-view .btn-eliminar-talla:hover {
-    background: rgba(239, 68, 68, 0.3);
+    background: var(--danger-muted);
     transform: scale(1.1);
 }
 
-/* Total de tallas */
 .nuevo-corte-view .tallas-total {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 12px;
-    background: rgba(16, 185, 129, 0.1);
+    padding: var(--space-3);
+    background: var(--success-subtle);
     border-radius: var(--radius-sm);
-    border: 1px solid rgba(16, 185, 129, 0.2);
+    border: 1px solid var(--success-muted);
 }
 
 .nuevo-corte-view .tallas-total span:first-child {
-    color: #a0a0a0;
-    font-size: 12px;
+    color: var(--text-secondary);
+    font-size: var(--text-xs);
     font-weight: 500;
 }
 
 .nuevo-corte-view .total-valor {
-    font-size: 18px;
+    font-size: var(--text-xl);
     font-weight: 700;
-    color: #10b981;
-    font-family: 'Menlo', 'Monaco', 'Courier New', monospace;
+    color: var(--success);
+    font-family: var(--font-mono);
 }
 
-/* Campo de cantidad readonly */
 .nuevo-corte-view .form-control[readonly] {
-    background: rgba(16, 185, 129, 0.1);
-    border-color: rgba(16, 185, 129, 0.3);
-    color: #10b981;
+    background: var(--success-subtle);
+    border-color: var(--success-muted);
+    color: var(--success);
     font-weight: 600;
     cursor: not-allowed;
 }
 
-.nuevo-corte-view .info-message {
-    color: #60a5fa;
-    font-size: 11px;
-    margin-top: 4px;
-    display: block;
-}
-
-/* ==========================================================================
-   NUEVO CORTE - RESPONSIVE ADICIONAL
-   ========================================================================== */
-
-/* Tablets */
-@media (min-width: 768px) {
-    .nuevo-corte-view .mobile-container {
-        max-width: 100%;
-    }
-
-    .nuevo-corte-view .header {
-        padding: 16px 24px;
-    }
-
-    .nuevo-corte-view .small-title {
-        font-size: 20px;
-    }
-
-    .nuevo-corte-view .form-control {
-        padding: 12px 16px;
-        font-size: 14px;
-    }
-
-    .nuevo-corte-view .form-group label {
-        font-size: 13px;
-    }
-
-    .nuevo-corte-view .card-subtitle {
-        font-size: 16px;
-    }
-
-    .nuevo-corte-view .btn-add-talla {
-        padding: 14px;
-        font-size: 14px;
-    }
-
-    .nuevo-corte-view .talla-item {
-        padding: 12px 16px;
-    }
-
-    .nuevo-corte-view .talla-nombre {
-        font-size: 14px;
-    }
-
-    .nuevo-corte-view .talla-cantidad {
-        font-size: 13px;
-    }
-
-    .nuevo-corte-view .total-valor {
-        font-size: 22px;
-    }
-
-    .nuevo-corte-view .btn-primary,
-    .nuevo-corte-view .btn-secondary {
-        padding: 16px;
-        font-size: 15px;
-    }
-
-    .nuevo-corte-view .empty-state p {
-        font-size: 14px;
-    }
-}
-
-/* Desktop */
-@media (min-width: 1024px) {
-    .nuevo-corte-view .header {
-        padding: 20px 32px;
-    }
-
-    .nuevo-corte-view .small-title {
-        font-size: 22px;
-    }
-
-    .nuevo-corte-view .form-section {
-        max-width: 100%;
-    }
-
-    .nuevo-corte-view .form-card {
-        padding: 24px;
-    }
-
-    .nuevo-corte-view .form-control {
-        padding: 14px 18px;
-        font-size: 15px;
-    }
-
-    .nuevo-corte-view .form-group label {
-        font-size: 14px;
-        margin-bottom: 8px;
-    }
-
-    .nuevo-corte-view .form-row {
-        gap: 20px;
-    }
-
-    .nuevo-corte-view .card-subtitle {
-        font-size: 17px;
-        margin-bottom: 16px;
-    }
-
-    .nuevo-corte-view .tallas-card {
-        padding: 24px;
-    }
-
-    .nuevo-corte-view .tallas-input-row {
-        gap: 20px;
-        margin-bottom: 16px;
-    }
-
-    .nuevo-corte-view .btn-add-talla {
-        padding: 16px 24px;
-        font-size: 15px;
-        max-width: 250px;
-    }
-
-    .nuevo-corte-view .tallas-lista {
-        gap: 16px;
-        margin-bottom: 16px;
-    }
-
-    .nuevo-corte-view .talla-item {
-        padding: 14px 18px;
-    }
-
-    .nuevo-corte-view .talla-nombre {
-        font-size: 15px;
-        min-width: 60px;
-    }
-
-    .nuevo-corte-view .talla-cantidad {
-        font-size: 14px;
-    }
-
-    .nuevo-corte-view .btn-eliminar-talla {
-        width: 32px;
-        height: 32px;
-        font-size: 18px;
-    }
-
-    .nuevo-corte-view .tallas-total {
-        padding: 16px 20px;
-    }
-
-    .nuevo-corte-view .tallas-total span:first-child {
-        font-size: 14px;
-    }
-
-    .nuevo-corte-view .total-valor {
-        font-size: 26px;
-    }
-
-    .nuevo-corte-view .tasks-section {
-        max-width: 100%;
-    }
-
-    .nuevo-corte-view .section-title {
-        font-size: 20px;
-    }
-
-    .nuevo-corte-view .tasks-table th {
-        font-size: 12px;
-        padding: 16px 24px;
-    }
-
-    .nuevo-corte-view .tasks-table td {
-        padding: 16px 24px;
-        font-size: 14px;
-    }
-
-    .nuevo-corte-view .task-name {
-        font-size: 15px;
-        max-width: 400px;
-    }
-
-    .nuevo-corte-view .task-price-cell .form-control {
-        padding: 12px 16px;
-        font-size: 14px;
-        max-width: 140px;
-    }
-
-    .nuevo-corte-view .task-total {
-        font-size: 15px;
-    }
-
-    .nuevo-corte-view .summary-card {
-        padding: 24px;
-    }
-
-    .nuevo-corte-view .section-title {
-        font-size: 18px;
-        margin-bottom: 20px;
-    }
-
-    .nuevo-corte-view .summary-row {
-        padding: 16px;
-        font-size: 14px;
-    }
-
-    .nuevo-corte-view .summary-row.ganancia {
-        font-size: 16px;
-    }
-
-    .nuevo-corte-view .money {
-        font-size: 18px;
-    }
-
-    .nuevo-corte-view .actions-section {
-        padding: 24px;
-        gap: 24px;
-    }
-
-    .nuevo-corte-view .btn-primary,
-    .nuevo-corte-view .btn-secondary {
-        padding: 18px 32px;
-        font-size: 16px;
-        max-width: 280px;
-    }
-
-    .nuevo-corte-view .empty-state {
-        padding: 40px;
-    }
-
-    .nuevo-corte-view .empty-icon {
-        font-size: 48px;
-    }
-
-    .nuevo-corte-view .empty-state p {
-        font-size: 16px;
-    }
-}
-
-/* Pantallas muy grandes */
-@media (min-width: 1440px) {
-    .nuevo-corte-view .form-section {
-        gap: 30px;
-        padding: 30px;
-    }
-
-    .nuevo-corte-view .form-card {
-        padding: 30px;
-    }
-
-    .nuevo-corte-view .tallas-card {
-        padding: 30px;
-    }
-
-    .nuevo-corte-view .tallas-lista {
-        grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-    }
-
-    .nuevo-corte-view .summary-card {
-        padding: 30px;
-        gap: 24px;
-    }
+.nuevo-corte-view .task-price-cell .form-control {
+    padding: var(--space-2) var(--space-2);
+    font-size: var(--text-sm);
+    text-align: right;
+    max-width: 80px;
+    margin: 0;
 }

@@ -16,11 +16,6 @@ export function renderHistorialPagos() {
 
     app.innerHTML = `
         <div class="mobile-container">
-            <div class="header">
-                <button class="back-btn" onclick="window.location.hash='#dashboard'">←</button>
-                <h1 class="small-title">Historial de Pagos</h1>
-            </div>
-
             <div class="tab-menu">
                 <div class="tab-container">
                     <button class="tab-item active" data-tab="resumen">💼 Resumen</button>

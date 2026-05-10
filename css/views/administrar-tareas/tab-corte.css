@@ -1,41 +1,20 @@
-/* ==========================================================================
-   TAB CORTE CSS - Estilos para la pestaña Corte de Administrar Tareas
-   ========================================================================== */
-
-/* ==========================================================================
-   PESTAÑA CORTE
-   ========================================================================== */
-
-/* Información del corte */
 .administrar-tareas .corte-info-header {
-    padding: 16px;
-    margin-bottom: 20px;
+    padding: var(--space-4);
+    margin-bottom: var(--space-5);
 }
 
 .administrar-tareas .corte-info-row {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 8px 0;
-    font-size: 13px;
+    padding: var(--space-2) 0;
+    font-size: var(--text-sm);
     color: var(--text-secondary);
-    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    border-bottom: 1px solid var(--border-subtle);
 }
 
 .administrar-tareas .corte-info-row:last-child {
     border-bottom: none;
-}
-
-/* Tabla de tareas compacta */
-.administrar-tareas .task-name {
-    min-width: 120px;
-    max-width: 180px;
-    color: var(--text-primary);
-    font-weight: 500;
-    word-wrap: break-word;
-    white-space: normal;
-    line-height: 1.4;
-    padding: 12px 14px;
 }
 
 .administrar-tareas .task-name .task-price-small {
@@ -43,33 +22,24 @@
     color: var(--text-muted);
     font-weight: normal;
     display: block;
-    margin-top: 4px;
-    opacity: 0.8;
+    margin-top: var(--space-1);
 }
 
 .administrar-tareas .task-total {
-    font-family: "SF Mono", "Menlo", "Monaco", "Courier New", monospace;
+    font-family: var(--font-mono);
     text-align: right;
-    color: var(--primary);
+    color: var(--accent);
     font-weight: 500;
-    padding: 12px 14px;
+    padding: var(--space-3);
     white-space: normal;
-    line-height: 1.4;
+    line-height: var(--leading-normal);
     min-width: 80px;
 }
 
 .administrar-tareas .task-workers {
-    padding: 12px 14px;
+    padding: var(--space-3);
     white-space: normal;
-    line-height: 1.4;
+    line-height: var(--leading-normal);
     color: var(--text-primary);
     min-width: 90px;
-}
-
-.administrar-tareas .no-asignado {
-    color: var(--text-muted);
-    font-size: 12px;
-    font-style: italic;
-    display: block;
-    padding: 4px 0;
 }

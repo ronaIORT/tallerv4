@@ -6,7 +6,7 @@ export function renderGestionPrendas() {
   app.innerHTML = `
     <div class="mobile-container gestion-prendas">
       <div class="header">
-        <button class="back-btn" onclick="window.location.hash = '#dashboard'">←</button>
+        <button class="back-btn" onclick="window.location.hash = '#perfil'">←</button>
         <h1 class="small-title">Gestión de Prendas</h1>
       </div>
 
@@ -133,6 +133,7 @@ async function cargarPrendas() {
     `;
   }
 }
+window.cargarPrendas = cargarPrendas;
 
 // Inicializar eventos de selección de prendas
 function inicializarEventosSeleccionPrendas() {
@@ -1475,3 +1476,9 @@ function mostrarMensaje(mensaje) {
     mensajeEl.remove();
   }, 2000);
 }
+
+window.crearPrenda = crearPrenda;
+window.inicializarEventosSeleccionPrendas = inicializarEventosSeleccionPrendas;
+window.manejarArchivoImportacion = manejarArchivoImportacion;
+window.mostrarModalEliminarPrenda = mostrarModalEliminarPrenda;
+window.mostrarModalCrearPrendaDesdeExistente = mostrarModalCrearPrendaDesdeExistente;

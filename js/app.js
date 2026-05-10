@@ -11,6 +11,8 @@ import { renderAdministrarTareas } from "./views/administrar-tareas/index.js";
 import { renderHistorialPagos } from "./views/historial-pagos.js";
 import { renderGestionCortes } from "./views/gestion-cortes.js";
 import { renderGanancias } from "./views/ganancias.js";
+import { renderPerfil } from "./views/perfil.js";
+import { renderDashboard } from "./views/dashboard.js";
 
 // ===========================================================================
 // 🔧 SERVICE WORKER - MODO DESARROLLO
@@ -57,80 +59,27 @@ async function cargarVista(ruta) {
 
   // Rutas estáticas
   if (ruta === "#dashboard") {
-    app.innerHTML = `
-            <div class="mobile-container">
-                <div class="header">
-                    <h1 class="header-title">🏠 Dashboard Taller <span class="version-badge" id="app-version">v8.1</span></h1>
-                    <button class="header-btn logout-btn" onclick="confirmarSalida()" title="Salir de la aplicación">
-                        <span class="btn-icon">🚪</span>
-                    </button>
-                </div>
-
-                <div class="dashboard-content">
-                    <!-- Métricas principales -->
-                    <div class="stats-grid" id="estadisticas">
-                        <div class="stat-card stat-cortes" onclick="window.location.hash='#gestion-cortes'">
-                            <div class="stat-icon">📋</div>
-                            <div class="stat-content">
-                                <div class="stat-value">-</div>
-                                <div class="stat-label">CORTES</div>
-                            </div>
-                        </div>
-                        <div class="stat-card stat-ganancias" onclick="window.location.hash='#ganancias'">
-                            <div class="stat-icon">💰</div>
-                            <div class="stat-content">
-                                <div class="stat-value">Bs -</div>
-                                <div class="stat-label">GANANCIAS</div>
-                            </div>
-                        </div>
-                        <div class="stat-card stat-trabajadores" onclick="window.location.hash='#gestion-trabajadores'">
-                            <div class="stat-icon">👷</div>
-                            <div class="stat-content">
-                                <div class="stat-value">-</div>
-                                <div class="stat-label">TRABAJADORES</div>
-                            </div>
-                        </div>
-                        <div class="stat-card stat-por-pagar" onclick="window.location.hash='#historial-pagos'">
-                            <div class="stat-icon">💳</div>
-                            <div class="stat-content">
-                                <div class="stat-value">Bs -</div>
-                                <div class="stat-label">POR PAGAR</div>
-                            </div>
-                        </div>
-                        <div class="stat-card stat-nuevo-corte" onclick="window.location.hash='#nuevo-corte'">
-                            <div class="stat-icon">✂️</div>
-                            <div class="stat-content">
-                                <div class="stat-value">+</div>
-                                <div class="stat-label">NUEVO CORTE</div>
-                            </div>
-                        </div>
-                        <div class="stat-card stat-prendas" onclick="window.location.hash='#gestion-prendas'">
-                            <div class="stat-icon">👕</div>
-                            <div class="stat-content">
-                                <div class="stat-value">-</div>
-                                <div class="stat-label">PRENDAS</div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        `;
-
-    // Cargar estadísticas reales
-    await cargarEstadisticas();
+    renderDashboard();
     actualizarVersionBadge();
+    actualizarNav(ruta);
+    return;
+  }
+
+  if (ruta === "#perfil") {
+    window.location.hash = '#gestion-trabajadores';
     return;
   }
 
   // Nueva vista de gestión de cortes
   if (ruta === "#gestion-cortes") {
     renderGestionCortes();
+    actualizarNav(ruta);
     return;
   }
 
-  // Vista de ganancias
   if (ruta === "#ganancias") {
     renderGanancias();
+    actualizarNav(ruta);
     return;
   }
 
@@ -140,26 +89,27 @@ async function cargarVista(ruta) {
     const corteId = parseInt(partes[1]);
     if (!isNaN(corteId)) {
       renderAdministrarTareas(corteId);
+      actualizarNav(ruta);
       return;
     }
   }
 
-  // Rutas dinámicas (ver-prenda/ID)
   if (ruta.startsWith("#ver-prenda/")) {
     const partes = ruta.split("/");
     const prendaId = parseInt(partes[1]);
     if (!isNaN(prendaId)) {
       renderVerPrenda(prendaId);
+      actualizarNav(ruta);
       return;
     }
   }
 
-  // Rutas dinámicas (editar-prenda/ID)
   if (ruta.startsWith("#editar-prenda/")) {
     const partes = ruta.split("/");
     const prendaId = parseInt(partes[1]);
     if (!isNaN(prendaId)) {
       renderEditarPrenda(prendaId);
+      actualizarNav(ruta);
       return;
     }
   }
@@ -168,21 +118,26 @@ async function cargarVista(ruta) {
   switch (ruta) {
     case "#nuevo-corte":
       renderNuevoCorte();
+      actualizarNav(ruta);
       break;
 
     case "#gestion-trabajadores":
       renderGestionTrabajadores();
+      actualizarNav(ruta);
       break;
 
     case "#gestion-prendas":
       renderGestionPrendas();
+      actualizarNav(ruta);
       break;
 
     case "#historial-pagos":
       renderHistorialPagos();
+      actualizarNav(ruta);
       break;
 
     default:
+      actualizarNav(ruta);
       app.innerHTML = `
                 <div class="mobile-container">
                     <div class="header">
@@ -199,140 +154,6 @@ async function cargarVista(ruta) {
                     </div>
                 </div>
             `;
-  }
-}
-
-// Cargar estadísticas desde la DB
-// Cargar estadísticas desde la DB
-async function cargarEstadisticas() {
-  try {
-    const cortesActivos = await db.cortes
-      .where("estado")
-      .equals("activo")
-      .count();
-
-    // Obtener todos los cortes terminados
-    const cortesTerminados = await db.cortes
-      .where("estado")
-      .equals("terminado")
-      .toArray();
-
-    // Calcular ganancias REALES totales (solo cortes terminados)
-    // Los precios de tareas están en centavos, precioVentaUnitario está en Bolivianos
-    const gananciasRealesTotales = cortesTerminados.reduce((total, corte) => {
-      const totalVentaBs = corte.cantidadPrendas * corte.precioVentaUnitario;
-
-      // Calcular mano de obra REAL del corte (solo lo asignado) - en centavos
-      const totalManoObraCentavos = corte.tareas.reduce((sum, tarea) => {
-        const cantidadAsignada = tarea.asignaciones.reduce((t, asignacion) => {
-          return t + asignacion.cantidad;
-        }, 0);
-        return sum + tarea.precioUnitario * cantidadAsignada;
-      }, 0);
-
-      // Convertir centavos a Bolivianos
-      const totalManoObraBs = totalManoObraCentavos / 100;
-
-      return total + (totalVentaBs - totalManoObraBs);
-    }, 0);
-
-    // Calcular cantidad de trabajadores
-    const trabajadoresCount = await db.trabajadores.count();
-
-    // Calcular cantidad de prendas
-    const prendasCount = await db.prendas.count();
-
-    // Calcular monto por pagar (coincide con historial-pagos.js)
-    const todosLosCortes = await db.cortes.toArray();
-
-    const totalGanadoCentavos = todosLosCortes.reduce((total, corte) => {
-      return (
-        total +
-        corte.tareas.reduce((sumTarea, tarea) => {
-          return (
-            sumTarea +
-            tarea.asignaciones.reduce((sumAsig, asig) => {
-              return sumAsig + asig.cantidad * tarea.precioUnitario;
-            }, 0)
-          );
-        }, 0)
-      );
-    }, 0);
-
-    const pagosRealizados = await db.pagos.toArray();
-    const totalPagadoCentavos = pagosRealizados.reduce(
-      (sum, pago) => sum + pago.monto,
-      0,
-    );
-
-    const totalPorPagarCentavos = Math.max(
-      0,
-      totalGanadoCentavos - totalPagadoCentavos,
-    );
-    const totalPorPagarBs = totalPorPagarCentavos / 100;
-
-    // Actualizar tarjetas de estadísticas
-    const statsContainer = document.getElementById("estadisticas");
-    if (statsContainer) {
-      statsContainer.innerHTML = `
-                <div class="stat-card stat-cortes" onclick="window.location.hash='#gestion-cortes'">
-                    <div class="stat-icon">📋</div>
-                    <div class="stat-content">
-                        <div class="stat-value">(${cortesActivos} activo)</div>
-                        <div class="stat-label">CORTES</div>
-                    </div>
-                </div>
-                <div class="stat-card stat-ganancias" onclick="window.location.hash='#ganancias'">
-                    <div class="stat-icon">💰</div>
-                    <div class="stat-content">
-                        <div class="stat-value">Bs ${gananciasRealesTotales.toFixed(0)}</div>
-                        <div class="stat-label">GANANCIAS</div>
-                    </div>
-                </div>
-                <div class="stat-card stat-trabajadores" onclick="window.location.hash='#gestion-trabajadores'">
-                    <div class="stat-icon">👷</div>
-                    <div class="stat-content">
-                        <div class="stat-value">${trabajadoresCount}</div>
-                        <div class="stat-label">TRABAJADORES</div>
-                    </div>
-                </div>
-                <div class="stat-card stat-por-pagar" onclick="window.location.hash='#historial-pagos'">
-                    <div class="stat-icon">💳</div>
-                    <div class="stat-content">
-                        <div class="stat-value">Bs ${totalPorPagarBs.toFixed(2)}</div>
-                        <div class="stat-label">POR PAGAR</div>
-                    </div>
-                </div>
-                <div class="stat-card stat-nuevo-corte" onclick="window.location.hash='#nuevo-corte'">
-                    <div class="stat-icon">✂️</div>
-                    <div class="stat-content">
-                        <div class="stat-value">+</div>
-                        <div class="stat-label">NUEVO CORTE</div>
-                    </div>
-                </div>
-                <div class="stat-card stat-prendas" onclick="window.location.hash='#gestion-prendas'">
-                    <div class="stat-icon">👕</div>
-                    <div class="stat-content">
-                        <div class="stat-value">${prendasCount}</div>
-                        <div class="stat-label">PRENDAS</div>
-                    </div>
-                </div>
-            `;
-    }
-  } catch (error) {
-    console.error("Error al cargar estadísticas:", error);
-    const statsContainer = document.getElementById("estadisticas");
-    if (statsContainer) {
-      statsContainer.innerHTML = `
-                <div class="stat-card error">
-                    <div class="stat-icon">⚠️</div>
-                    <div class="stat-content">
-                        <div class="stat-value">Error</div>
-                        <div class="stat-label">Cargar de nuevo</div>
-                    </div>
-                </div>
-            `;
-    }
   }
 }
 
@@ -353,6 +174,57 @@ function mostrarMensaje(mensaje) {
   }, 2000);
 }
 
+// ===========================================================================
+// 🧭 GESTION DE BARRA DE NAVEGACION INFERIOR
+// ===========================================================================
+
+const RUTA_A_NAV = {
+    '#dashboard': '#dashboard',
+    '#gestion-cortes': '#gestion-cortes',
+    '#nuevo-corte': '#nuevo-corte',
+    '#historial-pagos': '#historial-pagos',
+    '#perfil': '#gestion-trabajadores',
+    '#gestion-trabajadores': '#gestion-trabajadores'
+};
+
+function actualizarNav(ruta) {
+    const bottomNav = document.getElementById('bottom-nav');
+    if (!bottomNav) return;
+
+    const esSubVista = ruta.startsWith('#administrar-tareas/') ||
+                       ruta.startsWith('#ver-prenda/') ||
+                       ruta.startsWith('#editar-prenda/');
+
+    if (esSubVista) {
+        bottomNav.classList.add('hidden');
+    } else {
+        bottomNav.classList.remove('hidden');
+    }
+
+    const navRoute = RUTA_A_NAV[ruta] || null;
+    bottomNav.querySelectorAll('.nav-item').forEach(item => {
+        if (navRoute && item.dataset.route === navRoute) {
+            item.classList.add('active');
+        } else {
+            item.classList.remove('active');
+        }
+    });
+}
+
+function inicializarBottomNav() {
+    const bottomNav = document.getElementById('bottom-nav');
+    if (!bottomNav) return;
+
+    bottomNav.querySelectorAll('.nav-item').forEach(item => {
+        item.addEventListener('click', () => {
+            const route = item.dataset.route;
+            if (route) {
+                window.location.hash = route;
+            }
+        });
+    });
+}
+
 // Escuchar cambios en el hash (URL)
 window.addEventListener("hashchange", () => {
   cargarVista(location.hash);
@@ -360,6 +232,7 @@ window.addEventListener("hashchange", () => {
 
 // Cargar la vista inicial
 document.addEventListener("DOMContentLoaded", () => {
+  inicializarBottomNav();
   cargarVista(location.hash || "#dashboard");
   actualizarVersionBadge();
 });

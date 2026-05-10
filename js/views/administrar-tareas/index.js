@@ -12,9 +12,9 @@ const ORDEN_PESTANAS = ['resumen', 'corte', 'trabajador', 'editar', 'asignar'];
 export function renderAdministrarTareas(corteId) {
   const app = document.getElementById('app');
   app.innerHTML = `
-    <div class="mobile-container">
+    <div class="mobile-container administrar-tareas">
       <div class="header">
-        <button onclick="location.hash='#dashboard'" class="back-btn">←</button>        
+        <button onclick="location.hash='#gestion-cortes'" class="back-btn">←</button>        
         <h1 class="small-title">Administración de Tareas</h1>
       </div>
       

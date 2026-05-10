@@ -7,6 +7,7 @@ export async function cargarPestanaEditar(corteId) {
 
   try {
     const corte = await db.cortes.get(corteId);
+    window._editarCorteId = corteId;
     if (!corte) {
       content.innerHTML = '<p class="error">Corte no encontrado</p>';
       return;
@@ -15,14 +16,13 @@ export async function cargarPestanaEditar(corteId) {
     const filas = corte.tareas
       .map((tarea, index) => {
         const tieneAsig = tarea.asignaciones && tarea.asignaciones.length > 0;
-        return `<tr class="tarea-row clickable"
+        return `<tr class="tarea-row clickable ${tieneAsig ? "tarea-asignada" : "tarea-no-asignada"}"
                   data-index="${index}"
                   data-nombre="${tarea.nombre}"
                   data-precio="${tarea.precioUnitario}"
                   data-tiene-asig="${tieneAsig}">
         <td>${tarea.nombre}</td>
         <td>${tarea.precioUnitario}</td>
-        <td>${tieneAsig ? '<span class="assigned-yes">Sí</span>' : '<span class="assigned-no">No</span>'}</td>
       </tr>`;
       })
       .join("");
@@ -32,10 +32,15 @@ export async function cargarPestanaEditar(corteId) {
 
     content.innerHTML = `
       <div class="editar-corte-section">
-        <h2>Editar Tareas</h2>
+        <h2>Tareas</h2>
+        <div class="filter-bar">
+          <button class="filter-btn active" onclick="filtrarTareasEditar('todos', this)">Todos</button>
+          <button class="filter-btn" onclick="filtrarTareasEditar('asignadas', this)">Asignadas</button>
+          <button class="filter-btn" onclick="filtrarTareasEditar('no-asignadas', this)">No asignadas</button>
+        </div>
         <div class="table-container">
           <table class="editar-table">
-            <thead><tr><th>Tarea</th><th>¢/UNI</th><th>Asig.</th></tr></thead>
+            <thead><tr><th>Tarea</th><th>¢/UNI</th></tr></thead>
             <tbody>${filas}</tbody>
           </table>
         </div>
@@ -56,6 +61,19 @@ export async function cargarPestanaEditar(corteId) {
           </div>
         </div>
       </div>
+
+      ${
+        corte.prendaId
+          ? `
+      <div class="update-prenda-section">
+        <button class="btn-update-prenda" onclick="actualizarPrendaConAsignadas()">
+          ⚡ Actualizar Prenda (solo tareas asignadas)
+        </button>
+        <p class="update-prenda-hint">Guarda solo las tareas con trabajador asignado en la prenda base</p>
+      </div>
+      `
+          : ""
+      }
 
       <!-- Botones flotantes para editar/eliminar/agregar -->
       <div id="floating-edit-btns" class="floating-action-btns" style="display: none;">
@@ -218,6 +236,24 @@ function inicializarEventosEditar(corteId, corte) {
       }
     });
 }
+
+window.filtrarTareasEditar = function (filtro, btn) {
+  document
+    .querySelectorAll(".filter-btn")
+    .forEach((b) => b.classList.remove("active"));
+  btn.classList.add("active");
+
+  document.querySelectorAll(".tarea-row.clickable").forEach((row) => {
+    const tieneAsig = row.dataset.tieneAsig === "true";
+    if (filtro === "todos") {
+      row.style.display = "";
+    } else if (filtro === "asignadas") {
+      row.style.display = tieneAsig ? "" : "none";
+    } else if (filtro === "no-asignadas") {
+      row.style.display = !tieneAsig ? "" : "none";
+    }
+  });
+};
 
 // Editar tarea
 async function editarTarea(corteId, tareaIndex, nuevoNombre, nuevoPrecio) {
@@ -461,6 +497,115 @@ function mostrarModalConfirmacion(titulo, mensaje, onConfirm) {
   });
 
   // Cerrar al hacer clic fuera
+  overlay.addEventListener("click", (e) => {
+    if (e.target === overlay) {
+      overlay.remove();
+      document.body.style.overflow = "auto";
+    }
+  });
+}
+
+window.actualizarPrendaConAsignadas = async function () {
+  const corteId = window._editarCorteId;
+  if (!corteId) return;
+
+  try {
+    const corte = await db.cortes.get(corteId);
+    if (!corte || !corte.prendaId) return;
+
+    const tareasAsignadas = corte.tareas.filter(
+      (t) => t.asignaciones && t.asignaciones.length > 0,
+    );
+
+    if (tareasAsignadas.length === 0) {
+      mostrarMensaje("❌ No hay tareas con trabajador asignado");
+      return;
+    }
+
+    const total = corte.tareas.length;
+    const asignadas = tareasAsignadas.length;
+
+    mostrarModalActualizarPrenda(
+      corte.nombrePrendaOriginal || "la prenda",
+      asignadas,
+      total,
+      async () => {
+        try {
+          const tareasLimpias = tareasAsignadas.map((t) => ({
+            nombre: t.nombre,
+            precioUnitario: t.precioUnitario,
+          }));
+
+          await db.prendas.update(corte.prendaId, { tareas: tareasLimpias });
+          mostrarMensaje(`✅ Prenda actualizada con ${asignadas} tarea(s)`);
+        } catch (error) {
+          console.error("Error al actualizar prenda:", error);
+          mostrarMensaje("❌ Error al actualizar la prenda");
+        }
+      },
+    );
+  } catch (error) {
+    console.error("Error en actualizarPrendaConAsignadas:", error);
+    mostrarMensaje("❌ Error al procesar");
+  }
+};
+
+function mostrarModalActualizarPrenda(
+  nombrePrenda,
+  totalAsignadas,
+  totalTareas,
+  onConfirm,
+) {
+  const overlay = document.createElement("div");
+  overlay.className = "modal-overlay";
+  overlay.innerHTML = `
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>⚡ Actualizar Prenda Base</h3>
+      </div>
+      <div class="modal-body">
+        <p>Se actualizará <strong>"${nombrePrenda}"</strong> conservando solo las <strong>${totalAsignadas}</strong> tareas con trabajador asignado.</p>
+        <p class="modal-info-text">⚠️ Se eliminarán ${totalTareas - totalAsignadas} tarea(s) sin asignar de la prenda base. Esta acción no se puede deshacer.</p>
+        <div class="update-prenda-counts">
+          <div class="count-row">
+            <span>Tareas asignadas:</span>
+            <span class="count-green">${totalAsignadas}</span>
+          </div>
+          <div class="count-row">
+            <span>Tareas sin asignar:</span>
+            <span class="count-red">${totalTareas - totalAsignadas}</span>
+          </div>
+          <div class="count-row count-total">
+            <span>Total actual:</span>
+            <span>${totalTareas}</span>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-secondary" id="modal-cancel-update-prenda">Cancelar</button>
+        <button class="btn-primary" id="modal-confirm-update-prenda">Actualizar Prenda</button>
+      </div>
+    </div>
+  `;
+
+  document.body.appendChild(overlay);
+  document.body.style.overflow = "hidden";
+
+  document
+    .getElementById("modal-cancel-update-prenda")
+    .addEventListener("click", () => {
+      overlay.remove();
+      document.body.style.overflow = "auto";
+    });
+
+  document
+    .getElementById("modal-confirm-update-prenda")
+    .addEventListener("click", () => {
+      overlay.remove();
+      document.body.style.overflow = "auto";
+      if (onConfirm) onConfirm();
+    });
+
   overlay.addEventListener("click", (e) => {
     if (e.target === overlay) {
       overlay.remove();

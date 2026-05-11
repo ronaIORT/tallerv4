@@ -66,7 +66,7 @@ async function cargarVista(ruta) {
   }
 
   if (ruta === "#perfil") {
-    window.location.hash = '#gestion-trabajadores';
+    window.location.hash = "#gestion-trabajadores";
     return;
   }
 
@@ -179,50 +179,51 @@ function mostrarMensaje(mensaje) {
 // ===========================================================================
 
 const RUTA_A_NAV = {
-    '#dashboard': '#dashboard',
-    '#gestion-cortes': '#gestion-cortes',
-    '#nuevo-corte': '#nuevo-corte',
-    '#historial-pagos': '#historial-pagos',
-    '#perfil': '#gestion-trabajadores',
-    '#gestion-trabajadores': '#gestion-trabajadores'
+  "#dashboard": "#dashboard",
+  "#gestion-cortes": "#gestion-cortes",
+  "#nuevo-corte": "#nuevo-corte",
+  "#historial-pagos": "#historial-pagos",
+  "#perfil": "#gestion-trabajadores",
+  "#gestion-trabajadores": "#gestion-trabajadores",
 };
 
 function actualizarNav(ruta) {
-    const bottomNav = document.getElementById('bottom-nav');
-    if (!bottomNav) return;
+  const bottomNav = document.getElementById("bottom-nav");
+  if (!bottomNav) return;
 
-    const esSubVista = ruta.startsWith('#administrar-tareas/') ||
-                       ruta.startsWith('#ver-prenda/') ||
-                       ruta.startsWith('#editar-prenda/');
+  const esSubVista =
+    ruta.startsWith("#administrar-tareas/") ||
+    ruta.startsWith("#ver-prenda/") ||
+    ruta.startsWith("#editar-prenda/");
 
-    if (esSubVista) {
-        bottomNav.classList.add('hidden');
+  if (esSubVista) {
+    bottomNav.classList.add("hidden");
+  } else {
+    bottomNav.classList.remove("hidden");
+  }
+
+  const navRoute = RUTA_A_NAV[ruta] || null;
+  bottomNav.querySelectorAll(".nav-item").forEach((item) => {
+    if (navRoute && item.dataset.route === navRoute) {
+      item.classList.add("active");
     } else {
-        bottomNav.classList.remove('hidden');
+      item.classList.remove("active");
     }
-
-    const navRoute = RUTA_A_NAV[ruta] || null;
-    bottomNav.querySelectorAll('.nav-item').forEach(item => {
-        if (navRoute && item.dataset.route === navRoute) {
-            item.classList.add('active');
-        } else {
-            item.classList.remove('active');
-        }
-    });
+  });
 }
 
 function inicializarBottomNav() {
-    const bottomNav = document.getElementById('bottom-nav');
-    if (!bottomNav) return;
+  const bottomNav = document.getElementById("bottom-nav");
+  if (!bottomNav) return;
 
-    bottomNav.querySelectorAll('.nav-item').forEach(item => {
-        item.addEventListener('click', () => {
-            const route = item.dataset.route;
-            if (route) {
-                window.location.hash = route;
-            }
-        });
+  bottomNav.querySelectorAll(".nav-item").forEach((item) => {
+    item.addEventListener("click", () => {
+      const route = item.dataset.route;
+      if (route) {
+        window.location.hash = route;
+      }
     });
+  });
 }
 
 // Escuchar cambios en el hash (URL)
@@ -329,11 +330,3 @@ function salirAplicacion() {
 window.confirmarSalida = confirmarSalida;
 window.cerrarModalSalida = cerrarModalSalida;
 window.salirAplicacion = salirAplicacion;
-
-// ===========================================================================
-// 🗑️ FUNCIONES PARA ELIMINAR CORTE
-// ===========================================================================
-
-// ===========================================================================
-// 📋 FUNCIÓN PARA RENDERIZAR VISTA DE GESTIÓN DE CORTES
-// ===========================================================================
